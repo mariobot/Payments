@@ -1,6 +1,7 @@
 ﻿using Hyip_Payments.Command.Country;
 using Hyip_Payments.Command.Money;
 using Hyip_Payments.Command.Payment;
+using Hyip_Payments.Context;
 using Hyip_Payments.Web.Client.Pages;
 using Hyip_Payments.Web.Components;
 using Hyip_Payments.Web.Components.Account;
@@ -29,9 +30,9 @@ namespace Hyip_Payments.Web
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
             // Fix: Ensure that AddCountryCommand implements IAddCountryCommand interface
-            builder.Services.AddScoped<IAddCountryCommand, AddCountryCommand>();
-            builder.Services.AddScoped<IAddMoneyCommand, AddMoneyCommand>();
-            builder.Services.AddScoped<IAddPaymentCommand, AddPaymentCommand>();
+            //builder.Services.AddScoped<IAddCountryCommand, AddCountryCommand>();
+            //builder.Services.AddScoped<IAddMoneyCommand, AddMoneyCommand>();
+            //builder.Services.AddScoped<IAddPaymentCommand, AddPaymentCommand>();
 
 
             builder.Services.AddAuthentication(options =>
@@ -44,9 +45,15 @@ namespace Hyip_Payments.Web
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+            // Add ApplicationDbContext
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
-            
+
+            // Add PaymentsDbContext
+            builder.Services.AddDbContext<PaymentsDbContext>(options =>
+                options.UseSqlServer(connectionString));
+
+
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -86,10 +93,5 @@ namespace Hyip_Payments.Web
 
             app.Run();
         }
-    }
-    // Ensure AddCountryCommand implements IAddCountryCommand
-    public class AddCountryCommand : IAddCountryCommand
-    {
-        public string CountryName { get; set; }
     }
 }

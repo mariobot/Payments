@@ -20,8 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Money\" />
-    <Folder Include="Components\Country\" />
     <Folder Include="Components\Payment\" />
   </ItemGroup>
 

@@ -1,5 +1,5 @@
-﻿using Hyip_Payments.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Hyip_Payments.Models;
 
 namespace Hyip_Payments.Server.Data
 {

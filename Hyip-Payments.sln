@@ -2,10 +2,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Server", "Server\Hyip-Payments.Server.csproj", "{C8E6BE44-6F84-46C1-2FE5-C3F58B0E6EC2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Shared", "Shared\Hyip-Payments.Shared.csproj", "{62B88A01-6542-95FD-28A0-B09FF0E38719}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Models", "Hyip-Payments.Models\Hyip-Payments.Models.csproj", "{3AAE2E92-658F-41FC-A3CA-A6D12119AADE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Context", "Hyip-Payments.Context\Hyip-Payments.Context.csproj", "{08CA2CC9-472B-456F-A03A-5B09DD372883}"
@@ -18,20 +14,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThemeLibrary", "ThemeLibrar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Services", "Hyip-Payments.Services\Hyip-Payments.Services.csproj", "{43A5D96A-A0B7-4F33-AF9C-04DECAE9FB89}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Shared", "..\hypay\Hyip-Payments\Hiyp-Payments.Shared\Hyip-Payments.Shared.csproj", "{34EAF63B-D407-3FD1-1A24-0EF2667AF885}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Web", "Hyip-Payments.Web\Hyip-Payments.Web\Hyip-Payments.Web.csproj", "{0F674E4D-8D0F-4FAD-AE05-FC8FB10067A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Web.Client", "Hyip-Payments.Web\Hyip-Payments.Web.Client\Hyip-Payments.Web.Client.csproj", "{5CC4598E-B629-44F3-B3F2-90399DC31500}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C8E6BE44-6F84-46C1-2FE5-C3F58B0E6EC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C8E6BE44-6F84-46C1-2FE5-C3F58B0E6EC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C8E6BE44-6F84-46C1-2FE5-C3F58B0E6EC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C8E6BE44-6F84-46C1-2FE5-C3F58B0E6EC2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62B88A01-6542-95FD-28A0-B09FF0E38719}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62B88A01-6542-95FD-28A0-B09FF0E38719}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62B88A01-6542-95FD-28A0-B09FF0E38719}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62B88A01-6542-95FD-28A0-B09FF0E38719}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3AAE2E92-658F-41FC-A3CA-A6D12119AADE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3AAE2E92-658F-41FC-A3CA-A6D12119AADE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AAE2E92-658F-41FC-A3CA-A6D12119AADE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -56,6 +50,18 @@ Global
 		{43A5D96A-A0B7-4F33-AF9C-04DECAE9FB89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43A5D96A-A0B7-4F33-AF9C-04DECAE9FB89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43A5D96A-A0B7-4F33-AF9C-04DECAE9FB89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34EAF63B-D407-3FD1-1A24-0EF2667AF885}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34EAF63B-D407-3FD1-1A24-0EF2667AF885}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34EAF63B-D407-3FD1-1A24-0EF2667AF885}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34EAF63B-D407-3FD1-1A24-0EF2667AF885}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F674E4D-8D0F-4FAD-AE05-FC8FB10067A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F674E4D-8D0F-4FAD-AE05-FC8FB10067A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F674E4D-8D0F-4FAD-AE05-FC8FB10067A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F674E4D-8D0F-4FAD-AE05-FC8FB10067A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CC4598E-B629-44F3-B3F2-90399DC31500}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CC4598E-B629-44F3-B3F2-90399DC31500}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CC4598E-B629-44F3-B3F2-90399DC31500}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CC4598E-B629-44F3-B3F2-90399DC31500}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

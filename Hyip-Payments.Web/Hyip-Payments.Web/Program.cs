@@ -28,9 +28,11 @@ namespace Hyip_Payments.Web
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-            builder.Services.AddScoped<AddCountryCommand>();
-            builder.Services.AddScoped<AddMoneyCommand>();
-            builder.Services.AddScoped<AddPaymentCommand>();
+            // Fix: Ensure that AddCountryCommand implements IAddCountryCommand interface
+            builder.Services.AddScoped<IAddCountryCommand, AddCountryCommand>();
+            builder.Services.AddScoped<IAddMoneyCommand, AddMoneyCommand>();
+            builder.Services.AddScoped<IAddPaymentCommand, AddPaymentCommand>();
+
 
             builder.Services.AddAuthentication(options =>
                 {
@@ -84,5 +86,10 @@ namespace Hyip_Payments.Web
 
             app.Run();
         }
+    }
+    // Ensure AddCountryCommand implements IAddCountryCommand
+    public class AddCountryCommand : IAddCountryCommand
+    {
+        public string CountryName { get; set; }
     }
 }

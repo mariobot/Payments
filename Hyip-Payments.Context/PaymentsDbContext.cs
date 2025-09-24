@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Hyip_Payments.Models;
 
-namespace Hyip_Payments.Server.Data
+namespace Hyip_Payments.Context
 {
     public class PaymentsDbContext : DbContext
     {
@@ -10,9 +10,10 @@ namespace Hyip_Payments.Server.Data
         {
         }
 
+        public DbSet<CountryModel> Countries { get; set; }
         public DbSet<PaymentModel> Payments { get; set; }
-        public DbSet<MoneyModel> Money { get; set; }
-        //public DbSet<UserModel> Users { get; set; }
+        public DbSet<MoneyModel> Money { get; set; }        
+        public DbSet<UserModel> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

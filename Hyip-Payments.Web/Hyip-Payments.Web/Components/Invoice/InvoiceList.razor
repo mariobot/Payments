@@ -1,0 +1,91 @@
+﻿@using Hyip_Payments.Models
+@inject NavigationManager NavigationManager
+
+<h3>Invoice List</h3>
+
+@if (invoices == null)
+{
+    <div>Loading invoices...</div>
+}
+else if (!invoices.Any())
+{
+    <div class="alert alert-info">No invoices found.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Invoice Number</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Total Amount</th>
+                <th>Items</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var invoice in invoices)
+            {
+                <tr>
+                    <td>@invoice.InvoiceNumber</td>
+                    <td>@invoice.InvoiceDate.ToShortDateString()</td>
+                    <td>@invoice.Description</td>
+                    <td>@invoice.TotalAmount.ToString("C")</td>
+                    <td>@invoice.Items?.Count ?? 0</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" @onclick="() => NavigateToView(invoice.Id)">View</button>
+                        <button class="btn btn-sm btn-secondary me-1" @onclick="() => NavigateToEdit(invoice.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => NavigateToDelete(invoice.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Invoice>? invoices;
+
+    protected override async Task OnInitializedAsync()
+    {
+        invoices = await LoadInvoicesAsync();
+    }
+
+    private Task<List<Invoice>> LoadInvoicesAsync()
+    {
+        // Replace with actual data fetching logic (API/service)
+        return Task.FromResult(new List<Invoice>
+        {
+            new Invoice
+            {
+                Id = 1,
+                InvoiceNumber = "INV-001",
+                InvoiceDate = DateTime.UtcNow.AddDays(-2),
+                Description = "Web development services",
+                TotalAmount = 1200,
+                Items = new List<InvoiceItem>
+                {
+                    new InvoiceItem { ItemName = "Design", Quantity = 1, UnitPrice = 500 },
+                    new InvoiceItem { ItemName = "Development", Quantity = 1, UnitPrice = 700 }
+                }
+            },
+            new Invoice
+            {
+                Id = 2,
+                InvoiceNumber = "INV-002",
+                InvoiceDate = DateTime.UtcNow.AddDays(-1),
+                Description = "Consulting",
+                TotalAmount = 300,
+                Items = new List<InvoiceItem>
+                {
+                    new InvoiceItem { ItemName = "Consulting Hours", Quantity = 3, UnitPrice = 100 }
+                }
+            }
+        });
+    }
+
+    private void NavigateToView(int id) => NavigationManager.NavigateTo($"/invoice/view/{id}");
+    private void NavigateToEdit(int id) => NavigationManager.NavigateTo($"/invoice/edit/{id}");
+    private void NavigateToDelete(int id) => NavigationManager.NavigateTo($"/invoice/delete/{id}");
+}

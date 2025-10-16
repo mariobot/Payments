@@ -34,7 +34,6 @@ namespace Hyip_Payments.Web
             //builder.Services.AddScoped<IAddMoneyCommand, AddMoneyCommand>();
             //builder.Services.AddScoped<IAddPaymentCommand, AddPaymentCommand>();
 
-
             builder.Services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -52,7 +51,6 @@ namespace Hyip_Payments.Web
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
-
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

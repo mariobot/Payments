@@ -1,8 +1,8 @@
 ﻿using Hyip_Payments.Command.Country;
+using Hyip_Payments.Command.InvoiceCommand;
 using Hyip_Payments.Command.Money;
 using Hyip_Payments.Command.Payment;
 using Hyip_Payments.Context;
-using Hyip_Payments.Web.Client.Pages;
 using Hyip_Payments.Web.Components;
 using Hyip_Payments.Web.Components.Account;
 using Hyip_Payments.Web.Data;
@@ -32,6 +32,7 @@ namespace Hyip_Payments.Web
             // Fix: Ensure that AddCountryCommand implements IAddCountryCommand interface
             //builder.Services.AddScoped<IAddCountryCommand, AddCountryCommand>();
             //builder.Services.AddScoped<IAddMoneyCommand, AddMoneyCommand>();
+            //builder.Services.AddScoped<IAddInvoiceCommand, AddInvoiceCommand>();
             //builder.Services.AddScoped<IAddPaymentCommand, AddPaymentCommand>();
 
             builder.Services.AddAuthentication(options =>

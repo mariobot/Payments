@@ -45,41 +45,41 @@ else
 }
 
 @code {
-    private List<Invoice>? invoices;
+    private List<InvoiceModel>? invoices;
 
     protected override async Task OnInitializedAsync()
     {
         invoices = await LoadInvoicesAsync();
     }
 
-    private Task<List<Invoice>> LoadInvoicesAsync()
+    private Task<List<InvoiceModel>> LoadInvoicesAsync()
     {
         // Replace with actual data fetching logic (API/service)
-        return Task.FromResult(new List<Invoice>
+        return Task.FromResult(new List<InvoiceModel>
         {
-            new Invoice
+            new InvoiceModel
             {
                 Id = 1,
                 InvoiceNumber = "INV-001",
                 InvoiceDate = DateTime.UtcNow.AddDays(-2),
                 Description = "Web development services",
                 TotalAmount = 1200,
-                Items = new List<InvoiceItem>
+                Items = new List<InvoiceItemModel>
                 {
-                    new InvoiceItem { ItemName = "Design", Quantity = 1, UnitPrice = 500 },
-                    new InvoiceItem { ItemName = "Development", Quantity = 1, UnitPrice = 700 }
+                    new InvoiceItemModel { ItemName = "Design", Quantity = 1, UnitPrice = 500 },
+                    new InvoiceItemModel { ItemName = "Development", Quantity = 1, UnitPrice = 700 }
                 }
             },
-            new Invoice
+            new InvoiceModel
             {
                 Id = 2,
                 InvoiceNumber = "INV-002",
                 InvoiceDate = DateTime.UtcNow.AddDays(-1),
                 Description = "Consulting",
                 TotalAmount = 300,
-                Items = new List<InvoiceItem>
+                Items = new List<InvoiceItemModel>
                 {
-                    new InvoiceItem { ItemName = "Consulting Hours", Quantity = 3, UnitPrice = 100 }
+                    new InvoiceItemModel { ItemName = "Consulting Hours", Quantity = 3, UnitPrice = 100 }
                 }
             }
         });

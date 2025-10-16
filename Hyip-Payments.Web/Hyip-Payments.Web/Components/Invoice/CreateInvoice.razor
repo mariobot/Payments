@@ -66,20 +66,20 @@
 }
 
 @code {
-    private Invoice invoice = new()
+    private InvoiceModel invoice = new()
     {
         InvoiceDate = DateTime.UtcNow,
-        Items = new List<InvoiceItem>()
+        Items = new List<InvoiceItemModel>()
     };
     private string? successMessage;
     private string? errorMessage;
 
     private void AddItem()
     {
-        invoice.Items.Add(new InvoiceItem { Quantity = 1, UnitPrice = 0 });
+        invoice.Items.Add(new InvoiceItemModel { Quantity = 1, UnitPrice = 0 });
     }
 
-    private void RemoveItem(InvoiceItem item)
+    private void RemoveItem(InvoiceItemModel item)
     {
         invoice.Items.Remove(item);
     }
@@ -93,7 +93,7 @@
 
             successMessage = $"Invoice '{invoice.InvoiceNumber}' created successfully!";
             errorMessage = null;
-            invoice = new Invoice { InvoiceDate = DateTime.UtcNow, Items = new List<InvoiceItem>() };
+            invoice = new InvoiceModel { InvoiceDate = DateTime.UtcNow, Items = new List<InvoiceItemModel>() };
         }
         catch (Exception ex)
         {

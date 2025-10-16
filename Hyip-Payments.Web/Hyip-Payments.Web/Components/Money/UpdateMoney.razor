@@ -1,5 +1,126 @@
-﻿<h3>UpdateMoney</h3>
+﻿@using Hyip_Payments.Models
+
+<h3>Update Money</h3>
+
+@if (moneyList == null)
+{
+    <div>Loading money records...</div>
+}
+else
+{
+    <EditForm Model="@selectedMoney" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Select Money Record</label>
+            <InputSelect class="form-select" @bind-Value="selectedMoneyId" @onchange="OnMoneyChanged">
+                <option value="">-- Select --</option>
+                @foreach (var m in moneyList)
+                {
+                    <option value="@m.Id">@($"{m.Amount} {m.Currency} ({m.Country})")</option>
+                }
+            </InputSelect>
+        </div>
+
+        @if (selectedMoney != null)
+        {
+            <div class="mb-3">
+                <label class="form-label">Amount</label>
+                <InputNumber class="form-control" @bind-Value="selectedMoney.Amount" />
+                <ValidationMessage For="@(() => selectedMoney.Amount)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Currency</label>
+                <InputText class="form-control" @bind-Value="selectedMoney.Currency" />
+                <ValidationMessage For="@(() => selectedMoney.Currency)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Country</label>
+                <InputText class="form-control" @bind-Value="selectedMoney.Country" />
+                <ValidationMessage For="@(() => selectedMoney.Country)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Money</button>
+        }
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success mt-3">@successMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">@errorMessage</div>
+    }
+}
 
 @code {
+    private List<MoneyModel>? moneyList;
+    private int? selectedMoneyId;
+    private MoneyModel? selectedMoney;
+    private string? successMessage;
+    private string? errorMessage;
 
+    protected override async Task OnInitializedAsync()
+    {
+        moneyList = await LoadMoneyAsync();
+    }
+
+    private async Task OnMoneyChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            selectedMoneyId = id;
+            selectedMoney = moneyList?.FirstOrDefault(m => m.Id == id);
+        }
+        else
+        {
+            selectedMoney = null;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (selectedMoney == null)
+        {
+            errorMessage = "No money record selected.";
+            return;
+        }
+
+        try
+        {
+            // TODO: Replace with your actual update logic/service call
+            await UpdateMoneyAsync(selectedMoney);
+
+            successMessage = "Money record updated successfully.";
+            errorMessage = null;
+            moneyList = await LoadMoneyAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating money record: {ex.Message}";
+            successMessage = null;
+        }
+    }
+
+    // Placeholder for loading money records
+    private Task<List<MoneyModel>> LoadMoneyAsync()
+    {
+        // Replace with actual data fetching logic
+        return Task.FromResult(new List<MoneyModel>
+        {
+            new MoneyModel { Id = 1, Amount = 100, Currency = "USD", Country = "USA" },
+            new MoneyModel { Id = 2, Amount = 200, Currency = "EUR", Country = "Germany" }
+        });
+    }
+
+    // Placeholder for updating a money record
+    private Task UpdateMoneyAsync(MoneyModel money)
+    {
+        // Replace with actual update logic
+        return Task.CompletedTask;
+    }
 }

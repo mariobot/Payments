@@ -15,12 +15,4 @@
     <ProjectReference Include="..\Hyip-Payments.Context\Hyip-Payments.Context.csproj" />
     <ProjectReference Include="..\Hyip-Payments.Models\Hyip-Payments.Models.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Invoice\" />
-    <Folder Include="Country\" />
-    <Folder Include="Money\" />
-    <Folder Include="Payment\" />
-    <Folder Include="User\" />
-  </ItemGroup>
 </Project>

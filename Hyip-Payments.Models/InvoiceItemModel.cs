@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Hyip_Payments.Models
 {
     [Table("InvoiceItem")]
-    public class InvoiceItem
+    public class InvoiceItemModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -14,7 +14,7 @@ namespace Hyip_Payments.Models
         public int InvoiceId { get; set; }
 
         [ForeignKey(nameof(InvoiceId))]
-        public Invoice Invoice { get; set; } = null!;
+        public InvoiceModel Invoice { get; set; } = null!;
 
         [Required]
         [MaxLength(128)]

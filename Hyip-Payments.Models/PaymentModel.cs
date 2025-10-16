@@ -38,6 +38,6 @@ namespace Hyip_Payments.Models
         public int InvoiceId { get; set; }
 
         [ForeignKey(nameof(InvoiceId))]
-        public Invoice Invoice { get; set; } = null!;
+        public InvoiceModel Invoice { get; set; } = null!;
     }
 }

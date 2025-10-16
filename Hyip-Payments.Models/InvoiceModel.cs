@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Hyip_Payments.Models
 {
     [Table("Invoice")]
-    public class Invoice
+    public class InvoiceModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -26,6 +26,6 @@ namespace Hyip_Payments.Models
         public decimal TotalAmount { get; set; }
 
         // Navigation property for invoice items
-        public List<InvoiceItem> Items { get; set; } = new();
+        public List<InvoiceItemModel> Items { get; set; } = new();
     }
 }

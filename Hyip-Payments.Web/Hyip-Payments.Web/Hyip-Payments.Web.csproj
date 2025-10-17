@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Hyip-Payments.Command\Hyip-Payments.Command.csproj" />
+    <ProjectReference Include="..\..\Hyip-Payments.Query\Hyip-Payments.Query.csproj" />
     <ProjectReference Include="..\Hyip-Payments.Web.Client\Hyip-Payments.Web.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.6" />

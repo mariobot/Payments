@@ -1,14 +1,16 @@
-﻿using Hyip_Payments.Command.Country;
+using Hyip_Payments.Command.Country;
 using Hyip_Payments.Command.InvoiceCommand;
 using Hyip_Payments.Command.Money;
 using Hyip_Payments.Command.Payment;
 using Hyip_Payments.Context;
+using Hyip_Payments.Query.InvoiceQuery;
 using Hyip_Payments.Web.Components;
 using Hyip_Payments.Web.Components.Account;
 using Hyip_Payments.Web.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MediatR;
 
 namespace Hyip_Payments.Web
 {
@@ -52,6 +54,12 @@ namespace Hyip_Payments.Web
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            // Add MediatR
+            builder.Services.AddMediatR(cfg => {
+                cfg.RegisterServicesFromAssemblyContaining<GetAllInvoicesQuery>();
+                cfg.RegisterServicesFromAssemblyContaining<AddCountryCommand>();
+            });
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

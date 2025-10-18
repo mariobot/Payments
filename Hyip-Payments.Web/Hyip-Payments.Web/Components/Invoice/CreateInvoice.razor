@@ -1,0 +1,106 @@
+﻿@page "/CreateInvoice"
+
+@using Hyip_Payments.Models
+
+<h3>Create Invoice</h3>
+
+<EditForm Model="@invoice" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Invoice Number</label>
+        <InputText class="form-control" @bind-Value="invoice.InvoiceNumber" />
+        <ValidationMessage For="@(() => invoice.InvoiceNumber)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Invoice Date</label>
+        <InputDate class="form-control" @bind-Value="invoice.InvoiceDate" />
+        <ValidationMessage For="@(() => invoice.InvoiceDate)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <InputText class="form-control" @bind-Value="invoice.Description" />
+        <ValidationMessage For="@(() => invoice.Description)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Total Amount</label>
+        <InputNumber class="form-control" @bind-Value="invoice.TotalAmount" />
+        <ValidationMessage For="@(() => invoice.TotalAmount)" />
+    </div>
+
+    <h5>Invoice Items</h5>
+    @foreach (var item in invoice.Items)
+    {
+        <div class="row mb-2">
+            <div class="col">
+                <InputText class="form-control" @bind-Value="item.ItemName" placeholder="Item Name" />
+            </div>
+            <div class="col">
+                <InputNumber class="form-control" @bind-Value="item.Quantity" placeholder="Quantity" />
+            </div>
+            <div class="col">
+                <InputNumber class="form-control" @bind-Value="item.UnitPrice" placeholder="Unit Price" />
+            </div>
+            <div class="col">
+                <span class="form-control-plaintext">@item.Total</span>
+            </div>
+            <div class="col-auto">
+                <button type="button" class="btn btn-danger" @onclick="() => RemoveItem(item)">Remove</button>
+            </div>
+        </div>
+    }
+    <button type="button" class="btn btn-secondary mb-3" @onclick="AddItem">Add Item</button>
+
+    <button type="submit" class="btn btn-primary">Create Invoice</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+@code {
+    private InvoiceModel invoice = new()
+    {
+        InvoiceDate = DateTime.UtcNow,
+        Items = new List<InvoiceItemModel>()
+    };
+    private string? successMessage;
+    private string? errorMessage;
+
+    private void AddItem()
+    {
+        invoice.Items.Add(new InvoiceItemModel { Quantity = 1, UnitPrice = 0 });
+    }
+
+    private void RemoveItem(InvoiceItemModel item)
+    {
+        invoice.Items.Remove(item);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            // TODO: Replace with your actual create logic, e.g., call a service or MediatR command
+            // await InvoiceService.CreateInvoiceAsync(invoice);
+
+            successMessage = $"Invoice '{invoice.InvoiceNumber}' created successfully!";
+            errorMessage = null;
+            invoice = new InvoiceModel { InvoiceDate = DateTime.UtcNow, Items = new List<InvoiceItemModel>() };
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating invoice: {ex.Message}";
+            successMessage = null;
+        }
+    }
+}

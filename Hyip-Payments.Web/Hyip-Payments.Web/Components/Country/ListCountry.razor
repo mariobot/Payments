@@ -1,0 +1,69 @@
+﻿@page "/ListCountry"
+
+@using Hyip_Payments.Models
+@inject NavigationManager NavigationManager
+
+<h3>Countries</h3>
+
+@if (countries == null)
+{
+    <div>Loading countries...</div>
+}
+else if (!countries.Any())
+{
+    <div class="alert alert-info">No countries found.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>ISO Code</th>
+                <th>Capital</th>
+                <th>Region</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var country in countries)
+            {
+                <tr>
+                    <td>@country.Name</td>
+                    <td>@country.IsoCode</td>
+                    <td>@country.Capital</td>
+                    <td>@country.Region</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" @onclick="() => NavigateToEdit(country.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger me-1" @onclick="() => NavigateToDelete(country.Id)">Delete</button>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => NavigateToUpdate(country.Id)">Update</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CountryModel>? countries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Replace with your actual data fetching logic
+        countries = await LoadCountriesAsync();
+    }
+
+    private Task<List<CountryModel>> LoadCountriesAsync()
+    {
+        // Replace with actual data fetching logic (API/service)
+        return Task.FromResult(new List<CountryModel>
+        {
+            new CountryModel { Id = 1, Name = "USA", IsoCode = "USA", Capital = "Washington", Region = "Americas" },
+            new CountryModel { Id = 2, Name = "Canada", IsoCode = "CAN", Capital = "Ottawa", Region = "Americas" }
+        });
+    }
+
+    private void NavigateToEdit(int id) => NavigationManager.NavigateTo($"/country/edit/{id}");
+    private void NavigateToDelete(int id) => NavigationManager.NavigateTo($"/country/delete/{id}");
+    private void NavigateToUpdate(int id) => NavigationManager.NavigateTo($"/country/update/{id}");
+}

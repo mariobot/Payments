@@ -1,0 +1,72 @@
+﻿@page "/UpdateInvoice/{InvoiceId:int}"
+@using Hyip_Payments.Models
+@inject Hyip_Payments.Context.PaymentsDbContext DbContext
+@inject NavigationManager NavigationManager
+
+<h3>Update Invoice</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (invoice == null)
+{
+    <p class="text-danger">Invoice not found.</p>
+}
+else
+{
+    <EditForm Model="invoice" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="number" class="form-label">Invoice Number</label>
+            <InputText id="number" class="form-control" @bind-Value="invoice.InvoiceNumber" />
+        </div>
+        <div class="mb-3">
+            <label for="date" class="form-label">Date</label>
+            <InputDate id="date" class="form-control" @bind-Value="invoice.InvoiceDate" />
+        </div>
+        <div class="mb-3">
+            <label for="amount" class="form-label">Total Amount</label>
+            <InputNumber id="amount" class="form-control" @bind-Value="invoice.TotalAmount" />
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="invoice.Description" />
+        </div>
+        <!-- Add more fields as needed from InvoiceModel -->
+
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int InvoiceId { get; set; }
+
+    private InvoiceModel? invoice;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        invoice = await DbContext.Invoices.FindAsync(InvoiceId);
+        isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (invoice != null)
+        {
+            DbContext.Invoices.Update(invoice);
+            await DbContext.SaveChangesAsync();
+            NavigationManager.NavigateTo("/InvoiceList");
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/InvoiceList");
+    }
+}

@@ -1,8 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
-using System.Diagnostics;
-using System.IO;
 
 namespace Hyip_Payments.Context
 {
@@ -10,15 +7,11 @@ namespace Hyip_Payments.Context
     {
         public PaymentsDbContext CreateDbContext(string[] args)
         {
-            Debugger.Launch();  
-            // Adjust the path as needed for your solution structure
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .Build();
-
+            // Use a simplified connection string for design-time operations
+            var connectionString = "Data Source=MBOTERO\\MBOTERO;Initial Catalog=Payments;Integrated Security=True;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Encrypt=False";
+            
             var optionsBuilder = new DbContextOptionsBuilder<PaymentsDbContext>();
-            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            optionsBuilder.UseSqlServer(connectionString);
 
             return new PaymentsDbContext(optionsBuilder.Options);
         }

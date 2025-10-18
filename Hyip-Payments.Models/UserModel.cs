@@ -32,5 +32,8 @@ namespace Hyip_Payments.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsActive { get; set; } = true;
+
+        // Navigation property for user roles
+        public ICollection<UserRoleModel> UserRoles { get; set; } = new List<UserRoleModel>();
     }
 }

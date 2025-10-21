@@ -2,6 +2,7 @@
 
 @using Hyip_Payments.Models
 @inject NavigationManager NavigationManager
+@inject MediatR.IMediator Mediator
 
 <h3>Countries</h3>
 
@@ -44,26 +45,35 @@ else
     </table>
 }
 
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+
 @code {
     private List<CountryModel>? countries;
+    private string? successMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Replace with your actual data fetching logic
         countries = await LoadCountriesAsync();
     }
 
     private Task<List<CountryModel>> LoadCountriesAsync()
     {
-        // Replace with actual data fetching logic (API/service)
-        return Task.FromResult(new List<CountryModel>
+        var result = Mediator.Send(new Hyip_Payments.Query.CountryQuery.GetCountryListQuery());
+
+        if (result.IsCompletedSuccessfully)
         {
-            new CountryModel { Id = 1, Name = "USA", IsoCode = "USA", Capital = "Washington", Region = "Americas" },
-            new CountryModel { Id = 2, Name = "Canada", IsoCode = "CAN", Capital = "Ottawa", Region = "Americas" }
-        });
+            return result;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     private void NavigateToEdit(int id) => NavigationManager.NavigateTo($"/country/edit/{id}");
-    private void NavigateToDelete(int id) => NavigationManager.NavigateTo($"/country/delete/{id}");
     private void NavigateToUpdate(int id) => NavigationManager.NavigateTo($"/country/update/{id}");
+    private void NavigateToDelete(int id) => NavigationManager.NavigateTo($"/country/delete/{id}");
 }

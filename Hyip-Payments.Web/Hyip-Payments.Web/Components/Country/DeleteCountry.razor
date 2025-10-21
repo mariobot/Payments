@@ -1,9 +1,10 @@
-﻿@page "/DeleteCountry"
+﻿@page "/country/delete/{id}"
 
 @using Hyip_Payments.Models
 @inject NavigationManager NavigationManager
+@inject MediatR.IMediator Mediator
 
-<h3>Add Country</h3>
+<h3>Delete Country</h3>
 
 <EditForm Model="@country" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -47,8 +48,16 @@
 
     private async Task HandleValidSubmit()
     {
-        // TODO: Replace with your actual add country logic, e.g., call a service or command
-        // await CountryService.AddCountryAsync(country);
+        //var result = await Mediator.Send(DeleteCountryCommand(country.Id));
+        /*if (result)
+        {
+            // Success logic
+        }
+        else
+        {
+            // Not found logic
+        }
+        */
 
         successMessage = $"Country '{country.Name}' added successfully!";
         country = new(); // Reset form

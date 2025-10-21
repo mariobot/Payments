@@ -1,0 +1,279 @@
+@host = http://localhost:5009
+
+### Country Endpoints
+
+GET {{host}}/api/Country
+Accept: application/json
+
+###
+
+GET {{host}}/api/Country/1
+Accept: application/json
+
+###
+
+POST {{host}}/api/Country
+Content-Type: application/json
+
+{
+  "name": "Colombia",
+  "isoCode": "CO",
+  "capital": "Bogota",
+  "region": "Latin America"
+}
+
+###
+
+PUT {{host}}/api/Country/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "France Updated",
+  "isoCode": "FRA",
+  "capital": "Paris",
+  "region": "Europe"
+}
+
+###
+
+DELETE {{host}}/api/Country/3
+
+###
+
+### Coin Endpoints
+
+GET {{host}}/api/Coin
+Accept: application/json
+
+###
+
+GET {{host}}/api/Coin/1
+Accept: application/json
+
+###
+
+POST {{host}}/api/Coin
+Content-Type: application/json
+
+{
+  "symbol": "BTC",
+  "name": "Bitcoin",
+  "description": "The original cryptocurrency",
+  "currentPrice": 60000,
+  "network": "Bitcoin"
+}
+
+###
+
+PUT {{host}}/api/Coin/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "symbol": "BTC",
+  "name": "Bitcoin Updated",
+  "description": "Updated description",
+  "currentPrice": 61000,
+  "network": "Bitcoin"
+}
+
+###
+
+DELETE {{host}}/api/Coin/1
+
+###
+
+### Invoice Endpoints
+
+GET {{host}}/api/Invoice
+Accept: application/json
+
+###
+
+GET {{host}}/api/Invoice/1
+Accept: application/json
+
+###
+
+POST {{host}}/api/Invoice
+Content-Type: application/json
+
+{
+  "invoiceNumber": "INV-001",
+  "invoiceDate": "2025-10-21T00:00:00Z",
+  "description": "Consulting services",
+  "totalAmount": 1000,
+  "items": [
+    {
+      "itemName": "Consulting",
+      "quantity": 10,
+      "unitPrice": 100
+    }
+  ]
+}
+
+###
+
+PUT {{host}}/api/Invoice/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "invoiceNumber": "INV-001",
+  "invoiceDate": "2025-10-21T00:00:00Z",
+  "description": "Consulting services updated",
+  "totalAmount": 1200,
+  "items": [
+    {
+      "id": 1,
+      "itemName": "Consulting",
+      "quantity": 12,
+      "unitPrice": 100
+    }
+  ]
+}
+
+###
+
+DELETE {{host}}/api/Invoice/1
+
+###
+
+### Money Endpoints
+
+GET {{host}}/api/Money
+Accept: application/json
+
+###
+
+GET {{host}}/api/Money/1
+Accept: application/json
+
+###
+
+POST {{host}}/api/Money
+Content-Type: application/json
+
+{
+  "slug": "USD",
+  "currency": "USD",
+  "country": "USA",
+  "amount": 1000
+}
+
+###
+
+PUT {{host}}/api/Money/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "slug": "USD",
+  "currency": "USD",
+  "country": "USA",
+  "amount": 2000
+}
+
+###
+
+DELETE {{host}}/api/Money/1
+
+###
+
+### Payment Endpoints
+
+GET {{host}}/api/Payment
+Accept: application/json
+
+###
+
+GET {{host}}/api/Payment/1
+Accept: application/json
+
+###
+
+POST {{host}}/api/Payment
+Content-Type: application/json
+
+{
+  "amount": 100,
+  "currency": "USD",
+  "senderUserId": "user1",
+  "receiverUserId": "user2",
+  "paymentDate": "2025-10-21T00:00:00Z",
+  "status": "Completed",
+  "description": "Payment for services",
+  "transactionId": "TX123456"
+}
+
+###
+
+PUT {{host}}/api/Payment/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "amount": 150,
+  "currency": "USD",
+  "senderUserId": "user1",
+  "receiverUserId": "user2",
+  "paymentDate": "2025-10-21T00:00:00Z",
+  "status": "Completed",
+  "description": "Updated payment",
+  "transactionId": "TX123456"
+}
+
+###
+
+DELETE {{host}}/api/Payment/1
+
+###
+
+### User Endpoints
+
+GET {{host}}/api/User
+Accept: application/json
+
+###
+
+GET {{host}}/api/User/1
+Accept: application/json
+
+###
+
+POST {{host}}/api/User
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "passwordHash": "hashedpassword",
+  "firstName": "John",
+  "lastName": "Doe",
+  "createdAt": "2025-10-21T00:00:00Z",
+  "isActive": true
+}
+
+###
+
+PUT {{host}}/api/User/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "username": "johndoe",
+  "email": "john@example.com",
+  "passwordHash": "newhashedpassword",
+  "firstName": "John",
+  "lastName": "Doe",
+  "createdAt": "2025-10-21T00:00:00Z",
+  "isActive": true
+}
+
+###
+
+DELETE {{host}}/api/User/1
+
+###
+

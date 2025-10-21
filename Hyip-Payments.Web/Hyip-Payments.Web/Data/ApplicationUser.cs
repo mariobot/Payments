@@ -6,5 +6,4 @@ namespace Hyip_Payments.Web.Data
     public class ApplicationUser : IdentityUser
     {
     }
-
 }

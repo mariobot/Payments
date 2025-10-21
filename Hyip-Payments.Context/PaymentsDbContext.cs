@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Hyip_Payments.Models;
+using System.Diagnostics;
 
 namespace Hyip_Payments.Context
 {
@@ -16,12 +17,15 @@ namespace Hyip_Payments.Context
         public DbSet<UserModel> Users { get; set; }
         public DbSet<InvoiceModel> Invoices { get; set; }
         public DbSet<InvoiceItemModel> InvoiceItems { get; set; }
+        public DbSet<CoinModel> Coins { get; set; }
+        //public DbSet<PaymentMethodModel> PaymentMethods { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            Debugger.Launch();
             base.OnModelCreating(modelBuilder);
             // Add custom configuration if needed
-            ApplyMigrations();
         }
 
         // Manual migration method(call this from your startup code)

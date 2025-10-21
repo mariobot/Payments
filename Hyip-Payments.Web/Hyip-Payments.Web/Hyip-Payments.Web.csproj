@@ -21,6 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Role\" />
+    <Folder Include="Components\User\" />
     <Folder Include="Components\Payment\" />
   </ItemGroup>
 

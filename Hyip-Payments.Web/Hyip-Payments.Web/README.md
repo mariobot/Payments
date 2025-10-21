@@ -30,6 +30,11 @@ PM> Add-Migration InitialCreate
 PM> Update-Database
 ```
 
+Context Application
+dotnet ef update database --project Hyip-Payments.Web --startup-project Hyip-Payments.Web --context ApplicationDbContext
+
+Context App
+
 
 
 Make sure to replace `InitialCreate` with a descriptive name for your migration.

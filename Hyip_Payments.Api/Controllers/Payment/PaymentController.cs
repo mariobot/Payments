@@ -1,83 +1,70 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Hyip_Payments.Command.PaymentCommand;
+using Hyip_Payments.Query.PaymentQuery;
+using Hyip_Payments.Models;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.Payment
 {
-    public class PaymentController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PaymentController : ControllerBase
     {
-        // GET: PaymentController
-        public ActionResult Index()
+        private readonly IMediator _mediator;
+
+        public PaymentController(IMediator mediator)
         {
-            return View();
+            _mediator = mediator;
         }
 
-        // GET: PaymentController/Details/5
-        public ActionResult Details(int id)
+        // GET: api/Payment
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var payments = await _mediator.Send(new GetPaymentListQuery());
+            return Ok(payments);
         }
 
-        // GET: PaymentController/Create
-        public ActionResult Create()
+        // GET: api/Payment/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Details(int id)
         {
-            return View();
+            var payment = await _mediator.Send(new GetPaymentByIdQuery(id));
+            if (payment == null)
+                return NotFound();
+            return Ok(payment);
         }
 
-        // POST: PaymentController/Create
+        // POST: api/Payment
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([FromBody] PaymentModel model)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var result = await _mediator.Send(new AddPaymentCommand(model));
+            return CreatedAtAction(nameof(Details), new { id = result.Id }, result);
         }
 
-        // GET: PaymentController/Edit/5
-        public ActionResult Edit(int id)
+        // PUT: api/Payment/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Edit(Guid id, [FromBody] PaymentModel model)
         {
-            return View();
+            if (id != model.Id)
+                return BadRequest();
+
+            var result = await _mediator.Send(new EditPaymentCommand(model));
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
         }
 
-        // POST: PaymentController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        // DELETE: api/Payment/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: PaymentController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: PaymentController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var success = await _mediator.Send(new DeletePaymentCommand(id));
+            if (!success)
+                return NotFound();
+            return NoContent();
         }
     }
 }

@@ -1,83 +1,70 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Hyip_Payments.Command.UserCommand;
+using Hyip_Payments.Query.UserQuery;
+using Hyip_Payments.Models;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.User
 {
-    public class UserController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UserController : ControllerBase
     {
-        // GET: UserController
-        public ActionResult Index()
+        private readonly IMediator _mediator;
+
+        public UserController(IMediator mediator)
         {
-            return View();
+            _mediator = mediator;
         }
 
-        // GET: UserController/Details/5
-        public ActionResult Details(int id)
+        // GET: api/User
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var users = await _mediator.Send(new GetUserListQuery());
+            return Ok(users);
         }
 
-        // GET: UserController/Create
-        public ActionResult Create()
+        // GET: api/User/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Details(int id)
         {
-            return View();
+            var user = await _mediator.Send(new GetUserByIdQuery(id));
+            if (user == null)
+                return NotFound();
+            return Ok(user);
         }
 
-        // POST: UserController/Create
+        // POST: api/User
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([FromBody] UserModel model)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var result = await _mediator.Send(new AddUserCommand(model));
+            return CreatedAtAction(nameof(Details), new { id = result.Id }, result);
         }
 
-        // GET: UserController/Edit/5
-        public ActionResult Edit(int id)
+        // PUT: api/User/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Edit(int id, [FromBody] UserModel model)
         {
-            return View();
+            if (id != model.Id)
+                return BadRequest();
+
+            var result = await _mediator.Send(new EditUserCommand(model));
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
         }
 
-        // POST: UserController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        // DELETE: api/User/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: UserController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: UserController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var success = await _mediator.Send(new DeleteUserCommand(id));
+            if (!success)
+                return NotFound();
+            return NoContent();
         }
     }
 }

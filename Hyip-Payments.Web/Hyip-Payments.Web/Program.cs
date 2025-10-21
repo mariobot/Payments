@@ -98,8 +98,8 @@ namespace Hyip_Payments.Web
                 cfg.RegisterServicesFromAssemblyContaining<GetInvoiceByIdQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetMoneyByIdQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetMoneyQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetPaymentQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetInvoiceItemQuery>();
+                cfg.RegisterServicesFromAssemblyContaining<GetPaymentByIdQuery>();
+                cfg.RegisterServicesFromAssemblyContaining<GetPaymentListQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetCointByIdQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetCoinsQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetCountryByIdQuery>();

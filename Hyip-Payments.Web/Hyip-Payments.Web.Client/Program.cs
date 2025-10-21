@@ -12,8 +12,8 @@ namespace Hyip_Payments.Web.Client
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddAuthenticationStateDeserialization();
 
-            // Registers HttpClient with the base address of the app (by default)
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7263") });
+            // Registers HttpClient with the base address of the API
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7263/") });
 
             await builder.Build().RunAsync();
         }

@@ -1,12 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Hyip_Payments.Context;
+using Hyip_Payments.Models;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Hyip_Payments.Query.MoneyQuery
 {
-    internal class GetMoneyQuery
+    // Query to get all money records
+    public class GetMoneyQuery : IRequest<List<MoneyModel>>
     {
+    }
+
+    // Handler for GetMoneyQuery
+    public class GetMoneyQueryHandler : IRequestHandler<GetMoneyQuery, List<MoneyModel>>
+    {
+        private readonly PaymentsDbContext _dbContext;
+
+        public GetMoneyQueryHandler(PaymentsDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<List<MoneyModel>> Handle(GetMoneyQuery request, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Money
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
     }
 }

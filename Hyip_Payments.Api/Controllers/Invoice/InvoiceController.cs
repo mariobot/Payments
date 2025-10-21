@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Hyip_Payments.Command.InvoiceCommand;
+﻿using Hyip_Payments.Command.InvoiceCommand;
 using Hyip_Payments.Models;
 using Hyip_Payments.Query.InvoiceQuery;
 using MediatR;
@@ -50,12 +48,10 @@ namespace Hyip_Payments.Api.Controllers.Invoice
         public async Task<IActionResult> Edit(int id, [FromBody] InvoiceModel invoice)
         {
             invoice.Id = id;
-            // You would implement and use an EditInvoiceCommand here
-            // var result = await _mediator.Send(new EditInvoiceCommand(invoice));
-            // if (result == null)
-            //     return NotFound();
-            // return NoContent();
-            return NoContent(); // Placeholder
+            var result = await _mediator.Send(new EditInvoiceCommand(invoice));
+            if (result == null)
+               return NotFound();
+            return NoContent();
         }
 
         // DELETE: api/Invoice/5
@@ -63,11 +59,10 @@ namespace Hyip_Payments.Api.Controllers.Invoice
         public async Task<IActionResult> Delete(int id)
         {
             // You would implement and use a DeleteInvoiceCommand here
-            // var result = await _mediator.Send(new DeleteInvoiceCommand(id));
-            // if (!result)
-            //     return NotFound();
-            // return NoContent();
-            return NoContent(); // Placeholder
+            var result = await _mediator.Send(new DeleteInvoiceCommand(id));
+            if (!result)
+                return NotFound();
+            return NoContent();
         }
     }
 }

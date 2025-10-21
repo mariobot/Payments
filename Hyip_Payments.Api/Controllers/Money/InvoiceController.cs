@@ -1,83 +1,70 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Hyip_Payments.Models;
+using Hyip_Payments.Command.InvoiceCommand;
+using Hyip_Payments.Query.InvoiceQuery;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.Money
 {
-    public class InvoiceController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class InvoiceController : ControllerBase
     {
-        // GET: InvoiceController
-        public ActionResult Index()
+        private readonly IMediator _mediator;
+
+        public InvoiceController(IMediator mediator)
         {
-            return View();
+            _mediator = mediator;
         }
 
-        // GET: InvoiceController/Details/5
-        public ActionResult Details(int id)
+        // GET: api/Invoice
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var invoices = await _mediator.Send(new GetAllInvoicesQuery());
+            return Ok(invoices);
         }
 
-        // GET: InvoiceController/Create
-        public ActionResult Create()
+        // GET: api/Invoice/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Details(int id)
         {
-            return View();
+            var invoice = await _mediator.Send(new GetInvoiceByIdQuery(id));
+            if (invoice == null)
+                return NotFound();
+            return Ok(invoice);
         }
 
-        // POST: InvoiceController/Create
+        // POST: api/Invoice
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([FromBody] InvoiceModel model)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var result = await _mediator.Send(new AddInvoiceCommand(model));
+            return CreatedAtAction(nameof(Details), new { id = result.Id }, result);
         }
 
-        // GET: InvoiceController/Edit/5
-        public ActionResult Edit(int id)
+        // PUT: api/Invoice/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Edit(int id, [FromBody] InvoiceModel model)
         {
-            return View();
+            if (id != model.Id)
+                return BadRequest();
+
+            var result = await _mediator.Send(new EditInvoiceCommand(model));
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
         }
 
-        // POST: InvoiceController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        // DELETE: api/Invoice/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: InvoiceController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: InvoiceController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var success = await _mediator.Send(new DeleteInvoiceCommand(id));
+            if (!success)
+                return NotFound();
+            return NoContent();
         }
     }
 }

@@ -1,0 +1,96 @@
+﻿@page "/country/delete2/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Delete Country</h3>
+
+@if (isLoading)
+{
+    <p>Deleting country...</p>
+}
+else if (successMessage != null)
+{
+    <div class="alert alert-success">@successMessage</div>
+    <button class="btn btn-primary" @onclick="GoToList">Back to Country List</button>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+    <button class="btn btn-secondary" @onclick="GoToList">Back to Country List</button>
+}
+else if (country != null)
+{
+    <div class="alert alert-warning">
+        Are you sure you want to delete the country <strong>@country.Name</strong>?
+    </div>
+    <button class="btn btn-danger" @onclick="DeleteCountry">Delete</button>
+    <button class="btn btn-secondary" @onclick="GoToList">Cancel</button>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private CountryModel? country;
+    private bool isLoading = false;
+    private string? successMessage;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            country = await Http.GetFromJsonAsync<CountryModel>($"/api/Country/{Id}");
+            if (country == null)
+            {
+                errorMessage = "Country not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading country: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteCountry()
+    {
+        isLoading = true;
+        successMessage = null;
+        errorMessage = null;
+        try
+        {
+            var response = await Http.DeleteAsync($"/api/Country/{Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Country deleted successfully.";
+            }
+            else
+            {
+                errorMessage = $"Error: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Exception: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoToList()
+    {
+        NavigationManager.NavigateTo("/country/list");
+    }
+
+    // Example model (replace with shared type if available)
+    public class CountryModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? IsoCode { get; set; }
+        public string? Capital { get; set; }
+        public string? Region { get; set; }
+    }
+}

@@ -1,0 +1,109 @@
+﻿@page "/country/edit2/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Edit Country</h3>
+
+@if (isLoading)
+{
+    <p>Loading country...</p>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (country != null)
+{
+    <EditForm Model="@country" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>Name</label>
+            <InputText class="form-control" @bind-Value="country.Name" />
+        </div>
+        <div class="mb-3">
+            <label>ISO Code</label>
+            <InputText class="form-control" @bind-Value="country.IsoCode" />
+        </div>
+        <div class="mb-3">
+            <label>Capital</label>
+            <InputText class="form-control" @bind-Value="country.Capital" />
+        </div>
+        <div class="mb-3">
+            <label>Region</label>
+            <InputText class="form-control" @bind-Value="country.Region" />
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+        <button type="button" class="btn btn-secondary mt-3" @onclick="GoToList">Cancel</button>
+    </EditForm>
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success mt-3">@successMessage</div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private CountryModel? country;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            country = await Http.GetFromJsonAsync<CountryModel>($"/api/Country/{Id}");
+            if (country == null)
+            {
+                errorMessage = "Country not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading country: {ex.Message}";
+        }
+        isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        errorMessage = null;
+        successMessage = null;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"/api/Country/{Id}", country);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Country updated successfully!";
+            }
+            else
+            {
+                errorMessage = $"Error: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Exception: {ex.Message}";
+        }
+    }
+
+    private void GoToList()
+    {
+        NavigationManager.NavigateTo("/country/list");
+    }
+
+    // Example model (replace with shared type if available)
+    public class CountryModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? IsoCode { get; set; }
+        public string? Capital { get; set; }
+        public string? Region { get; set; }
+    }
+}

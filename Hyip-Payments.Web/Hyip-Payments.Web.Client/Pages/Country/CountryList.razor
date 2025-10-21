@@ -2,6 +2,7 @@
 
 @using Hyip_Payments.Models
 @inject HttpClient Http
+@inject NavigationManager NavigationManager
 
 <h3>Country List (API)</h3>
 
@@ -22,6 +23,8 @@ else
                 <th>ISO Code</th>
                 <th>Capital</th>
                 <th>Region</th>
+                <th>Edit</th>
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -32,6 +35,12 @@ else
                     <td>@country.IsoCode</td>
                     <td>@country.Capital</td>
                     <td>@country.Region</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => EditCountry(country.Id)">Edit</button>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteCountry(country.Id)">Delete</button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -44,5 +53,15 @@ else
     protected override async Task OnInitializedAsync()
     {
         countries = await Http.GetFromJsonAsync<List<CountryModel>>("api/Country");
+    }
+
+    private void EditCountry(int id)
+    {
+        NavigationManager.NavigateTo($"/country/edit2/{id}");
+    }
+
+    private void DeleteCountry(int id)
+    {
+        NavigationManager.NavigateTo($"/country/delete2/{id}");
     }
 }

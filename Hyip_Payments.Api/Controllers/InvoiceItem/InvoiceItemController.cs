@@ -30,7 +30,7 @@ namespace Hyip_Payments.Api.Controllers.InvoiceItem
         [HttpGet("{id}")]
         public async Task<IActionResult> Details(int id)
         {
-            var item = await _mediator.Send(new GetPaymentByIdQuery(id));
+            var item = await _mediator.Send(new GetInvoiceItemByIdQuery(id));
             if (item == null)
                 return NotFound();
             return Ok(item);

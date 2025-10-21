@@ -27,7 +27,7 @@ namespace Hyip_Payments.Api.Controllers.Payment
 
         // GET: api/Payment/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(Guid id)
         {
             var payment = await _mediator.Send(new GetPaymentByIdQuery(id));
             if (payment == null)

@@ -32,6 +32,12 @@ namespace Hyip_Payments.Web
                 .AddInteractiveWebAssemblyComponents()
                 .AddAuthenticationStateSerialization();
 
+            // Add HttpClient for WebAssembly components
+            builder.Services.AddScoped(sp => new HttpClient 
+            { 
+                BaseAddress = new Uri("https://localhost:7263")
+            });
+
             // Identity services 
             // TODO pending while fix the migrations of the Identity
             builder.Services.AddCascadingAuthenticationState();
@@ -109,7 +115,7 @@ namespace Hyip_Payments.Web
             builder.Services.AddIdentityCore<ApplicationUser>(options =>
                 {
                     options.SignIn.RequireConfirmedAccount = false;
-                    options.Password.RequireNonAlphanumeric = true;
+                    options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequireUppercase = false;
                     options.Password.RequireLowercase = false;
                     options.Password.RequireDigit = false;

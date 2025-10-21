@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Web", "Hyip-P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip-Payments.Web.Client", "Hyip-Payments.Web\Hyip-Payments.Web.Client\Hyip-Payments.Web.Client.csproj", "{5CC4598E-B629-44F3-B3F2-90399DC31500}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyip_Payments.Api", "Hyip_Payments.Api\Hyip_Payments.Api.csproj", "{7A1F30D1-2D33-4132-A309-EF0D3253DE73}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{5CC4598E-B629-44F3-B3F2-90399DC31500}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CC4598E-B629-44F3-B3F2-90399DC31500}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CC4598E-B629-44F3-B3F2-90399DC31500}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1F30D1-2D33-4132-A309-EF0D3253DE73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F30D1-2D33-4132-A309-EF0D3253DE73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F30D1-2D33-4132-A309-EF0D3253DE73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F30D1-2D33-4132-A309-EF0D3253DE73}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -140,6 +140,47 @@ DELETE {{host}}/api/Invoice/1
 
 ###
 
+### InvoiceItem Endpoints
+
+GET {{host}}/api/InvoiceItem
+Accept: application/json
+
+###
+
+GET {{host}}/api/InvoiceItem/1
+Accept: application/json
+
+###
+
+POST {{host}}/api/InvoiceItem
+Content-Type: application/json
+
+{
+  "invoiceId": 1,
+  "itemName": "Service Fee",
+  "quantity": 2,
+  "unitPrice": 50
+}
+
+###
+
+PUT {{host}}/api/InvoiceItem/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "invoiceId": 1,
+  "itemName": "Service Fee Updated",
+  "quantity": 3,
+  "unitPrice": 60
+}
+
+###
+
+DELETE {{host}}/api/InvoiceItem/1
+
+###
+
 ### Money Endpoints
 
 GET {{host}}/api/Money
@@ -276,4 +317,3 @@ Content-Type: application/json
 DELETE {{host}}/api/User/1
 
 ###
-

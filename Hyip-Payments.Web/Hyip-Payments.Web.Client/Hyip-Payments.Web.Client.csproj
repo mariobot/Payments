@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -17,6 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Hyip-Payments.Models\Hyip-Payments.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Pages\Money\" />
+    <Folder Include="Pages\Invoice\" />
+    <Folder Include="Pages\invoiceItem\" />
   </ItemGroup>
 
 </Project>

@@ -50,6 +50,17 @@ namespace Hyip_Payments.Api
                 cfg.RegisterServicesFromAssemblyContaining<AddUserCommand>();
             });
 
+            // Add CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.WithOrigins("https://localhost:5244", "https://localhost:7030")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
+
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
@@ -64,6 +75,8 @@ namespace Hyip_Payments.Api
 
             app.UseHttpsRedirection();
 
+            app.UseCors();
+            
             app.UseAuthorization();
 
 

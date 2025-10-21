@@ -11,7 +11,7 @@ namespace Hyip_Payments.Query.PaymentQuery
     public class GetPaymentByIdQuery : IRequest<PaymentModel?>
     {
         public Guid Id { get; }
-        public GetPaymentByIdQuery(int id) => Id = id;
+        public GetPaymentByIdQuery(Guid id) => Id = id;
     }
 
     // Handler for GetPaymentByIdQuery

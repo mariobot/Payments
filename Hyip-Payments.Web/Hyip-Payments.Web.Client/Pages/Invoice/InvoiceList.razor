@@ -1,0 +1,93 @@
+﻿@page "/invoice"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Invoice List</h3>
+
+<button class="btn btn-primary mb-3" @onclick="GoToCreate">Create New Invoice</button>
+
+@if (isLoading)
+{
+    <p>Loading invoices...</p>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (invoices != null && invoices.Count > 0)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Invoice Number</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Total Amount</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var invoice in invoices)
+            {
+                <tr>
+                    <td>@invoice.InvoiceNumber</td>
+                    <td>@invoice.InvoiceDate.ToShortDateString()</td>
+                    <td>@invoice.Description</td>
+                    <td>@invoice.TotalAmount</td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" @onclick="() => GoToEdit(invoice.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger me-1" @onclick="() => GoToDelete(invoice.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No invoices found.</p>
+}
+
+@code {
+    private List<InvoiceModel> invoices = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            invoices = await Http.GetFromJsonAsync<List<InvoiceModel>>("/api/Invoice") ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading invoices: {ex.Message}";
+        }
+        isLoading = false;
+    }
+
+    private void GoToCreate()
+    {
+        NavigationManager.NavigateTo("/invoice/add");
+    }
+
+    private void GoToEdit(int id)
+    {
+        NavigationManager.NavigateTo($"/invoice/edit/{id}");
+    }
+
+    private void GoToDelete(int id)
+    {
+        NavigationManager.NavigateTo($"/invoice/delete/{id}");
+    }
+
+    // Example model (replace with shared type if available)
+    public class InvoiceModel
+    {
+        public int Id { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public DateTime InvoiceDate { get; set; }
+        public string? Description { get; set; }
+        public decimal TotalAmount { get; set; }
+    }
+}

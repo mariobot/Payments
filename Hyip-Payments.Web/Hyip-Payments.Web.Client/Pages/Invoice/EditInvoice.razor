@@ -1,0 +1,149 @@
+﻿@page "/invoice/edit/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Edit Invoice</h3>
+
+@if (isLoading)
+{
+    <p>Loading invoice...</p>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (invoice != null)
+{
+    <EditForm Model="@invoice" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>Invoice Number</label>
+            <InputText class="form-control" @bind-Value="invoice.InvoiceNumber" />
+        </div>
+        <div class="mb-3">
+            <label>Invoice Date</label>
+            <InputDate class="form-control" @bind-Value="invoice.InvoiceDate" />
+        </div>
+        <div class="mb-3">
+            <label>Description</label>
+            <InputText class="form-control" @bind-Value="invoice.Description" />
+        </div>
+        <div class="mb-3">
+            <label>Total Amount</label>
+            <InputNumber class="form-control" @bind-Value="invoice.TotalAmount" />
+        </div>
+
+        <h5>Invoice Items</h5>
+        @foreach (var item in invoice.Items)
+        {
+            <div class="border p-2 mb-2">
+                <div>
+                    <label>Item Name</label>
+                    <InputText class="form-control" @bind-Value="item.ItemName" />
+                </div>
+                <div>
+                    <label>Quantity</label>
+                    <InputNumber class="form-control" @bind-Value="item.Quantity" />
+                </div>
+                <div>
+                    <label>Unit Price</label>
+                    <InputNumber class="form-control" @bind-Value="item.UnitPrice" />
+                </div>
+                <button type="button" class="btn btn-danger mt-2" @onclick="@(() => RemoveItem(item))">Remove</button>
+            </div>
+        }
+        <button type="button" class="btn btn-secondary" @onclick="AddItem">Add Item</button>
+
+        <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+        <button type="button" class="btn btn-secondary mt-3" @onclick="GoToList">Cancel</button>
+    </EditForm>
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success mt-3">@successMessage</div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private InvoiceModel? invoice;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            invoice = await Http.GetFromJsonAsync<InvoiceModel>($"/api/Invoice/{Id}");
+            if (invoice == null)
+            {
+                errorMessage = "Invoice not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading invoice: {ex.Message}";
+        }
+        isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        errorMessage = null;
+        successMessage = null;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"/api/Invoice/{Id}", invoice);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Invoice updated successfully!";
+            }
+            else
+            {
+                errorMessage = $"Error: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Exception: {ex.Message}";
+        }
+    }
+
+    private void AddItem()
+    {
+        invoice?.Items.Add(new InvoiceItemModel());
+    }
+
+    private void RemoveItem(InvoiceItemModel item)
+    {
+        invoice?.Items.Remove(item);
+    }
+
+    private void GoToList()
+    {
+        NavigationManager.NavigateTo("/invoice");
+    }
+
+    // Example models (replace with shared types if available)
+    public class InvoiceModel
+    {
+        public int Id { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public DateTime InvoiceDate { get; set; }
+        public string? Description { get; set; }
+        public decimal TotalAmount { get; set; }
+        public List<InvoiceItemModel> Items { get; set; } = new();
+    }
+
+    public class InvoiceItemModel
+    {
+        public int Id { get; set; }
+        public string ItemName { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+    }
+}

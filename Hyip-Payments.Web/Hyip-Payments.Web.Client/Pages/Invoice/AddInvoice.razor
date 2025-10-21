@@ -1,0 +1,119 @@
+﻿@page "/invoice/add"
+@inject HttpClient Http
+
+<h3>Add Invoice</h3>
+
+<EditForm Model="@invoice" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Invoice Number</label>
+        <InputText class="form-control" @bind-Value="invoice.InvoiceNumber" />
+    </div>
+    <div class="mb-3">
+        <label>Invoice Date</label>
+        <InputDate class="form-control" @bind-Value="invoice.InvoiceDate" />
+    </div>
+    <div class="mb-3">
+        <label>Description</label>
+        <InputText class="form-control" @bind-Value="invoice.Description" />
+    </div>
+    <div class="mb-3">
+        <label>Total Amount</label>
+        <InputNumber class="form-control" @bind-Value="invoice.TotalAmount" />
+    </div>
+
+    <h5>Invoice Items</h5>
+    @foreach (var item in invoice.Items)
+    {
+        <div class="border p-2 mb-2">
+            <div>
+                <label>Item Name</label>
+                <InputText class="form-control" @bind-Value="item.ItemName" />
+            </div>
+            <div>
+                <label>Quantity</label>
+                <InputNumber class="form-control" @bind-Value="item.Quantity" />
+            </div>
+            <div>
+                <label>Unit Price</label>
+                <InputNumber class="form-control" @bind-Value="item.UnitPrice" />
+            </div>
+            <button type="button" class="btn btn-danger mt-2" @onclick="@(() => RemoveItem(item))">Remove</button>
+        </div>
+    }
+    <button type="button" class="btn btn-secondary" @onclick="AddItem">Add Item</button>
+
+    <button type="submit" class="btn btn-primary mt-3">Submit</button>
+</EditForm>
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+@code {
+    private InvoiceModel invoice = new InvoiceModel
+    {
+        InvoiceDate = DateTime.Today,
+        Items = new List<InvoiceItemModel>()
+    };
+
+    private string? successMessage;
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        successMessage = null;
+        errorMessage = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/Invoice", invoice);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Invoice added successfully!";
+                invoice = new InvoiceModel { InvoiceDate = DateTime.Today, Items = new List<InvoiceItemModel>() };
+            }
+            else
+            {
+                errorMessage = $"Error: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Exception: {ex.Message}";
+        }
+    }
+
+    private void AddItem()
+    {
+        invoice.Items.Add(new InvoiceItemModel());
+    }
+
+    private void RemoveItem(InvoiceItemModel item)
+    {
+        invoice.Items.Remove(item);
+    }
+
+    // Example models (adjust namespaces/types as needed)
+    public class InvoiceModel
+    {
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public DateTime InvoiceDate { get; set; }
+        public string? Description { get; set; }
+        public decimal TotalAmount { get; set; }
+        public List<InvoiceItemModel> Items { get; set; } = new();
+    }
+
+    public class InvoiceItemModel
+    {
+        public string ItemName { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+    }
+}

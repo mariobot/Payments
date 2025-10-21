@@ -1,0 +1,48 @@
+﻿@page "/country/list"
+
+@using Hyip_Payments.Models
+@inject HttpClient Http
+
+<h3>Country List (API)</h3>
+
+@if (countries == null)
+{
+    <div>Loading countries...</div>
+}
+else if (!countries.Any())
+{
+    <div class="alert alert-info">No countries found.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>ISO Code</th>
+                <th>Capital</th>
+                <th>Region</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var country in countries)
+            {
+                <tr>
+                    <td>@country.Name</td>
+                    <td>@country.IsoCode</td>
+                    <td>@country.Capital</td>
+                    <td>@country.Region</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CountryModel>? countries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        countries = await Http.GetFromJsonAsync<List<CountryModel>>("api/Country");
+    }
+}

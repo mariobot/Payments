@@ -1,12 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Command
+using Hyip_Payments.Context;
+using Hyip_Payments.Models;
+using MediatR;
 
-namespace Hyip_Payments.Query.UserQuery
+public class AddUserCommand : IRequest<UserModel>
 {
-    internal class GetUserQuery
+    public UserModel User { get; }
+    public AddUserCommand(UserModel user) => User = user;
+}
+
+// Handler
+public class AddUserCommandHandler : IRequestHandler<AddUserCommand, UserModel>
+{
+    private readonly PaymentsDbContext _context;
+    public AddUserCommandHandler(PaymentsDbContext context) => _context = context;
+
+    public async Task<UserModel> Handle(AddUserCommand request, CancellationToken cancellationToken)
     {
+        _context.Users.Add(request.User);
+        await _context.SaveChangesAsync(cancellationToken);
+        return request.User;
     }
 }

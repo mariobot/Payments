@@ -23,7 +23,7 @@ else if (country != null)
     <div class="alert alert-warning">
         Are you sure you want to delete the country <strong>@country.Name</strong>?
     </div>
-    <button class="btn btn-danger" @onclick="DeleteCountry">Delete</button>
+    <button class="btn btn-danger" @onclick="DeleteCountry2">Delete</button>
     <button class="btn btn-secondary" @onclick="GoToList">Cancel</button>
 }
 
@@ -52,7 +52,7 @@ else if (country != null)
         }
     }
 
-    private async Task DeleteCountry()
+    private async Task DeleteCountry2()
     {
         isLoading = true;
         successMessage = null;

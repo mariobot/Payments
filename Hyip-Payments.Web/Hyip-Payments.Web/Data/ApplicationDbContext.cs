@@ -8,7 +8,7 @@ namespace Hyip_Payments.Web.Data
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            Debugger.Launch();
+            //Debugger.Launch();
             base.OnModelCreating(modelBuilder);
 
             // Add your custom configuration here

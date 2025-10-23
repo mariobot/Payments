@@ -11,8 +11,7 @@ namespace Hyip_Payments.Context
         {
         }
 
-        public DbSet<CountryModel> Countries { get; set; }
-        
+        public DbSet<CountryModel> Countries { get; set; }        
         public DbSet<MoneyModel> Money { get; set; }        
         public DbSet<UserModel> Users { get; set; }
         public DbSet<InvoiceModel> Invoices { get; set; }

@@ -1,0 +1,102 @@
+﻿@page "/brand/delete/{BrandId:int}"
+
+@inject HttpClient Http
+
+<h3>DeleteBrand</h3>
+
+@code {
+
+}
+<h3>Delete Brand</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (brand == null)
+{
+    <p>Brand not found.</p>
+}
+else
+{
+    <div>
+        <p>Are you sure you want to delete the following brand?</p>
+        <p><strong>Name:</strong> @brand.Name</p>
+        <p><strong>Description:</strong> @brand.Description</p>
+
+        <button class="btn btn-danger" @onclick="DeleteBrand">Delete</button>
+        <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    [Parameter] public int BrandId { get; set; }
+
+    private BrandModel? brand;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            brand = await Http.GetFromJsonAsync<BrandModel>($"api/brands/{BrandId}");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading the brand: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteBrand()
+    {
+        message = null;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/brands/{BrandId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Brand deleted successfully!";
+                brand = null; // Clear the brand after deletion
+            }
+            else
+            {
+                message = "Failed to delete brand. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void Cancel()
+    {
+        // Navigate back or perform any other cancel action
+        message = "Deletion canceled.";
+    }
+
+    public class BrandModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        public string? Description { get; set; }
+    }
+}

@@ -1,0 +1,79 @@
+﻿@page "/brand/add"
+
+@using static System.Net.WebRequestMethods
+
+<h3>Add Brand</h3>
+
+<EditForm Model="brand" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="name" class="form-label">Brand Name</label>
+        <InputText id="name" class="form-control" @bind-Value="brand.Name" />
+        <ValidationMessage For="@(() => brand.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <InputTextArea id="description" class="form-control" @bind-Value="brand.Description" />
+        <ValidationMessage For="@(() => brand.Description)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Brand</button>
+</EditForm>
+
+@if (isSubmitting)
+{
+    <p>Submitting...</p>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private BrandModel brand = new BrandModel();
+    private bool isSubmitting = false;
+    private string? message;
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        message = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/brands", brand);
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Brand added successfully!";
+                brand = new BrandModel(); // Reset the form
+            }
+            else
+            {
+                message = "Failed to add brand. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    public class BrandModel
+    {
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        public string? Description { get; set; }
+    }
+}

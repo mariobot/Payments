@@ -1,0 +1,79 @@
+﻿@page "/brand/list"
+
+@inject HttpClient Http
+
+<h3>Brand List</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (brands == null || !brands.Any())
+{
+    <p>No brands available.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var brand in brands)
+            {
+                <tr>
+                    <td>@brand.Name</td>
+                    <td>@brand.Description</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" href="/brand/edit/@brand.Id">Edit</a>
+                        <a class="btn btn-danger btn-sm" href="/brand/delete/@brand.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private List<BrandModel>? brands;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            brands = await Http.GetFromJsonAsync<List<BrandModel>>("api/brands");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading the brands: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class BrandModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        public string? Description { get; set; }
+    }
+}

@@ -1,3 +1,4 @@
+using Hyip_Payments.Api.Extensions;
 using Hyip_Payments.Command.BrandCommand;
 using Hyip_Payments.Command.CategoryCommand;
 using Hyip_Payments.Command.CoinCommand;
@@ -33,54 +34,7 @@ namespace Hyip_Payments.Api
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
-
-            // Add MediatR
-            builder.Services.AddMediatR(cfg => {
-                // Command assemblies
-                cfg.RegisterServicesFromAssemblyContaining<AddCoinCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditCoinCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<DeleteCoinCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddCountryCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditCountryCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<DeleteCountryCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddInvoiceCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditInvoiceCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<DeleteInvoiceCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddMoneyCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditMoneyCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<DeleteMoneyCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddPaymentCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddUserCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddBrandCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditBrandCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<DeleteBrandCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddCategoryCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditCategoryCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<DeleteCategoryCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddProductCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditProductCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<DeleteProductCommand>();
-
-                // Query assemblies
-                cfg.RegisterServicesFromAssemblyContaining<GetCoinsQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCointByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCountryListQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCountryByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetAllInvoicesQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetInvoiceByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetMoneyQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetMoneyByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetPaymentListQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetPaymentByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetBrandListQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetBrandByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCategoriesListQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCategoryByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetProductListQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetProductByIdQuery>();
-            });
-
-            // Add CORS
+            
             // Add CORS policy
             builder.Services.AddCors(options =>
             {
@@ -91,6 +45,9 @@ namespace Hyip_Payments.Api
                           .AllowAnyHeader();
                 });
             });
+
+            // Add Application Services
+            builder.Services.AddApplicationServices(connectionString);
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

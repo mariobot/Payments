@@ -1,0 +1,64 @@
+﻿@page "/editmoney/{Id:int}"
+@using System.Net.Http.Json
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Edit Money</h3>
+
+@if (money == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="money" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="amount" class="form-label">Amount</label>
+            <InputNumber id="amount" class="form-control" @bind-Value="money.Amount" />
+        </div>
+        <div class="mb-3">
+            <label for="currency" class="form-label">Currency</label>
+            <InputText id="currency" class="form-control" @bind-Value="money.Currency" />
+        </div>
+        <div class="mb-3">
+            <label for="country" class="form-label">Country</label>
+            <InputText id="country" class="form-control" @bind-Value="money.Country" />
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private MoneyModel? money;
+
+    protected override async Task OnInitializedAsync()
+    {
+        money = await Http.GetFromJsonAsync<MoneyModel>($"api/money/{Id}");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var response = await Http.PutAsJsonAsync($"api/money/{Id}", money);
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/moneylist");
+        }
+        else
+        {
+            // Handle error (optional)
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/moneylist");
+    }
+}

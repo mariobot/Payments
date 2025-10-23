@@ -1,0 +1,77 @@
+﻿@page "/money/list"
+@using System.Net.Http.Json
+@using Hyip_Payments.Models
+@inject HttpClient Http
+
+<h3>Money List</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (moneyList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!moneyList.Any())
+{
+    <p>No money records found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Currency</th>
+                <th>Slug</th>
+                <th>Edit</th>
+                <th>Delete</th>
+                <!-- Add more columns as needed -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var money in moneyList)
+            {
+                <tr>
+                    <td>@money.Id</td>
+                    <td>@money.Amount</td>
+                    <td>@money.Currency</td>
+                    <td>@money.Slug</td>
+                    <td>
+                        <a class="btn btn-sm btn-primary" href="@($"/editmoney/{money.Id}")">Edit</a>
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-danger" href="@($"/deletemoney/{money.Id}")">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<MoneyModel>? moneyList;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/money");
+            if (response.IsSuccessStatusCode)
+            {
+                moneyList = await response.Content.ReadFromJsonAsync<List<MoneyModel>>();
+            }
+            else
+            {
+                errorMessage = $"Error loading money list (Status: {(int)response.StatusCode}).";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+}

@@ -87,7 +87,7 @@ namespace Hyip_Payments.Api
                 {
                     policy.WithOrigins(
                         "https://localhost:7193", "http://localhost:5244", 
-                        "https://localhost:5244", "http://localhost:65377"
+                        "https://localhost:5244", "http://localhost:65377", "http://localhost:7263"
                     )
                     .AllowAnyMethod()
                     .AllowAnyHeader()

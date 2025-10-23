@@ -15,6 +15,7 @@ using Hyip_Payments.Query.PaymentQuery;
 using Hyip_Payments.Web.Components;
 using Hyip_Payments.Web.Components.Account;
 using Hyip_Payments.Web.Data;
+using Hyip_Payments.Web.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -79,50 +80,6 @@ namespace Hyip_Payments.Web
                 });
             });
 
-            // Add MediatR
-
-            // User Commands
-            builder.Services.AddScoped<IRequestHandler<AddUserCommand, UserModel>, AddUserCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditUserCommand, UserModel?>, EditUserCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteUserCommand, bool>, DeleteUserCommandHandler>();
-
-            // Payment Commands
-            builder.Services.AddScoped<IRequestHandler<AddPaymentCommand, PaymentModel>, AddPaymentCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditPaymentCommand, PaymentModel?>, EditPaymentCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeletePaymentCommand, bool>, DeletePaymentCommandHandler>();
-
-            // Money Commands
-            builder.Services.AddScoped<IRequestHandler<AddMoneyCommand, MoneyModel>, AddMoneyCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditMoneyCommand, MoneyModel?>, EditMoneyCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteMoneyCommand, bool>, DeleteMoneyCommandHandler>();
-
-            // Invoice Commands
-            builder.Services.AddScoped<IRequestHandler<AddInvoiceCommand, InvoiceModel>, AddInvoiceCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditInvoiceCommand, InvoiceModel?>, EditInvoiceCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteInvoiceCommand, bool>, DeleteInvoiceCommandHandler>();
-
-            // InvoiceItem Commands
-            builder.Services.AddScoped<IRequestHandler<AddInvoiceItemCommand, InvoiceItemModel>, AddInvoiceItemCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditInvoiceItemCommand, InvoiceItemModel?>, EditInvoiceItemCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteInvoiceItemCommand, bool>, DeleteInvoiceItemCommandHandler>();
-
-            // Register all queries. 
-            builder.Services.AddMediatR(cfg => {
-                cfg.RegisterServicesFromAssemblyContaining<GetAllInvoicesQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetInvoiceByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetMoneyByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetMoneyQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetPaymentByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetPaymentListQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCointByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCoinsQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<GetCountryByIdQuery>();
-                cfg.RegisterServicesFromAssemblyContaining<AddCountryCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<AddCoinCommand>();
-                cfg.RegisterServicesFromAssemblyContaining<EditCoinCommand>();
-            });
-
-
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             // TODO pendig while fix the migrations of the Identity
@@ -140,6 +97,8 @@ namespace Hyip_Payments.Web
 
             // TODO pending identity migrations
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+            builder.Services.AddWebApplicationServices("http://localhost:5009");
 
             var app = builder.Build();
 

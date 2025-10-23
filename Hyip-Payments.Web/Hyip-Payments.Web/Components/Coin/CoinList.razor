@@ -1,5 +1,110 @@
-﻿<h3>CountryList</h3>
+﻿@page "/AddCoin"
+
+@using Hyip_Payments.Models
+@using Hyip_Payments.Command.CoinCommand
+@using Hyip_Payments.Query.CoinQuery
+@using MediatR
+@inject IMediator Mediator
+
+<h3>Add Coin</h3>
+
+<EditForm Model="@coin" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Symbol</label>
+        <InputText class="form-control" @bind-Value="coin.Symbol" />
+        <ValidationMessage For="@(() => coin.Symbol)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <InputText class="form-control" @bind-Value="coin.Name" />
+        <ValidationMessage For="@(() => coin.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <InputTextArea class="form-control" @bind-Value="coin.Description" />
+        <ValidationMessage For="@(() => coin.Description)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Current Price</label>
+        <InputNumber class="form-control" @bind-Value="coin.CurrentPrice" />
+        <ValidationMessage For="@(() => coin.CurrentPrice)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Network</label>
+        <InputText class="form-control" @bind-Value="coin.Network" />
+        <ValidationMessage For="@(() => coin.Network)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Coin</button>
+</EditForm>
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+
+@if (coinList != null)
+{
+    <h4 class="mt-4">Current Coins</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Current Price</th>
+                <th>Network</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in coinList)
+            {
+                <tr>
+                    <td>@c.Symbol</td>
+                    <td>@c.Name</td>
+                    <td>@c.Description</td>
+                    <td>@c.CurrentPrice</td>
+                    <td>@c.Network</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
+    private CoinModel coin = new();
+    private string? successMessage;
+    private List<CoinModel>? coinList;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCoinsAsync();
+    }
+
+    private async Task LoadCoinsAsync()
+    {
+        coinList = await Mediator.Send(new GetCoinsQuery());
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var result = await Mediator.Send(new AddCoinCommand(coin));
+            successMessage = $"Coin '{result.Name}' added successfully!";
+            coin = new(); // Reset form
+            await LoadCoinsAsync(); // Refresh coin list
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error: {ex.Message}";
+        }
+    }
 }

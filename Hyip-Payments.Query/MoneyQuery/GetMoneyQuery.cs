@@ -22,9 +22,19 @@ namespace Hyip_Payments.Query.MoneyQuery
 
         public async Task<List<MoneyModel>> Handle(GetMoneyQuery request, CancellationToken cancellationToken)
         {
-            return await _dbContext.Money
-                .AsNoTracking()
+            try
+            {
+                var tmp = await _dbContext.Money
                 .ToListAsync(cancellationToken);
+
+                return await _dbContext.Money
+                .ToListAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
     }
 }

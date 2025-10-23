@@ -21,8 +21,15 @@ namespace Hyip_Payments.Api.Controllers.Money
         [HttpGet]
         public async Task<ActionResult<List<MoneyModel>>> GetAll()
         {
-            var moneyList = await _mediator.Send(new GetMoneyQuery());
-            return Ok(moneyList);
+            try
+            {
+                var moneyList = await _mediator.Send(new GetMoneyQuery());
+                return Ok(moneyList);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         // GET: api/Money/5

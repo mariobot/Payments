@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.Connection
 {
+
+    [ApiController]
+    [Route("api/[controller]")]
     public class ConnectionController : Controller
     {
         private readonly ILogger<ConnectionController> _logger;
@@ -18,79 +21,26 @@ namespace Hyip_Payments.Api.Controllers.Connection
         }
 
         // GET: ConnectionController
-        public ActionResult Index()
+        [HttpGet]
+        public ActionResult GetConnection()
         {
             string? connString = _configuration.GetConnectionString("DefaultConnection") ?? "Not Found";
-            return connString != null ? Content(connString) : Content("Connection string not found.");                            
-        }
+            bool canConnect = false;
+            string message;
 
-        // GET: ConnectionController/Details/5
-        public ActionResult Details(int id)
-        {
-            return null;
-        }
-
-        // GET: ConnectionController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: ConnectionController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
             try
             {
-                return RedirectToAction(nameof(Index));
+                canConnect = _context.Database.CanConnect();
+                message = canConnect
+                    ? $"Connection string: {connString}\nDatabase connection: SUCCESS"
+                    : $"Connection string: {connString}\nDatabase connection: FAILED";
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                message = $"Connection string: {connString}\nDatabase connection: ERROR - {ex.Message}";
             }
-        }
 
-        // GET: ConnectionController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: ConnectionController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: ConnectionController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: ConnectionController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            return Ok(message);
         }
     }
 }

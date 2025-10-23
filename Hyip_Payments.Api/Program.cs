@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Hyip_Payments.Api
 {
     public class Program
-    {
+    { 
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +14,10 @@ namespace Hyip_Payments.Api
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+            var defaultEndpoint = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                throw new InvalidOperationException("default endpoint.");
+
+
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
@@ -21,9 +25,9 @@ namespace Hyip_Payments.Api
             // Add CORS policy
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowSpecificOrigins", policy =>
+                options.AddPolicy("AllowAllOrigins", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5244", "https://localhost:7193", "https://localhost:44348/")
+                    policy.AllowAnyOrigin()
                           .AllowAnyMethod()
                           .AllowAnyHeader();
                 });
@@ -53,7 +57,7 @@ namespace Hyip_Payments.Api
 
             app.UseHttpsRedirection();
 
-            //app.UseCors("AllowSpecificOrigins");
+            app.UseCors("AllowAllOrigins");
             
             app.UseAuthorization();
 

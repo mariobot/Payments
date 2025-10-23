@@ -1,6 +1,9 @@
-﻿@page "/country/update/{id}"
+﻿@page "/country/update/{id:int}"
 
+@using Hyip_Payments.Command.CountryCommand
 @using Hyip_Payments.Models
+@using MediatR
+@inject IMediator Mediator
 
 <h3>Edit Country</h3>
 
@@ -66,6 +69,9 @@ else
 }
 
 @code {
+    [Parameter]
+    public int id { get; set; }
+
     private List<CountryModel>? countries;
     private int? selectedCountryId;
     private CountryModel? selectedCountry;
@@ -74,16 +80,36 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        countries = await LoadCountriesAsync();
+        try
+        {
+            countries = await Mediator.Send(new Hyip_Payments.Query.CountryQuery.GetCountryListQuery());
+            // If route parameter is present, select that country
+            if (id > 0)
+            {
+                selectedCountryId = id;
+                selectedCountry = await Mediator.Send(new Hyip_Payments.Query.CountryQuery.GetCountryByIdQuery(id));
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading countries: {ex.Message}";
+        }
     }
 
     private async Task OnCountryChanged(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var id))
+        if (int.TryParse(e.Value?.ToString(), out var countryId))
         {
-            selectedCountryId = id;
-            selectedCountry = countries?.FirstOrDefault(c => c.Id == id);
-            // Optionally, fetch the country from the server for up-to-date data
+            selectedCountryId = countryId;
+            try
+            {
+                selectedCountry = await Mediator.Send(new Hyip_Payments.Query.CountryQuery.GetCountryByIdQuery(countryId));
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error loading country: {ex.Message}";
+                selectedCountry = null;
+            }
         }
         else
         {
@@ -101,35 +127,16 @@ else
 
         try
         {
-            // TODO: Replace with your actual update logic/service call
-            await UpdateCountryAsync(selectedCountry);
+            await Mediator.Send(new EditCountryCommand(selectedCountry));
 
             successMessage = "Country updated successfully.";
             errorMessage = null;
-            countries = await LoadCountriesAsync();
+            countries = await Mediator.Send(new Hyip_Payments.Query.CountryQuery.GetCountryListQuery());
         }
         catch (Exception ex)
         {
             errorMessage = $"Error updating country: {ex.Message}";
             successMessage = null;
         }
-    }
-
-    // Placeholder for loading countries
-    private Task<List<CountryModel>> LoadCountriesAsync()
-    {
-        // Replace with actual data fetching logic
-        return Task.FromResult(new List<CountryModel>
-        {
-            new CountryModel { Id = 1, Name = "USA", IsoCode = "USA", Capital = "Washington", Region = "Americas" },
-            new CountryModel { Id = 2, Name = "Canada", IsoCode = "CAN", Capital = "Ottawa", Region = "Americas" }
-        });
-    }
-
-    // Placeholder for updating a country
-    private Task UpdateCountryAsync(CountryModel country)
-    {
-        // Replace with actual update logic
-        return Task.CompletedTask;
     }
 }

@@ -1,9 +1,10 @@
 ﻿@page "/AddCountry"
 
+@using Hyip_Payments.Command.CountryCommand
 @using Hyip_Payments.Models
+@using MediatR
 @inject NavigationManager NavigationManager
-@inject MediatR.IMediator Mediator
-
+@inject IMediator Mediator
 
 <h3>Add Country</h3>
 
@@ -49,8 +50,16 @@
 
     private async Task HandleValidSubmit()
     {
-        var result = await Mediator.Send(new Hyip_Payments.Command.CountryCommand.AddCountryCommand(country));
-        successMessage = $"Country '{result.Name}' added successfully!";
-        country = new(); // Reset form
+        try
+        {
+            // Use MediatR to send the AddCountryCommand
+            var result = await Mediator.Send(new AddCountryCommand(country));
+            successMessage = $"Country '{result.Name}' added successfully!";
+            country = new();
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error: {ex.Message}";
+        }
     }
 }

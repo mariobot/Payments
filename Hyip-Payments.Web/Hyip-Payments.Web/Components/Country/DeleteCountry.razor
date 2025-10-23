@@ -1,65 +1,48 @@
-﻿@page "/country/delete/{id}"
+﻿@page "/country/delete/{id:int}"
 
 @using Hyip_Payments.Models
+@using MediatR
 @inject NavigationManager NavigationManager
-@inject MediatR.IMediator Mediator
+@inject IMediator Mediator
 
 <h3>Delete Country</h3>
 
-<EditForm Model="@country" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="mb-3">
-        <label class="form-label">Country Name</label>
-        <InputText class="form-control" @bind-Value="country.Name" />
-        <ValidationMessage For="@(() => country.Name)" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">ISO Code</label>
-        <InputText class="form-control" @bind-Value="country.IsoCode" />
-        <ValidationMessage For="@(() => country.IsoCode)" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Capital</label>
-        <InputText class="form-control" @bind-Value="country.Capital" />
-        <ValidationMessage For="@(() => country.Capital)" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Region</label>
-        <InputText class="form-control" @bind-Value="country.Region" />
-        <ValidationMessage For="@(() => country.Region)" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">Add Country</button>
-</EditForm>
-
-@if (successMessage != null)
+@if (!string.IsNullOrEmpty(successMessage))
 {
     <div class="alert alert-success mt-3">@successMessage</div>
 }
+else
+{
+    <div class="alert alert-warning">
+        Are you sure you want to delete this country?
+    </div>
+    <button class="btn btn-danger" @onclick="HandleDelete">Delete</button>
+    <button class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+}
 
 @code {
-    private CountryModel country = new();
+    [Parameter]
+    public int id { get; set; }
+
     private string? successMessage;
 
-    private async Task HandleValidSubmit()
+    private async Task HandleDelete()
     {
-        //var result = await Mediator.Send(DeleteCountryCommand(country.Id));
-        /*if (result)
+        try
         {
-            // Success logic
+            await Mediator.Send(new Hyip_Payments.Command.CountryCommand.DeleteCountryCommand(id));
+            successMessage = "Country deleted successfully!";
+            // Optionally, navigate away after deletion:
+            // NavigationManager.NavigateTo("/country/list");
         }
-        else
+        catch (Exception ex)
         {
-            // Not found logic
+            successMessage = $"Error: {ex.Message}";
         }
-        */
+    }
 
-        successMessage = $"Country '{country.Name}' added successfully!";
-        country = new(); // Reset form
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/country/list");
     }
 }

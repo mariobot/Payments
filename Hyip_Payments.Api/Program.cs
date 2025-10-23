@@ -81,17 +81,14 @@ namespace Hyip_Payments.Api
             });
 
             // Add CORS
+            // Add CORS policy
             builder.Services.AddCors(options =>
             {
-                options.AddDefaultPolicy(policy =>
+                options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.WithOrigins(
-                        "https://localhost:7193", "http://localhost:5244", 
-                        "https://localhost:5244", "http://localhost:65377", "http://localhost:7263"
-                    )
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials();
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
                 });
             });
 

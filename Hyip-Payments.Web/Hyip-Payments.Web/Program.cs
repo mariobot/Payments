@@ -37,7 +37,7 @@ namespace Hyip_Payments.Web
             // Add HttpClient for WebAssembly components
             builder.Services.AddScoped(sp => new HttpClient 
             { 
-                BaseAddress = new Uri("https://localhost:7263")
+                BaseAddress = new Uri("http://localhost:5009")
             });
 
             // Identity services 
@@ -68,6 +68,17 @@ namespace Hyip_Payments.Web
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            // Add CORS policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
+
             // Add MediatR
 
             // User Commands
@@ -94,15 +105,6 @@ namespace Hyip_Payments.Web
             builder.Services.AddScoped<IRequestHandler<AddInvoiceItemCommand, InvoiceItemModel>, AddInvoiceItemCommandHandler>();
             builder.Services.AddScoped<IRequestHandler<EditInvoiceItemCommand, InvoiceItemModel?>, EditInvoiceItemCommandHandler>();
             builder.Services.AddScoped<IRequestHandler<DeleteInvoiceItemCommand, bool>, DeleteInvoiceItemCommandHandler>();
-
-            //builder.Services.AddScoped<IAddCoinCommand, AddCoinCommand>();
-            //builder.Services.AddScoped<IEditCoinCommand, EditCoinCommand>();
-            //builder.Services.AddScoped<IAddCountryCommand, AddCountryCommand>();
-            //builder.Services.AddScoped<IAddInvoiceCommand, AddInvoiceCommand>();
-            //builder.Services.AddScoped<IAddMoneyCommand, AddMoneyCommand>();
-            //// Other command registrations
-            //builder.Services.AddScoped<IAddCountryCommand, AddCountryCommand>();
-            //builder.Services.AddScoped<IAddPaymentCommandHandler, AddPaymentCommandHandler>();
 
             // Register all queries. 
             builder.Services.AddMediatR(cfg => {

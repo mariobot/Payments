@@ -24,32 +24,32 @@ namespace Hyip_Payments.Web.Extensions
             // Add MediatR
 
             // User Commands
-            builder.Services.AddScoped<IRequestHandler<AddUserCommand, UserModel>, AddUserCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditUserCommand, UserModel?>, EditUserCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteUserCommand, bool>, DeleteUserCommandHandler>();
+            services.AddScoped<IRequestHandler<AddUserCommand, UserModel>, AddUserCommandHandler>();
+            services.AddScoped<IRequestHandler<EditUserCommand, UserModel?>, EditUserCommandHandler>();
+            services.AddScoped<IRequestHandler<DeleteUserCommand, bool>, DeleteUserCommandHandler>();
 
             // Payment Commands
-            builder.Services.AddScoped<IRequestHandler<AddPaymentCommand, PaymentModel>, AddPaymentCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditPaymentCommand, PaymentModel?>, EditPaymentCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeletePaymentCommand, bool>, DeletePaymentCommandHandler>();
+            services.AddScoped<IRequestHandler<AddPaymentCommand, PaymentModel>, AddPaymentCommandHandler>();
+            services.AddScoped<IRequestHandler<EditPaymentCommand, PaymentModel?>, EditPaymentCommandHandler>();
+            services.AddScoped<IRequestHandler<DeletePaymentCommand, bool>, DeletePaymentCommandHandler>();
 
             // Money Commands
-            builder.Services.AddScoped<IRequestHandler<AddMoneyCommand, MoneyModel>, AddMoneyCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditMoneyCommand, MoneyModel?>, EditMoneyCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteMoneyCommand, bool>, DeleteMoneyCommandHandler>();
+            services.AddScoped<IRequestHandler<AddMoneyCommand, MoneyModel>, AddMoneyCommandHandler>();
+            services.AddScoped<IRequestHandler<EditMoneyCommand, MoneyModel?>, EditMoneyCommandHandler>();
+            services.AddScoped<IRequestHandler<DeleteMoneyCommand, bool>, DeleteMoneyCommandHandler>();
 
             // Invoice Commands
-            builder.Services.AddScoped<IRequestHandler<AddInvoiceCommand, InvoiceModel>, AddInvoiceCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditInvoiceCommand, InvoiceModel?>, EditInvoiceCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteInvoiceCommand, bool>, DeleteInvoiceCommandHandler>();
+            services.AddScoped<IRequestHandler<AddInvoiceCommand, InvoiceModel>, AddInvoiceCommandHandler>();
+            services.AddScoped<IRequestHandler<EditInvoiceCommand, InvoiceModel?>, EditInvoiceCommandHandler>();
+            services.AddScoped<IRequestHandler<DeleteInvoiceCommand, bool>, DeleteInvoiceCommandHandler>();
 
             // InvoiceItem Commands
-            builder.Services.AddScoped<IRequestHandler<AddInvoiceItemCommand, InvoiceItemModel>, AddInvoiceItemCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<EditInvoiceItemCommand, InvoiceItemModel?>, EditInvoiceItemCommandHandler>();
-            builder.Services.AddScoped<IRequestHandler<DeleteInvoiceItemCommand, bool>, DeleteInvoiceItemCommandHandler>();
+            services.AddScoped<IRequestHandler<AddInvoiceItemCommand, InvoiceItemModel>, AddInvoiceItemCommandHandler>();
+            services.AddScoped<IRequestHandler<EditInvoiceItemCommand, InvoiceItemModel?>, EditInvoiceItemCommandHandler>();
+            services.AddScoped<IRequestHandler<DeleteInvoiceItemCommand, bool>, DeleteInvoiceItemCommandHandler>();
 
             // Register all queries. 
-            builder.Services.AddMediatR(cfg => {
+            services.AddMediatR(cfg => {
                 cfg.RegisterServicesFromAssemblyContaining<GetAllInvoicesQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetInvoiceByIdQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetMoneyByIdQuery>();

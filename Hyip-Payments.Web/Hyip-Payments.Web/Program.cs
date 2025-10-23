@@ -70,15 +70,16 @@ namespace Hyip_Payments.Web
                 options.UseSqlServer(connectionString));
 
             // Add CORS policy
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
-                });
-            });
+            // Add CORS policy
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowSpecificOrigins", policy =>
+            //    {
+            //        policy.WithOrigins("http://localhost:5009")
+            //              .AllowAnyMethod()
+            //              .AllowAnyHeader();
+            //    });
+            //});
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -123,6 +124,8 @@ namespace Hyip_Payments.Web
             app.UseHttpsRedirection();
 
             app.UseAntiforgery();
+
+            //app.UseCors("AllowSpecificOrigins");
 
             app.MapStaticAssets();
             

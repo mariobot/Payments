@@ -40,7 +40,7 @@
         <!-- Country Section -->
         <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Countries</div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/country/list">
+            <NavLink class="nav-link" href="/country/list">                     
                 <span class="bi bi-cash"></span> Country List
             </NavLink>
         </div>
@@ -51,40 +51,74 @@
         </div>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/country/add2">
-                <span class="bi bi-cash"></span> Add Country 2
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/DeleteCountry">
-                <span class="bi bi-trash"></span> Delete Country
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/UpdateCountry">
-                <span class="bi bi-arrow-repeat"></span> Update Country
+                <span class="bi bi-cash"></span> Add Country POST
             </NavLink>
         </div>
 
         <!-- Money Section -->
         <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Money</div>
+        
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/AddMoney">
-                <span class="bi bi-cash"></span> Add Money
+            <NavLink class="nav-link" href="/Moneylist">
+                <span class="bi bi-cash"></span> Money List
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/DeleteMoney">
+            <NavLink class="nav-link" href="/addmoney">
                 <span class="bi bi-trash"></span> Delete Money
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/UpdateMoney">
-                <span class="bi bi-arrow-repeat"></span> Update Money
+            <NavLink class="nav-link" href="/money/list">
+                <span class="bi bi-cash"></span> Money List POST
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/addmoney2">
+                <span class="bi bi-trash"></span> Delete Money
+            </NavLink>
+        </div>
+
+        <!-- Country Section -->
+        <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Coins</div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/CoinList">
+                <span class="bi bi-cash"></span> Coin List
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/CoinAdd">
+                <span class="bi bi-cash"></span> Add Country
+            </NavLink>
+        </div>
+
+        <!-- Country Section -->
+        <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Coins</div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/CoinList">
+                <span class="bi bi-cash"></span> Coin List
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/CoinAdd">
+                <span class="bi bi-cash"></span> Add Country
+            </NavLink>
+        </div>
+
+        <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Account</div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Account/Register">
+                <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Account/Login">
+                <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
             </NavLink>
         </div>
 
         <!-- Auth Section -->
-        <AuthorizeView>
+        @* <AuthorizeView>
             <Authorized>
                 <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Account</div>
                 <div class="nav-item px-3">
@@ -115,7 +149,7 @@
                     </NavLink>
                 </div>
             </NotAuthorized>
-        </AuthorizeView>
+        </AuthorizeView> *@
     </nav>
 </div>
 

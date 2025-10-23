@@ -1,4 +1,5 @@
 ﻿@page "/brand/delete/{BrandId:int}"
+@using System.ComponentModel.DataAnnotations
 
 @inject HttpClient Http
 
@@ -24,7 +25,7 @@ else
         <p><strong>Name:</strong> @brand.Name</p>
         <p><strong>Description:</strong> @brand.Description</p>
 
-        <button class="btn btn-danger" @onclick="DeleteBrand">Delete</button>
+        <button class="btn btn-danger" @onclick="DeleteBrand2">Delete</button>
         <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
     </div>
 }
@@ -58,7 +59,7 @@ else
         }
     }
 
-    private async Task DeleteBrand()
+    private async Task DeleteBrand2()
     {
         message = null;
 

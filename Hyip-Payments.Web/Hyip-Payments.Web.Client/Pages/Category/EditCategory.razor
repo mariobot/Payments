@@ -1,0 +1,100 @@
+﻿@page "/category/edit/{Id:int}"
+@inject HttpClient Http
+@using System.ComponentModel.DataAnnotations
+
+<h3>Edit Category</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (category == null)
+{
+    <p>Category not found.</p>
+}
+else
+{
+    <EditForm Model="category" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Category Name</label>
+            <InputText id="name" class="form-control" @bind-Value="category.Name" />
+            <ValidationMessage For="@(() => category.Name)" />
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="category.Description" />
+            <ValidationMessage For="@(() => category.Description)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <p>@message</p>
+    }
+}
+
+@code {
+    [Parameter] public int CategoryId { get; set; }
+
+    private CategoryModel? category;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            category = await Http.GetFromJsonAsync<CategoryModel>($"api/categories/{CategoryId}");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading the category: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        message = null;
+
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/categories/{CategoryId}", category);
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Category updated successfully!";
+            }
+            else
+            {
+                message = "Failed to update category. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    public class CategoryModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        public string? Description { get; set; }
+    }
+}

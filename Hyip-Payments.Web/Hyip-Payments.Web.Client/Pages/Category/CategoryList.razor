@@ -1,0 +1,81 @@
+﻿@page "/category/list"
+@using System.ComponentModel.DataAnnotations
+
+@inject HttpClient Http
+
+<h3>Category List</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (categories == null || !categories.Any())
+{
+    <p>No categories available.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in categories)
+            {
+                <tr>
+                    <td>@category.Name</td>
+                    <td>@category.Description</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" href="/category/edit/@category.Id">Edit</a>
+                        <a class="btn btn-danger btn-sm" href="/category/delete/@category.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private List<CategoryModel>? categories;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            categories = await Http.GetFromJsonAsync<List<CategoryModel>>("api/categories");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading the categories: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class CategoryModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        public string? Description { get; set; }
+    }
+}
+

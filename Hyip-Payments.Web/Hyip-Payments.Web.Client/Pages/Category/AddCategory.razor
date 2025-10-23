@@ -1,0 +1,79 @@
+﻿@page "/category/add"
+
+@inject HttpClient Http
+
+<h3>Add Category</h3>
+
+<EditForm Model="category" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="name" class="form-label">Category Name</label>
+        <InputText id="name" class="form-control" @bind-Value="category.Name" />
+        <ValidationMessage For="@(() => category.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <InputTextArea id="description" class="form-control" @bind-Value="category.Description" />
+        <ValidationMessage For="@(() => category.Description)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Category</button>
+</EditForm>
+
+@if (isSubmitting)
+{
+    <p>Submitting...</p>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private CategoryModel category = new CategoryModel();
+    private bool isSubmitting = false;
+    private string? message;
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        message = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/categories", category);
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Category added successfully!";
+                category = new CategoryModel(); // Reset the form
+            }
+            else
+            {
+                message = "Failed to add category. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    public class CategoryModel
+    {
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        public string? Description { get; set; }
+    }
+}

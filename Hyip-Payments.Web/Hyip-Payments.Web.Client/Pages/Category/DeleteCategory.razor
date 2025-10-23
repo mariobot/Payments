@@ -1,0 +1,98 @@
+﻿@page "/category/delete/{Id:int}"
+@using System.ComponentModel.DataAnnotations
+
+@inject HttpClient Http
+
+<h3>Delete Category</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (category == null)
+{
+    <p>Category not found.</p>
+}
+else
+{
+    <div>
+        <p>Are you sure you want to delete the following category?</p>
+        <p><strong>Name:</strong> @category.Name</p>
+        <p><strong>Description:</strong> @category.Description</p>
+
+        <button class="btn btn-danger" @onclick="DeleteCategory2">Delete</button>
+        <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CategoryModel? category;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            category = await Http.GetFromJsonAsync<CategoryModel>($"api/categories/{Id}");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading the category: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteCategory2()
+    {
+        message = null;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/categories/{Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Category deleted successfully!";
+                category = null; // Clear the category after deletion
+            }
+            else
+            {
+                message = "Failed to delete category. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void Cancel()
+    {
+        // Navigate back or perform any other cancel action
+        message = "Deletion canceled.";
+    }
+
+    public class CategoryModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        public string? Description { get; set; }
+    }
+}

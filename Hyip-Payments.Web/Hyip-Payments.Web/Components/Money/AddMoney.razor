@@ -1,5 +1,8 @@
 ﻿@page "/AddMoney"
+@using Hyip_Payments.Command.MoneyCommand
 @using Hyip_Payments.Models
+@using MediatR
+@inject IMediator Mediator
 
 <h3>Add Money</h3>
 
@@ -39,10 +42,16 @@
 
     private async Task HandleValidSubmit()
     {
-        // TODO: Replace with your actual add money logic, e.g., call a service or MediatR command
-        // await Mediator.Send(new AddMoneyCommand(money));
-
-        successMessage = $"Money added: {money.Amount} {money.Currency} for {money.Country}";
-        money = new(); // Reset form
+        try
+        {
+            // Call MediatR command
+            await Mediator.Send(new AddMoneyCommand(money));
+            successMessage = $"Money added: {money.Amount} {money.Currency} for {money.Country}";
+            money = new(); // Reset form
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Error: {ex.Message}";
+        }
     }
 }

@@ -1,6 +1,9 @@
 ﻿@page "/UpdateMoney"
-
+@using Hyip_Payments.Command.MoneyCommand
 @using Hyip_Payments.Models
+@using Hyip_Payments.Query.MoneyQuery
+@using MediatR
+@inject IMediator Mediator
 
 <h3>Update Money</h3>
 
@@ -68,7 +71,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        moneyList = await LoadMoneyAsync();
+        try
+        {
+            // Query all money records
+            moneyList = await Mediator.Send(new GetMoneyQuery());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading money records: {ex.Message}";
+        }
     }
 
     private async Task OnMoneyChanged(ChangeEventArgs e)
@@ -76,7 +87,16 @@ else
         if (int.TryParse(e.Value?.ToString(), out var id))
         {
             selectedMoneyId = id;
-            selectedMoney = moneyList?.FirstOrDefault(m => m.Id == id);
+            try
+            {
+                // Query single money record by ID
+                selectedMoney = await Mediator.Send(new GetMoneyByIdQuery(id));
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error loading selected money record: {ex.Message}";
+                selectedMoney = null;
+            }
         }
         else
         {
@@ -94,35 +114,18 @@ else
 
         try
         {
-            // TODO: Replace with your actual update logic/service call
-            await UpdateMoneyAsync(selectedMoney);
+            // Save changes using command
+            await Mediator.Send(new EditMoneyCommand(selectedMoney));
 
             successMessage = "Money record updated successfully.";
             errorMessage = null;
-            moneyList = await LoadMoneyAsync();
+            // Refresh list after update
+            moneyList = await Mediator.Send(new GetMoneyQuery());
         }
         catch (Exception ex)
         {
             errorMessage = $"Error updating money record: {ex.Message}";
             successMessage = null;
         }
-    }
-
-    // Placeholder for loading money records
-    private Task<List<MoneyModel>> LoadMoneyAsync()
-    {
-        // Replace with actual data fetching logic
-        return Task.FromResult(new List<MoneyModel>
-        {
-            new MoneyModel { Id = 1, Amount = 100, Currency = "USD", Country = "USA" },
-            new MoneyModel { Id = 2, Amount = 200, Currency = "EUR", Country = "Germany" }
-        });
-    }
-
-    // Placeholder for updating a money record
-    private Task UpdateMoneyAsync(MoneyModel money)
-    {
-        // Replace with actual update logic
-        return Task.CompletedTask;
     }
 }

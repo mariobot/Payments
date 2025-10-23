@@ -1,5 +1,53 @@
-﻿<h3>DeleteMoney</h3>
+﻿@page "/deletemoney/{Id:int}"
+@using Hyip_Payments.Command.MoneyCommand
+@using MediatR
+@using Hyip_Payments.Models
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+
+<h3>Delete Money</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (isDeleted)
+{
+    <div class="alert alert-success">Money record deleted successfully.</div>
+}
+else
+{
+    <div class="alert alert-warning">
+        <strong>Are you sure you want to delete this money record?</strong>
+    </div>
+    <button class="btn btn-danger" @onclick="DeleteMoney2">Delete</button>
+    <button class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+}
 
 @code {
+    [Parameter]
+    public int Id { get; set; }
 
+    private bool isDeleted = false;
+    private string? errorMessage;
+
+    private async Task DeleteMoney2()
+    {
+        try
+        {
+            await Mediator.Send(new DeleteMoneyCommand(Id));
+            isDeleted = true;
+            // Optionally, navigate away after deletion:
+            // NavigationManager.NavigateTo("/money/list");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting money record: {ex.Message}";
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/money/list");
+    }
 }

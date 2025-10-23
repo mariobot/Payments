@@ -1,0 +1,64 @@
+﻿@page "/Moneylist"
+
+@using Hyip_Payments.Models
+@using Hyip_Payments.Query.MoneyQuery
+@using MediatR
+@inject IMediator Mediator
+
+<h3>Money List</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (moneyList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!moneyList.Any())
+{
+    <p>No money records found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Currency</th>
+                <th>Slug</th>
+                <th>Country</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var money in moneyList)
+            {
+                <tr>
+                    <td>@money.Id</td>
+                    <td>@money.Amount</td>
+                    <td>@money.Currency</td>
+                    <td>@money.Slug</td>
+                    <td>@money.Country</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<MoneyModel>? moneyList;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            moneyList = await Mediator.Send(new GetMoneyQuery());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+}

@@ -12,7 +12,7 @@
 }
 else
 {
-    <EditForm Model="money" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="@money" OnValidSubmit="HandleValidSubmit" FormName="editMoneyForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
 

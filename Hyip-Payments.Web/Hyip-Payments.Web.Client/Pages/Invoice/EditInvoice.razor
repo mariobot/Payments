@@ -14,7 +14,7 @@ else if (errorMessage != null)
 }
 else if (invoice != null)
 {
-    <EditForm Model="@invoice" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="@invoice" OnValidSubmit="HandleValidSubmit" FormName="editInvoiceForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
 

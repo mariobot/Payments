@@ -1,4 +1,5 @@
 ﻿@page "/invoice"
+@using Hyip_Payments.Models
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
@@ -79,15 +80,5 @@ else
     private void GoToDelete(int id)
     {
         NavigationManager.NavigateTo($"/invoice/delete/{id}");
-    }
-
-    // Example model (replace with shared type if available)
-    public class InvoiceModel
-    {
-        public int Id { get; set; }
-        public string InvoiceNumber { get; set; } = string.Empty;
-        public DateTime InvoiceDate { get; set; }
-        public string? Description { get; set; }
-        public decimal TotalAmount { get; set; }
     }
 }

@@ -1,9 +1,10 @@
 ﻿@page "/invoice/add"
+@using Hyip_Payments.Models
 @inject HttpClient Http
 
 <h3>Add Invoice</h3>
 
-<EditForm Model="@invoice" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="@invoice" OnValidSubmit="HandleValidSubmit" FormName="addInvoiceForm">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -98,22 +99,5 @@
     private void RemoveItem(InvoiceItemModel item)
     {
         invoice.Items.Remove(item);
-    }
-
-    // Example models (adjust namespaces/types as needed)
-    public class InvoiceModel
-    {
-        public string InvoiceNumber { get; set; } = string.Empty;
-        public DateTime InvoiceDate { get; set; }
-        public string? Description { get; set; }
-        public decimal TotalAmount { get; set; }
-        public List<InvoiceItemModel> Items { get; set; } = new();
-    }
-
-    public class InvoiceItemModel
-    {
-        public string ItemName { get; set; } = string.Empty;
-        public int Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿@page "/country/delete2/{Id:int}"
+@using Hyip_Payments.Models
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
@@ -82,15 +83,5 @@ else if (country != null)
     private void GoToList()
     {
         NavigationManager.NavigateTo("/country/list");
-    }
-
-    // Example model (replace with shared type if available)
-    public class CountryModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string? IsoCode { get; set; }
-        public string? Capital { get; set; }
-        public string? Region { get; set; }
     }
 }

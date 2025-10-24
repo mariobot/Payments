@@ -47,7 +47,7 @@ else
         try
         {
             isLoading = true;
-            brand = await Http.GetFromJsonAsync<BrandModel>($"api/brands/{BrandId}");
+            brand = await Http.GetFromJsonAsync<BrandModel>($"api/brand/{BrandId}");
         }
         catch (Exception ex)
         {
@@ -65,7 +65,7 @@ else
 
         try
         {
-            var response = await Http.DeleteAsync($"api/brands/{BrandId}");
+            var response = await Http.DeleteAsync($"api/brand/{BrandId}");
 
             if (response.IsSuccessStatusCode)
             {

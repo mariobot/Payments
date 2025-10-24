@@ -1,12 +1,10 @@
 ﻿@page "/brand/add"
-
-@using System.ComponentModel.DataAnnotations
-
+@using Hyip_Payments.Models
 @inject HttpClient Http
 
 <h3>Add Brand</h3>
 
-<EditForm Model="brand" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="brand" OnValidSubmit="HandleValidSubmit" FormName="addBrandForm">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -47,7 +45,7 @@
 
         try
         {
-            var response = await Http.PostAsJsonAsync("api/brands", brand);
+            var response = await Http.PostAsJsonAsync("api/Brand", brand);
 
             if (response.IsSuccessStatusCode)
             {
@@ -67,15 +65,5 @@
         {
             isSubmitting = false;
         }
-    }
-
-    public class BrandModel
-    {
-        [Required]
-        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
-        public string Name { get; set; } = string.Empty;
-
-        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
-        public string? Description { get; set; }
     }
 }

@@ -54,7 +54,7 @@ else
         try
         {
             isLoading = true;
-            brands = await Http.GetFromJsonAsync<List<BrandModel>>("api/brands");
+            brands = await Http.GetFromJsonAsync<List<BrandModel>>("api/brand");
         }
         catch (Exception ex)
         {

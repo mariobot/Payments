@@ -15,7 +15,7 @@ else if (brand == null)
 }
 else
 {
-    <EditForm Model="brand" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="@brand" OnValidSubmit="HandleValidSubmit" FormName="editBrandForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -52,7 +52,7 @@ else
         try
         {
             isLoading = true;
-            brand = await Http.GetFromJsonAsync<BrandModel>($"api/brands/{BrandId}");
+            brand = await Http.GetFromJsonAsync<BrandModel>($"api/brand/{BrandId}");
         }
         catch (Exception ex)
         {
@@ -70,7 +70,7 @@ else
 
         try
         {
-            var response = await Http.PutAsJsonAsync($"api/brands/{BrandId}", brand);
+            var response = await Http.PutAsJsonAsync($"api/brand/{BrandId}", brand);
 
             if (response.IsSuccessStatusCode)
             {

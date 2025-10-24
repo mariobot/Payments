@@ -1,0 +1,126 @@
+@page "/product/add"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Add Product</h3>
+
+<EditForm Model="@product" OnValidSubmit="HandleValidSubmit" FormName="addProductForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Product Name</label>
+        <InputText class="form-control" @bind-Value="product.Name" />
+        <ValidationMessage For="@(() => product.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <InputTextArea class="form-control" @bind-Value="product.Description" rows="3" />
+        <ValidationMessage For="@(() => product.Description)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Price</label>
+        <InputNumber class="form-control" @bind-Value="product.Price" />
+        <ValidationMessage For="@(() => product.Price)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Category</label>
+        <InputSelect class="form-select" @bind-Value="product.CategoryId">
+            <option value="0">-- Select Category --</option>
+            @if (categories != null)
+            {
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => product.CategoryId)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Brand</label>
+        <InputSelect class="form-select" @bind-Value="product.BrandId">
+            <option value="0">-- Select Brand --</option>
+            @if (brands != null)
+            {
+                @foreach (var brand in brands)
+                {
+                    <option value="@brand.Id">@brand.Name</option>
+                }
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => product.BrandId)" />
+    </div>
+
+    <div class="mb-3 form-check">
+        <InputCheckbox class="form-check-input" id="isActive" @bind-Value="product.IsActive" />
+        <label class="form-check-label" for="isActive">Active</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Product</button>
+    <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
+</EditForm>
+
+@if (successMessage != null)
+{
+    <div class="alert alert-success mt-3">@successMessage</div>
+}
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+@code {
+    private ProductModel product = new() { IsActive = true };
+    private List<CategoryModel>? categories;
+    private List<BrandModel>? brands;
+    private string? successMessage;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load categories and brands for dropdowns
+            categories = await Http.GetFromJsonAsync<List<CategoryModel>>("api/Category");
+            brands = await Http.GetFromJsonAsync<List<BrandModel>>("api/Brand");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        successMessage = null;
+        errorMessage = null;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Product", product);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Product added successfully!";
+                product = new() { IsActive = true };
+            }
+            else
+            {
+                errorMessage = $"Error: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Exception: {ex.Message}";
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/product/list");
+    }
+}

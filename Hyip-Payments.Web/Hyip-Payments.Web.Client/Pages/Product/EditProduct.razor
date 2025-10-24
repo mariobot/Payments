@@ -1,0 +1,152 @@
+@page "/product/edit/{Id:int}"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Edit Product</h3>
+
+@if (isLoading)
+{
+    <p>Loading product...</p>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+else if (product != null)
+{
+    <EditForm Model="@product" OnValidSubmit="HandleValidSubmit" FormName="editProductForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Product Name</label>
+            <InputText class="form-control" @bind-Value="product.Name" />
+            <ValidationMessage For="@(() => product.Name)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control" @bind-Value="product.Description" rows="3" />
+            <ValidationMessage For="@(() => product.Description)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <InputNumber class="form-control" @bind-Value="product.Price" />
+            <ValidationMessage For="@(() => product.Price)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <InputSelect class="form-select" @bind-Value="product.CategoryId">
+                <option value="0">-- Select Category --</option>
+                @if (categories != null)
+                {
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => product.CategoryId)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Brand</label>
+            <InputSelect class="form-select" @bind-Value="product.BrandId">
+                <option value="0">-- Select Brand --</option>
+                @if (brands != null)
+                {
+                    @foreach (var brand in brands)
+                    {
+                        <option value="@brand.Id">@brand.Name</option>
+                    }
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => product.BrandId)" />
+        </div>
+
+        <div class="mb-3 form-check">
+            <InputCheckbox class="form-check-input" id="isActive" @bind-Value="product.IsActive" />
+            <label class="form-check-label" for="isActive">Active</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
+    </EditForm>
+
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success mt-3">@successMessage</div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ProductModel? product;
+    private List<CategoryModel>? categories;
+    private List<BrandModel>? brands;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load product, categories, and brands
+            var productTask = Http.GetFromJsonAsync<ProductModel>($"api/Product/{Id}");
+            var categoriesTask = Http.GetFromJsonAsync<List<CategoryModel>>("api/Category");
+            var brandsTask = Http.GetFromJsonAsync<List<BrandModel>>("api/Brand");
+
+            await Task.WhenAll(productTask, categoriesTask, brandsTask);
+
+            product = await productTask;
+            categories = await categoriesTask;
+            brands = await brandsTask;
+
+            if (product == null)
+            {
+                errorMessage = "Product not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        errorMessage = null;
+        successMessage = null;
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/Product/{Id}", product);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Product updated successfully!";
+            }
+            else
+            {
+                errorMessage = $"Error: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Exception: {ex.Message}";
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/product/list");
+    }
+}

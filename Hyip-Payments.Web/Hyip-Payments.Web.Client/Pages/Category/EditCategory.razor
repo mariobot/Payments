@@ -14,7 +14,7 @@ else if (category == null)
 }
 else
 {
-    <EditForm Model="category" OnValidSubmit="HandleValidSubmit">
+    <EditForm Model="@category" OnValidSubmit="HandleValidSubmit" FormName="editCategoryForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -51,7 +51,7 @@ else
         try
         {
             isLoading = true;
-            category = await Http.GetFromJsonAsync<CategoryModel>($"api/categories/{CategoryId}");
+            category = await Http.GetFromJsonAsync<CategoryModel>($"api/Category/{CategoryId}");
         }
         catch (Exception ex)
         {
@@ -69,7 +69,7 @@ else
 
         try
         {
-            var response = await Http.PutAsJsonAsync($"api/categories/{CategoryId}", category);
+            var response = await Http.PutAsJsonAsync($"api/Category/{CategoryId}", category);
 
             if (response.IsSuccessStatusCode)
             {

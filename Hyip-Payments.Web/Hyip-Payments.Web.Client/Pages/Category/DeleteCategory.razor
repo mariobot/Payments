@@ -42,7 +42,7 @@ else
         try
         {
             isLoading = true;
-            category = await Http.GetFromJsonAsync<CategoryModel>($"api/categories/{Id}");
+            category = await Http.GetFromJsonAsync<CategoryModel>($"api/Category/{Id}");
         }
         catch (Exception ex)
         {
@@ -60,7 +60,7 @@ else
 
         try
         {
-            var response = await Http.DeleteAsync($"api/categories/{Id}");
+            var response = await Http.DeleteAsync($"api/Category/{Id}");
 
             if (response.IsSuccessStatusCode)
             {

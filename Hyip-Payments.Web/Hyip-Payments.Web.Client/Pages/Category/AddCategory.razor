@@ -5,7 +5,7 @@
 
 <h3>Add Category</h3>
 
-<EditForm Model="category" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="category" OnValidSubmit="HandleValidSubmit" FormName="addCategoryForm">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -46,7 +46,7 @@
 
         try
         {
-            var response = await Http.PostAsJsonAsync("api/categories", category);
+            var response = await Http.PostAsJsonAsync("api/Category", category);
 
             if (response.IsSuccessStatusCode)
             {

@@ -54,7 +54,7 @@ else
         try
         {
             isLoading = true;
-            categories = await Http.GetFromJsonAsync<List<CategoryModel>>("api/categories");
+            categories = await Http.GetFromJsonAsync<List<CategoryModel>>("api/Category");
         }
         catch (Exception ex)
         {

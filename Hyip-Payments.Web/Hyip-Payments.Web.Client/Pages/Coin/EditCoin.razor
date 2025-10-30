@@ -1,0 +1,118 @@
+﻿@page "/coin/edit/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.ComponentModel.DataAnnotations
+
+<h3>Edit Coin</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (coin == null)
+{
+    <p>Coin not found.</p>
+}
+else
+{
+    <EditForm Model="@coin" OnValidSubmit="HandleValidSubmit" FormName="editCoinForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Coin Name</label>
+            <InputText id="name" class="form-control" @bind-Value="coin.Name" />
+            <ValidationMessage For="@(() => coin.Name)" />
+        </div>
+
+        <div class="mb-3">
+            <label for="symbol" class="form-label">Symbol</label>
+            <InputText id="symbol" class="form-control" @bind-Value="coin.Symbol" />
+            <ValidationMessage For="@(() => coin.Symbol)" />
+        </div>
+
+        <div class="mb-3">
+            <label for="marketCap" class="form-label">Market Cap</label>
+            <InputNumber id="marketCap" class="form-control" @bind-Value="coin.MarketCap" />
+            <ValidationMessage For="@(() => coin.MarketCap)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <p>@message</p>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CoinModel? coin;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            coin = await Http.GetFromJsonAsync<CoinModel>($"api/Coin/{Id}");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading the coin: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        message = null;
+
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/Coin/{Id}", coin);
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Coin updated successfully!";
+                NavigationManager.NavigateTo("/coin/list");
+            }
+            else
+            {
+                message = "Failed to update coin. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/coin/list");
+    }
+
+    public class CoinModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(10, ErrorMessage = "Symbol must be less than 10 characters.")]
+        public string Symbol { get; set; } = string.Empty;
+
+        [Range(0, double.MaxValue, ErrorMessage = "Market Cap must be a positive value.")]
+        public decimal MarketCap { get; set; }
+    }
+}

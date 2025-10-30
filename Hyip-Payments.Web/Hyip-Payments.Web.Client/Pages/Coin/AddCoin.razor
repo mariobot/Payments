@@ -1,0 +1,78 @@
+﻿@page "/coin/add"
+@inject HttpClient Http
+@using System.ComponentModel.DataAnnotations
+
+<h3>Add Coin</h3>
+
+<EditForm Model="@coin" OnValidSubmit="HandleValidSubmit" FormName="addCoinForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="name" class="form-label">Coin Name</label>
+        <InputText id="name" class="form-control" @bind-Value="coin.Name" />
+        <ValidationMessage For="@(() => coin.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="symbol" class="form-label">Symbol</label>
+        <InputText id="symbol" class="form-control" @bind-Value="coin.Symbol" />
+        <ValidationMessage For="@(() => coin.Symbol)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="marketCap" class="form-label">Market Cap</label>
+        <InputNumber id="marketCap" class="form-control" @bind-Value="coin.MarketCap" />
+        <ValidationMessage For="@(() => coin.MarketCap)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Coin</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private CoinModel coin = new();
+    private string? message;
+
+    private async Task HandleValidSubmit()
+    {
+        message = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Coin", coin);
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Coin added successfully!";
+                coin = new CoinModel(); // Reset the form
+            }
+            else
+            {
+                message = "Failed to add coin. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    public class CoinModel
+    {
+        [Required]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(10, ErrorMessage = "Symbol must be less than 10 characters.")]
+        public string Symbol { get; set; } = string.Empty;
+
+        [Range(0, double.MaxValue, ErrorMessage = "Market Cap must be a positive value.")]
+        public decimal MarketCap { get; set; }
+    }
+}

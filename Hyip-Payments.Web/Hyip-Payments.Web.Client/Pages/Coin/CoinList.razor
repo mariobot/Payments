@@ -1,0 +1,106 @@
+﻿@page "/coin/list"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Coin List</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (coins == null || !coins.Any())
+{
+    <p>No coins found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Symbol</th>
+                <th>Market Cap</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var coin in coins)
+            {
+                <tr>
+                    <td>@coin.Name</td>
+                    <td>@coin.Symbol</td>
+                    <td>@coin.MarketCap.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" @onclick="() => NavigateToEdit(coin.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteCoin(coin.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    private List<CoinModel>? coins;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            coins = await Http.GetFromJsonAsync<List<CoinModel>>("api/Coin");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading coins: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteCoin(int id)
+    {
+        message = null;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Coin/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Coin deleted successfully!";
+                coins = coins?.Where(c => c.Id != id).ToList(); // Remove the deleted coin from the list
+            }
+            else
+            {
+                message = "Failed to delete coin. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void NavigateToEdit(int id)
+    {
+        NavigationManager.NavigateTo($"/coin/edit/{id}");
+    }
+
+    public class CoinModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Symbol { get; set; } = string.Empty;
+        public decimal MarketCap { get; set; }
+    }
+}

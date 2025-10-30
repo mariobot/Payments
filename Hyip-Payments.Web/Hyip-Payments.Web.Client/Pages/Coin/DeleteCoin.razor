@@ -1,0 +1,89 @@
+﻿@page "/coin/delete/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Delete Coin</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (coin == null)
+{
+    <p>Coin not found.</p>
+}
+else
+{
+    <div class="alert alert-warning">
+        <p>Are you sure you want to delete the coin <strong>@coin.Name</strong>?</p>
+        <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
+        <button class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CoinModel? coin;
+    private bool isLoading = true;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            coin = await Http.GetFromJsonAsync<CoinModel>($"api/Coin/{Id}");
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred while loading the coin: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        message = null;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Coin/{Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "Coin deleted successfully!";
+                NavigationManager.NavigateTo("/coin/list");
+            }
+            else
+            {
+                message = "Failed to delete coin. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/coin/list");
+    }
+
+    public class CoinModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Symbol { get; set; } = string.Empty;
+        public decimal MarketCap { get; set; }
+    }
+}

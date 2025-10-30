@@ -1,3 +1,4 @@
+using CryptoExchange.Net.Authentication;
 using Hyip_Payments.Command.CoinCommand;
 using Hyip_Payments.Command.CountryCommand;
 using Hyip_Payments.Command.InvoiceCommand;
@@ -69,6 +70,22 @@ namespace Hyip_Payments.Web
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            var apiKeyBinance = builder.Configuration.GetSection("Binance").GetRequiredSection("ApiKey").Value;
+            var apiSecretBinance = builder.Configuration.GetSection("Binance").GetRequiredSection("ApiSecret").Value;
+
+            builder.Services.AddBinance(restClientOptions =>
+            {
+                restClientOptions.ApiCredentials = new ApiCredentials(apiKeyBinance, apiSecretBinance);
+                restClientOptions.Rest.OutputOriginalData = true;
+            });
+
+
+            // If the method is part of a library, ensure the library is installed via NuGet:
+            // Example: Install-Package YourLibraryName
+
+            // If the method is not available, you may need to implement it or provide an alternative.
+
+
             // Add CORS policy
             // Add CORS policy
             //builder.Services.AddCors(options =>
@@ -125,6 +142,7 @@ namespace Hyip_Payments.Web
 
             app.UseAntiforgery();
 
+            // Cors alwais is difined later up httpredirection
             //app.UseCors("AllowSpecificOrigins");
 
             app.MapStaticAssets();

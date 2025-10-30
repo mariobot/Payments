@@ -29,7 +29,7 @@ namespace Hyip_Payments.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //Debugger.Launch();
+            System.Diagnostics.Debugger.Launch();
             base.OnModelCreating(modelBuilder);
             // Add custom configuration if needed
         }

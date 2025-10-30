@@ -1,0 +1,43 @@
+﻿@page "/binance/get-ctc-price"
+
+@using global::Binance.Net.Interfaces.Clients
+@inject IBinanceRestClient binanceClient
+
+<h3>CTC Price</h3>
+@if (ctcPrice != null)
+{
+    <p>Current CTCUSDT Price: @ctcPrice</p>
+}
+else if (errorMessage != null)
+{
+    <p style="color:red">@errorMessage</p>
+}
+else
+{
+    <p>Loading price...</p>
+}
+
+@code {
+    private decimal? ctcPrice;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {  
+            var priceResult = await binanceClient.SpotApi.ExchangeData.GetPriceAsync("BTCUSDT");
+            if (priceResult.Success)
+            {
+                ctcPrice = priceResult.Data.Price;
+            }
+            else
+            {
+                errorMessage = priceResult.Error?.Message ?? "Failed to fetch price.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

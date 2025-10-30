@@ -1,7 +1,10 @@
 ﻿@page "/InvoiceList"
 
+@using Hyip_Payments.Context
 @using Hyip_Payments.Models
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager NavigationManager
+@inject PaymentsDbContext DbContext
 
 <h3>Invoice List</h3>
 
@@ -54,40 +57,15 @@ else
         invoices = await LoadInvoicesAsync();
     }
 
-    private Task<List<InvoiceModel>> LoadInvoicesAsync()
+    private async Task<List<InvoiceModel>> LoadInvoicesAsync()
     {
-        // Replace with actual data fetching logic (API/service)
-        return Task.FromResult(new List<InvoiceModel>
-        {
-            new InvoiceModel
-            {
-                Id = 1,
-                InvoiceNumber = "INV-001",
-                InvoiceDate = DateTime.UtcNow.AddDays(-2),
-                Description = "Web development services",
-                TotalAmount = 1200,
-                Items = new List<InvoiceItemModel>
-                {
-                    new InvoiceItemModel { ItemName = "Design", Quantity = 1, UnitPrice = 500 },
-                    new InvoiceItemModel { ItemName = "Development", Quantity = 1, UnitPrice = 700 }
-                }
-            },
-            new InvoiceModel
-            {
-                Id = 2,
-                InvoiceNumber = "INV-002",
-                InvoiceDate = DateTime.UtcNow.AddDays(-1),
-                Description = "Consulting",
-                TotalAmount = 300,
-                Items = new List<InvoiceItemModel>
-                {
-                    new InvoiceItemModel { ItemName = "Consulting Hours", Quantity = 3, UnitPrice = 100 }
-                }
-            }
-        });
+        // Fetch invoices from the database using the injected DbContext
+        return await DbContext.Invoices
+            .Include(i => i.Items) // Include related items
+            .ToListAsync();
     }
 
-    private void NavigateToView(int id) => NavigationManager.NavigateTo($"/invoice/view/{id}");
-    private void NavigateToEdit(int id) => NavigationManager.NavigateTo($"/invoice/edit/{id}");
-    private void NavigateToDelete(int id) => NavigationManager.NavigateTo($"/invoice/delete/{id}");
+    private void NavigateToView(int id) => NavigationManager.NavigateTo($"/ViewInvoice/{id}");
+    private void NavigateToEdit(int id) => NavigationManager.NavigateTo($"/UpdateInvoice/{id}");
+    private void NavigateToDelete(int id) => NavigationManager.NavigateTo($"/CancelInvoice/{id}");
 }

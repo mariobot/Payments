@@ -1,6 +1,7 @@
 ﻿@page "/UpdateInvoice/{InvoiceId:int}"
 @using Hyip_Payments.Models
-@inject Hyip_Payments.Context.PaymentsDbContext DbContext
+@using Hyip_Payments.Context
+@inject PaymentsDbContext DbContext
 @inject NavigationManager NavigationManager
 
 <h3>Update Invoice</h3>

@@ -25,6 +25,10 @@ namespace Hyip_Payments.Models
         [Required]
         public decimal TotalAmount { get; set; }
 
+        // New property to track active status
+        [Required]
+        public bool IsActive { get; set; } = true;
+
         // Navigation property for invoice items
         public List<InvoiceItemModel> Items { get; set; } = new();
     }

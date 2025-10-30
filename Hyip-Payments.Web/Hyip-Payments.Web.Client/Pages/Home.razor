@@ -1,7 +1,167 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard - HYIP Payments</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container-fluid">
+    <h3>💼 Payment Management Dashboard</h3>
+    
+    <div class="row mt-4">
+        <!-- Invoice Stats -->
+        <div class="col-md-3 mb-4">
+            <div class="stat-card" style="border-left: 4px solid #3498db;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Invoices</h6>
+                        <h4 class="mb-0">@("📄")</h4>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary mt-3 w-100" @onclick="GoToInvoices">
+                    View Invoices
+                </button>
+            </div>
+        </div>
 
-Welcome to your new app.
+        <!-- Products Stats -->
+        <div class="col-md-3 mb-4">
+            <div class="stat-card" style="border-left: 4px solid #2ecc71;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Products</h6>
+                        <h4 class="mb-0">@("📦")</h4>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-success mt-3 w-100" @onclick="GoToProducts">
+                    View Products
+                </button>
+            </div>
+        </div>
+
+        <!-- Brands Stats -->
+        <div class="col-md-3 mb-4">
+            <div class="stat-card" style="border-left: 4px solid #e74c3c;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Brands</h6>
+                        <h4 class="mb-0">@("🏷️")</h4>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary mt-3 w-100" @onclick="GoToBrands">
+                    View Brands
+                </button>
+            </div>
+        </div>
+
+        <!-- Categories Stats -->
+        <div class="col-md-3 mb-4">
+            <div class="stat-card" style="border-left: 4px solid #f39c12;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Categories</h6>
+                        <h4 class="mb-0">@("📂")</h4>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-primary mt-3 w-100" @onclick="GoToCategories">
+                    View Categories
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    @("⚡") Quick Actions
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-primary w-100" @onclick="GoToCreateInvoice">
+                                ➕ Create Invoice
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-success w-100" @onclick="GoToAddProduct">
+                                ➕ Add Product
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-primary w-100" @onclick="GoToAddBrand">
+                                ➕ Add Brand
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-primary w-100" @onclick="GoToAddCategory">
+                                ➕ Add Category
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Sections -->
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    Financial Management
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="/invoice" class="text-decoration-none"> Invoices</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/money/list" class="text-decoration-none"> Currency Management</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/coin/list" class="text-decoration-none"> Cryptocurrency</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/country/list" class="text-decoration-none">Countries</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    @("📦") Product Management
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="/product/list" class="text-decoration-none">Products</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/category/list" class="text-decoration-none">Categories</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/brand/list" class="text-decoration-none">Brands</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // View navigation methods
+    private void GoToInvoices() => NavigationManager.NavigateTo("/invoice");
+    private void GoToProducts() => NavigationManager.NavigateTo("/product/list");
+    private void GoToBrands() => NavigationManager.NavigateTo("/brand/list");
+    private void GoToCategories() => NavigationManager.NavigateTo("/category/list");
+    
+    // Add navigation methods
+    private void GoToCreateInvoice() => NavigationManager.NavigateTo("/invoice/add");
+    private void GoToAddProduct() => NavigationManager.NavigateTo("/product/add");
+    private void GoToAddBrand() => NavigationManager.NavigateTo("/brand/add");
+    private void GoToAddCategory() => NavigationManager.NavigateTo("/category/add");
+}

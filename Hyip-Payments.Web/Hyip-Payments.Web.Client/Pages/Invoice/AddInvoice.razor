@@ -195,7 +195,7 @@
             }
             else
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
+                var errorContent = await response.Content.ReadAsStringAsync();                                                                                                   
                 errorMessage = $"Error: {response.ReasonPhrase}. {errorContent}";
             }
         }

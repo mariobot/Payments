@@ -16,8 +16,4 @@
     <ProjectReference Include="..\Hyip-Payments.Models\Hyip-Payments.Models.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="WalletCommand\" />
-  </ItemGroup>
-
 </Project>

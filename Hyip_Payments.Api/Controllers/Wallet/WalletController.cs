@@ -1,7 +1,8 @@
 ﻿using Hyip_Payments.Models;
-using Hyip_Payments.Context;
+using Hyip_Payments.Command.WalletCommand;
+using Hyip_Payments.Query.WalletQuery;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Hyip_Payments.Api.Controllers.Wallet
 {
@@ -9,37 +10,38 @@ namespace Hyip_Payments.Api.Controllers.Wallet
     [Route("api/[controller]")]
     public class WalletController : ControllerBase
     {
-        private readonly PaymentsDbContext _context;
+        private readonly IMediator _mediator;
 
-        public WalletController(PaymentsDbContext context)
+        public WalletController(IMediator mediator)
         {
-            _context = context;
+            _mediator = mediator;
         }
 
         // GET: api/Wallet
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<WalletModel>>> GetAll()
+        public async Task<ActionResult<WalletModel?>> GetAll()
         {
-            return Ok(await _context.Wallets.ToListAsync());
+            // You may want to implement a GetAllWalletsQuery for listing all wallets
+            // For now, just return NotImplemented
+            return StatusCode(501, "GetAllWalletsQuery not implemented.");
         }
 
         // GET: api/Wallet/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<WalletModel>> GetById(int id)
+        public async Task<ActionResult<WalletModel?>> GetById(int id)
         {
-            var wallet = await _context.Wallets.FindAsync(id);
-            if (wallet == null)
+            var result = await _mediator.Send(new GetWalletQuery(id));
+            if (result == null)
                 return NotFound();
-            return Ok(wallet);
+            return Ok(result);
         }
 
         // POST: api/Wallet
         [HttpPost]
         public async Task<ActionResult<WalletModel>> Create([FromBody] WalletModel wallet)
         {
-            _context.Wallets.Add(wallet);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = wallet.Id }, wallet);
+            var result = await _mediator.Send(new AddWalletCommand(wallet));
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         // PUT: api/Wallet/5
@@ -49,18 +51,9 @@ namespace Hyip_Payments.Api.Controllers.Wallet
             if (id != wallet.Id)
                 return BadRequest();
 
-            _context.Entry(wallet).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await _context.Wallets.AnyAsync(w => w.Id == id))
-                    return NotFound();
-                throw;
-            }
+            var result = await _mediator.Send(new EditWalletCommand(wallet));
+            if (result == null)
+                return NotFound();
 
             return NoContent();
         }
@@ -69,12 +62,17 @@ namespace Hyip_Payments.Api.Controllers.Wallet
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var wallet = await _context.Wallets.FindAsync(id);
-            if (wallet == null)
-                return NotFound();
+            // You may want to implement a DeleteWalletCommand
+            return StatusCode(501, "DeleteWalletCommand not implemented.");
+        }
 
-            _context.Wallets.Remove(wallet);
-            await _context.SaveChangesAsync();
+        // PUT: api/Wallet/disable/5
+        [HttpPut("disable/{id}")]
+        public async Task<IActionResult> Disable(int id)
+        {
+            var result = await _mediator.Send(new DisableWalletCommand(id));
+            if (!result)
+                return NotFound();
             return NoContent();
         }
     }

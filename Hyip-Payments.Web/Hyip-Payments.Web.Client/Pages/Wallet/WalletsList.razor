@@ -1,0 +1,68 @@
+﻿@page "/wallet/list"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Wallets List</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (wallets == null || wallets.Count == 0)
+{
+    <div class="alert alert-info">No wallets found.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Currency</th>
+                <th>Balance</th>
+                <th>Is Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var wallet in wallets)
+            {
+                <tr>
+                    <td>@wallet.Address</td>
+                    <td>@wallet.Currency</td>
+                    <td>@wallet.Balance</td>
+                    <td>@(wallet.IsActive ? "Yes" : "No")</td>
+                    <td>
+                        <a class="btn btn-sm btn-primary" href="@($"/wallet/edit/{wallet.Id}")">Edit</a>
+                        <a class="btn btn-sm btn-danger" href="@($"/wallet/disable/{wallet.Id}")">Disable</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    private List<WalletModel>? wallets;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            wallets = await Http.GetFromJsonAsync<List<WalletModel>>("api/wallet");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        isLoading = false;
+    }
+}

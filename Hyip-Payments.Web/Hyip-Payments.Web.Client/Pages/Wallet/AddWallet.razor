@@ -1,0 +1,65 @@
+﻿@page "/wallet/add"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Add Wallet</h3>
+
+<EditForm Model="wallet" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="address" class="form-label">Address</label>
+        <InputText id="address" class="form-control" @bind-Value="wallet.Address" />
+    </div>
+    <div class="mb-3">
+        <label for="currency" class="form-label">Currency</label>
+        <InputText id="currency" class="form-control" @bind-Value="wallet.Currency" />
+    </div>
+    <div class="mb-3">
+        <label for="balance" class="form-label">Balance</label>
+        <InputNumber id="balance" class="form-control" @bind-Value="wallet.Balance" />
+    </div>
+    <div class="mb-3">
+        <label for="isActive" class="form-label">Is Active</label>
+        <InputCheckbox id="isActive" class="form-check-input" @bind-Value="wallet.IsActive" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Wallet</button>
+    <button type="button" class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    private WalletModel wallet = new();
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/wallet", wallet);
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/wallet/list");
+            }
+            else
+            {
+                errorMessage = "Failed to add wallet.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/wallet/list");
+    }
+}

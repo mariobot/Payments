@@ -1,0 +1,87 @@
+﻿@page "/wallet/disable/{Id:int}"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Disable Wallet</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (wallet == null)
+{
+    <div class="alert alert-danger">Wallet not found.</div>
+}
+else if (isDisabled)
+{
+    <div class="alert alert-success">Wallet has been disabled.</div>
+    <button class="btn btn-primary" @onclick="GoBack">Back to List</button>
+}
+else
+{
+    <div class="alert alert-warning">
+        Are you sure you want to disable the wallet <strong>@wallet.Address</strong>?
+    </div>
+    <button class="btn btn-danger" @onclick="DisableWalletAsync">Disable</button>
+    <button class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private WalletModel? wallet;
+    private bool isLoading = true;
+    private bool isDisabled = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            wallet = await Http.GetFromJsonAsync<WalletModel>($"api/wallet/{Id}");
+            if (wallet == null)
+                errorMessage = "Wallet not found.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        isLoading = false;
+    }
+
+    private async Task DisableWalletAsync()
+    {
+        if (wallet == null)
+            return;
+
+        try
+        {
+            wallet.IsActive = false;
+            var response = await Http.PutAsJsonAsync($"api/wallet/{Id}", wallet);
+            if (response.IsSuccessStatusCode)
+            {
+                isDisabled = true;
+            }
+            else
+            {
+                errorMessage = "Failed to disable wallet.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/wallet/list");
+    }
+}

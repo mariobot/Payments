@@ -1,0 +1,95 @@
+﻿@page "/wallet/edit/{Id:int}"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Edit Wallet</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (wallet == null)
+{
+    <div class="alert alert-danger">Wallet not found.</div>
+}
+else
+{
+    <EditForm Model="wallet" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="address" class="form-label">Address</label>
+            <InputText id="address" class="form-control" @bind-Value="wallet.Address" />
+        </div>
+        <div class="mb-3">
+            <label for="currency" class="form-label">Currency</label>
+            <InputText id="currency" class="form-control" @bind-Value="wallet.Currency" />
+        </div>
+        <div class="mb-3">
+            <label for="balance" class="form-label">Balance</label>
+            <InputNumber id="balance" class="form-control" @bind-Value="wallet.Balance" />
+        </div>
+        <div class="mb-3">
+            <label for="isActive" class="form-label">Is Active</label>
+            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="wallet.IsActive" />
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+    </EditForm>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private WalletModel? wallet;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            wallet = await Http.GetFromJsonAsync<WalletModel>($"api/wallet/{Id}");
+            if (wallet == null)
+                errorMessage = "Wallet not found.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/wallet/{Id}", wallet);
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/wallet/list");
+            }
+            else
+            {
+                errorMessage = "Failed to update wallet.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/wallet/list");
+    }
+}

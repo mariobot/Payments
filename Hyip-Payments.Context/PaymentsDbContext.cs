@@ -30,9 +30,11 @@ namespace Hyip_Payments.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            System.Diagnostics.Debugger.Launch();
+            //System.Diagnostics.Debugger.Launch();
             base.OnModelCreating(modelBuilder);
             // Add custom configuration if needed
+            
+            //this.Database.Migrate(); // Ensure migrations are applied at startup - use with caution in production
         }
 
         // Manual migration method(call this from your startup code)

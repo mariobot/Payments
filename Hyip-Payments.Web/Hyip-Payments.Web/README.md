@@ -33,7 +33,7 @@ PM> Update-Database
 Context PaymentsDbContext
 dotnet ef migrations add Add_Coins --project Hyip-Payments.Context --startup-project Hyip-Payments.Web/Hyip-Payments.Web --context PaymentsDbContext
 
-dotnet ef update database --project Hyip-Payments.Context --startup-project Hyip-Payments.Web/Hyip-Payments.Web --context PaymentsDbContext
+dotnet ef database update --project Hyip-Payments.Context --startup-project Hyip-Payments.Web/Hyip-Payments.Web --context PaymentsDbContext
 
 Context Application
 dotnet ef database update --project Hyip-Payments.Web\\Hyip-Payments.Web --context ApplicationDbContext

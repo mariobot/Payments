@@ -4,8 +4,12 @@ using Hyip_Payments.Command.UserCommand;
 using Hyip_Payments.Context;
 using Hyip_Payments.Models;
 using Hyip_Payments.Query.ProductQuery;
+using Hyip_Payments.Services;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Hyip_Payments.Api
 {
@@ -47,7 +51,29 @@ namespace Hyip_Payments.Api
             builder.Services.AddScoped<IRequestHandler<GetProductListQuery, List<ProductModel>>, GetProductListQueryHandler>();
             builder.Services.AddScoped<IRequestHandler<GetProductByIdQuery, ProductModel?>, GetProductByIdQueryHandler>();
             builder.Services.AddScoped<IRequestHandler<RegisterUserCommand, UserModel>, RegisterUserCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<LoginUserCommand, UserModel?>, LoginUserCommandHandler>();
 
+            // Add TokenService
+            builder.Services.AddScoped<TokenService>();
+
+            // Add JWT Authentication
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                    };
+                });
+
+            builder.Services.AddAuthorization();
 
             // Add Application Services
             builder.Services.AddApplicationServices(connectionString);
@@ -73,7 +99,8 @@ namespace Hyip_Payments.Api
             app.UseHttpsRedirection();
 
             app.UseCors("AllowAllOrigins");
-            
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

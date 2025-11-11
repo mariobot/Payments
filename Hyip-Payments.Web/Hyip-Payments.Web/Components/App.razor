@@ -15,7 +15,16 @@
 </head>
 
 <body>
-    <Hyip_Payments.Web.Client.Routes @rendermode="PageRenderMode" />
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Hyip_Payments.Web.Client.Layout.MainLayout)" @rendermode="PageRenderMode" />
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </NotFound>
+    </Router>
     <script src="_framework/blazor.web.js"></script>
 </body>
 

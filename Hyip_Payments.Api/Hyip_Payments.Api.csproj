@@ -23,4 +23,8 @@
     <ProjectReference Include="..\Hyip-Payments.Services\Hyip-Payments.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\Roles\" />
+  </ItemGroup>
+
 </Project>

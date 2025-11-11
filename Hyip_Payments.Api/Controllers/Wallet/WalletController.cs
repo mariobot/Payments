@@ -1,13 +1,15 @@
-﻿using Hyip_Payments.Models;
+using Hyip_Payments.Models;
 using Hyip_Payments.Command.WalletCommand;
 using Hyip_Payments.Query.WalletQuery;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.Wallet
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WalletController : ControllerBase
     {
         private readonly IMediator _mediator;

@@ -1,13 +1,15 @@
-﻿using Hyip_Payments.Command.InvoiceCommand;
+using Hyip_Payments.Command.InvoiceCommand;
 using Hyip_Payments.Models;
 using Hyip_Payments.Query.InvoiceQuery;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.Invoice
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class InvoiceController : ControllerBase
     {
         private readonly IMediator _mediator;

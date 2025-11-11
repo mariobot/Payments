@@ -1,4 +1,5 @@
-﻿using MediatR;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Hyip_Payments.Command.CountryCommand;
 using Hyip_Payments.Query.CountryQuery;
@@ -8,6 +9,7 @@ namespace Hyip_Payments.Api.Controllers.Country
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CountryController : ControllerBase
     {
         private readonly IMediator _mediator;

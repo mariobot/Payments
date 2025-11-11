@@ -1,13 +1,15 @@
-﻿using Hyip_Payments.Command.ProductCommand;
+using Hyip_Payments.Command.ProductCommand;
 using Hyip_Payments.Models;
 using Hyip_Payments.Query.ProductQuery;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.Product
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly IMediator _mediator;

@@ -1,13 +1,15 @@
-﻿using Hyip_Payments.Command.UserCommand;
+using Hyip_Payments.Command.UserCommand;
 using Hyip_Payments.Query.UserQuery;
 using Hyip_Payments.Models;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.User
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IMediator _mediator;

@@ -1,5 +1,10 @@
 using Hyip_Payments.Api.Extensions;
+using Hyip_Payments.Command.ProductCommand;
+using Hyip_Payments.Command.UserCommand;
 using Hyip_Payments.Context;
+using Hyip_Payments.Models;
+using Hyip_Payments.Query.ProductQuery;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hyip_Payments.Api
@@ -22,6 +27,8 @@ namespace Hyip_Payments.Api
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+
+
             // Add CORS policy
             builder.Services.AddCors(options =>
             {
@@ -32,6 +39,14 @@ namespace Hyip_Payments.Api
                           .AllowAnyHeader();
                 });
             });
+
+
+            builder.Services.AddScoped<IRequestHandler<AddProductCommand, ProductModel>, AddProductCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<EditProductCommand, ProductModel?>, EditProductCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<DeleteProductCommand, bool>, DeleteProductCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<GetProductListQuery, List<ProductModel>>, GetProductListQueryHandler>();
+            builder.Services.AddScoped<IRequestHandler<GetProductByIdQuery, ProductModel?>, GetProductByIdQueryHandler>();
+            builder.Services.AddScoped<IRequestHandler<RegisterUserCommand, UserModel>, RegisterUserCommandHandler>();
 
 
             // Add Application Services

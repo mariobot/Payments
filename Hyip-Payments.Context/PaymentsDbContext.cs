@@ -23,13 +23,14 @@ namespace Hyip_Payments.Context
         public DbSet<InvoiceModel> Invoices { get; set; }
         public DbSet<InvoiceItemModel> InvoiceItems { get; set; }
         public DbSet<WalletModel> Wallets { get; set; }
-        public DbSet<PaymentMethodModel> PaymentMethods { get; set; }
-        
+        public DbSet<PaymentMethodModel> PaymentMethods { get; set; }        
         public DbSet<PaymentTransactionModel> PaymentTransactions { get; set; }
+        public DbSet<UserApplicationModel> UserApplications { get; set; }
+        public DbSet<UserTenantModel> UserTenants { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //System.Diagnostics.Debugger.Launch();
+            System.Diagnostics.Debugger.Launch();
             base.OnModelCreating(modelBuilder);
             // Add custom configuration if needed
         }

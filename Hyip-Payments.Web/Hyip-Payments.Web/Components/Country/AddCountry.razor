@@ -3,8 +3,11 @@
 @using Hyip_Payments.Command.CountryCommand
 @using Hyip_Payments.Models
 @using MediatR
+@using Microsoft.AspNetCore.Authorization
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
+
+@attribute [AllowAnonymous]
 
 <h3>Add Country</h3>
 

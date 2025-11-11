@@ -1,6 +1,8 @@
 ﻿@page "/ListCountry"
+@attribute [AllowAnonymous]
 
 @using Hyip_Payments.Models
+@using Microsoft.AspNetCore.Authorization
 @inject NavigationManager NavigationManager
 @inject MediatR.IMediator Mediator
 
@@ -59,17 +61,15 @@ else
         countries = await LoadCountriesAsync();
     }
 
-    private Task<List<CountryModel>> LoadCountriesAsync()
+    private async Task<List<CountryModel>> LoadCountriesAsync()
     {
-        var result = Mediator.Send(new Hyip_Payments.Query.CountryQuery.GetCountryListQuery());
-
-        if (result.IsCompletedSuccessfully)
+        try
         {
-            return result;
+            return await Mediator.Send(new Hyip_Payments.Query.CountryQuery.GetCountryListQuery());
         }
-        else
+        catch
         {
-            return null;
+            return new List<CountryModel>();
         }
     }
 

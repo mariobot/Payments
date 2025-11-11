@@ -1,0 +1,75 @@
+@page "/profile"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject IAccessTokenProvider TokenProvider
+@inject HttpClient Http
+
+<PageTitle>User Profile</PageTitle>
+
+<h3>User Profile</h3>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card">
+            <div class="card-body">
+                <h5>Welcome, @context.User.Identity?.Name!</h5>
+                <p><strong>Email:</strong> @context.User.FindFirst("email")?.Value</p>
+                <p><strong>User ID:</strong> @context.User.FindFirst("sub")?.Value</p>
+                
+                @if (roles != null && roles.Any())
+                {
+                    <p><strong>Roles:</strong> @string.Join(", ", roles)</p>
+                }
+
+                @if (!string.IsNullOrEmpty(tokenStatus))
+                {
+                    <div class="alert alert-info mt-3">
+                        @tokenStatus
+                    </div>
+                }
+
+                <button class="btn btn-primary mt-3" @onclick="CheckToken">Check Token Status</button>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <p>You need to log in to view this page.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<string> roles = new();
+    private string? tokenStatus;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                roles = user.FindAll("role").Select(c => c.Value).ToList();
+            }
+        }
+    }
+
+    private async Task CheckToken()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken();
+
+        if (tokenResult.TryGetToken(out var token))
+        {
+            tokenStatus = $"Token is valid. Expires: {token.Expires.ToLocalTime()}";
+        }
+        else
+        {
+            tokenStatus = "Failed to retrieve token.";
+        }
+    }
+}

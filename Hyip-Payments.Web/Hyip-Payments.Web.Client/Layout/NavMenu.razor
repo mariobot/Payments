@@ -140,26 +140,23 @@
             </NavLink>
         </div>
 
-        <!-- Account Section -->
-        <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Account</div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Account/Register">
-                <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Account/Login">
-                <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-            </NavLink>
-        </div>
-
         <!-- Auth Section -->
-        @* <AuthorizeView>
+        <AuthorizeView>
             <Authorized>
-                <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">Account</div>
+                <div class="mt-3 mb-1 fw-bold text-uppercase text-secondary px-3 small">👤 Account</div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Manage">
                         <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Manage/ChangePassword">
+                        <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Change Password
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Manage/Email">
+                        <span class="bi bi-envelope-nav-menu" aria-hidden="true"></span> Email Confirmation
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
@@ -185,7 +182,7 @@
                     </NavLink>
                 </div>
             </NotAuthorized>
-        </AuthorizeView> *@
+        </AuthorizeView>
     </nav>
 </div>
 

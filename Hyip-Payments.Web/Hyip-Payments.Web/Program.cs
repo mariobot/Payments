@@ -61,13 +61,13 @@ namespace Hyip_Payments.Web
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+            // Add PaymentsDbContext
+            builder.Services.AddDbContext<PaymentsDbContext>(options =>
+                options.UseSqlServer(connectionString));
+
             // Add ApplicationDbContext
             // TODO pending while fix the migrations of the Identity
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
-
-            // Add PaymentsDbContext
-            builder.Services.AddDbContext<PaymentsDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
             var apiKeyBinance = builder.Configuration.GetSection("Binance").GetRequiredSection("ApiKey").Value;
@@ -120,19 +120,18 @@ namespace Hyip_Payments.Web
 
             var app = builder.Build();
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseWebAssemblyDebugging();
+                app.UseDeveloperExceptionPage();
                 //app.UseMigrationsEndPoint();
             }
             else
             {
+                // TODO remove in production
+                app.UseDeveloperExceptionPage();
+
                 app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();

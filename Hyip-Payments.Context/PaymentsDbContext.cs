@@ -32,7 +32,11 @@ namespace Hyip_Payments.Context
         {
             //System.Diagnostics.Debugger.Launch();
             base.OnModelCreating(modelBuilder);
-            // Add custom configuration if needed
+            
+            // Configure decimal precision for WalletModel.Balance
+            modelBuilder.Entity<WalletModel>()
+                .Property(w => w.Balance)
+                .HasPrecision(18, 2);
             
             //this.Database.Migrate(); // Ensure migrations are applied at startup - use with caution in production
         }

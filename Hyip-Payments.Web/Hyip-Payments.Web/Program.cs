@@ -140,6 +140,9 @@ namespace Hyip_Payments.Web
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseAntiforgery();
 
             // Cors alwais is difined later up httpredirection

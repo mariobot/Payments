@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
+@using Hyip_Payments.Command.UserCommand
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using Hyip_Payments.Web.Data
@@ -14,6 +15,7 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject HttpClient Http
 
 <PageTitle>Register</PageTitle>
 
@@ -81,6 +83,25 @@
         }
 
         Logger.LogInformation("User created a new account with password.");
+
+        string errorMessage = null;
+
+        var command = new RegisterUserCommand
+        {
+            Email = Input.Email,
+            Password = Input.Password,
+            Username = Input.Email // Or use a separate username field if available
+        };
+
+        var response = await Http.PostAsJsonAsync("api/user/register", command);
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            errorMessage = "Registration failed.";
+        }
 
         var userId = await UserManager.GetUserIdAsync(user);
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);

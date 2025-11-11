@@ -73,7 +73,10 @@ namespace Hyip_Payments.Command.UserCommand
             var appUser = new UserApplicationModel
             {
                 UserId = user.Id,
-                EmailConfirmed = request.EmailConfirmed
+                EmailConfirmed = request.EmailConfirmed,
+                UserTenantId = 1, // Assign tenant 1 (HomeCompany)
+                Email = request.Email,
+                Password = request.Password,
             };
             _context.UserApplications.Add(appUser);
 

@@ -1,0 +1,49 @@
+﻿@page "/user/info"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+
+<h3>User Information</h3>
+
+@if (user == null)
+{
+    <div>Loading user information...</div>
+}
+else
+{
+    <table class="table">
+        <tr>
+            <th>Username</th>
+            <td>@user.Username</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>@user.Email</td>
+        </tr>
+        <tr>
+            <th>First Name</th>
+            <td>@user.FirstName</td>
+        </tr>
+        <tr>
+            <th>Last Name</th>
+            <td>@user.LastName</td>
+        </tr>
+        <tr>
+            <th>Created At</th>
+            <td>@user.CreatedAt</td>
+        </tr>
+        <tr>
+            <th>Active</th>
+            <td>@(user.IsActive ? "Yes" : "No")</td>
+        </tr>
+    </table>
+}
+
+@code {
+    private UserModel? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Adjust the endpoint as needed to get the current user info
+        user = await Http.GetFromJsonAsync<UserModel>("api/user/me");
+    }
+}

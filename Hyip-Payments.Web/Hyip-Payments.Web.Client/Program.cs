@@ -8,21 +8,18 @@ namespace Hyip_Payments.Web.Client
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
+            // Simple setup for server-side Identity authentication
             builder.Services.AddAuthorizationCore();
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddAuthenticationStateDeserialization();
 
-            // Register the AuthorizationMessageHandler
-            builder.Services.AddScoped<AuthorizationMessageHandler>();
+            string val = builder.HostEnvironment.BaseAddress;
 
-            // Register HttpClient with the authorization handler
-            builder.Services.AddHttpClient("API", client =>
-                client.BaseAddress = new Uri("https://localhost:7263"))
-                .AddHttpMessageHandler<AuthorizationMessageHandler>();
-
-            // Register default HttpClient that uses the named client
-            builder.Services.AddScoped(sp =>
-                sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
+            // HttpClient - use the Web app's base address (same origin)
+            builder.Services.AddScoped(sp => new HttpClient
+            {
+                BaseAddress = new Uri("https://localhost:5009")
+            });
 
             await builder.Build().RunAsync();
         }

@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.User
 {
     [Route("api/user/me")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class UserMeController : ControllerBase
     {
         private readonly PaymentsDbContext _context;

@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.Money
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class MoneyController : ControllerBase
     {
         private readonly IMediator _mediator;

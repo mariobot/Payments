@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.User
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class UserController : ControllerBase
     {
         private readonly IMediator _mediator;

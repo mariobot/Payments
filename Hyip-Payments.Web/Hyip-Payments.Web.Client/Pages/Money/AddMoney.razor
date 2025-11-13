@@ -38,7 +38,7 @@
         var response = await Http.PostAsJsonAsync("api/money", money);
         if (response.IsSuccessStatusCode)
         {
-            NavigationManager.NavigateTo("/moneylist");
+            NavigationManager.NavigateTo("/money/list");
         }
         else
         {
@@ -48,6 +48,6 @@
 
     private void GoBack()
     {
-        NavigationManager.NavigateTo("/moneylist");
+        NavigationManager.NavigateTo("/money/list");
     }
 }

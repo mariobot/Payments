@@ -25,7 +25,7 @@ namespace Hyip_Payments.Web
             // Add HttpClient for WebAssembly components
             builder.Services.AddScoped(sp => new HttpClient 
             { 
-                BaseAddress = new Uri("http://localhost:5009")
+                BaseAddress = new Uri("https://localhost:7263")
             });
 
             // Identity services 
@@ -78,7 +78,7 @@ namespace Hyip_Payments.Web
             {
                 options.AddPolicy("AllowSpecificOrigins", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5009")
+                    policy.WithOrigins("https://localhost:7263")
                           .AllowAnyMethod()
                           .AllowAnyHeader();
                 });
@@ -102,7 +102,7 @@ namespace Hyip_Payments.Web
             // TODO pending identity migrations
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-            builder.Services.AddWebApplicationServices("http://localhost:5009");
+            builder.Services.AddWebApplicationServices("https://localhost:7263");
 
             var app = builder.Build();
 

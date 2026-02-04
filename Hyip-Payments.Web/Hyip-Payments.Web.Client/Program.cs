@@ -18,7 +18,7 @@ namespace Hyip_Payments.Web.Client
             // HttpClient - use the Web app's base address (same origin)
             builder.Services.AddScoped(sp => new HttpClient
             {
-                BaseAddress = new Uri("https://localhost:5009")
+                BaseAddress = new Uri("https://localhost:7263")
             });
 
             await builder.Build().RunAsync();

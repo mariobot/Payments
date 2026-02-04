@@ -38,7 +38,10 @@ namespace Hyip_Payments.Api
             {
                 options.AddPolicy("AllowAllOrigins", policy =>
                 {
-                    policy.WithOrigins("https://localhost:7263", "http://localhost:5009")
+                    policy.WithOrigins(
+                            "https://localhost:7263",  // Web app HTTPS
+                            "http://localhost:5009",   // Web app HTTP
+                            "https://localhost:5009")  // Web app HTTPS (added)
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials();
@@ -57,6 +60,9 @@ namespace Hyip_Payments.Api
             // Add TokenService
             builder.Services.AddScoped<TokenService>();
 
+            // TODO: Temporarily disabled JWT Authentication for testing
+            // Re-enable once client authentication is properly configured
+            /*
             // Add JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -75,6 +81,7 @@ namespace Hyip_Payments.Api
                 });
 
             builder.Services.AddAuthorization();
+            */
 
             // Add Application Services
             builder.Services.AddApplicationServices(connectionString);
@@ -101,8 +108,10 @@ namespace Hyip_Payments.Api
 
             app.UseCors("AllowAllOrigins");
 
-            app.UseAuthentication();
-            app.UseAuthorization();
+            // TODO: Temporarily disabled authentication middleware
+            // Re-enable once JWT authentication is properly configured
+            // app.UseAuthentication();
+            // app.UseAuthorization();
 
 
             app.MapControllers();

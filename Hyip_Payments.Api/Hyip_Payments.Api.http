@@ -1,4 +1,5 @@
- @host = http://localhost:5009
+ @host = https://localhost:7263
+
 
 ### Country Endpoints
 

@@ -74,15 +74,15 @@ namespace Hyip_Payments.Web
 
             // Add CORS policy
             // Add CORS policy
-            //builder.Services.AddCors(options =>
-            //{
-            //    options.AddPolicy("AllowSpecificOrigins", policy =>
-            //    {
-            //        policy.WithOrigins("http://localhost:5009")
-            //              .AllowAnyMethod()
-            //              .AllowAnyHeader();
-            //    });
-            //});
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigins", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5009")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

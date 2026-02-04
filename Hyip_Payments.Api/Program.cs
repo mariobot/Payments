@@ -38,9 +38,10 @@ namespace Hyip_Payments.Api
             {
                 options.AddPolicy("AllowAllOrigins", policy =>
                 {
-                    policy.AllowAnyOrigin()
+                    policy.WithOrigins("https://localhost:7263", "http://localhost:5009")
                           .AllowAnyMethod()
-                          .AllowAnyHeader();
+                          .AllowAnyHeader()
+                          .AllowCredentials();
                 });
             });
 

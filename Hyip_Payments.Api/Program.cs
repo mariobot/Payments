@@ -25,18 +25,14 @@ namespace Hyip_Payments.Api
 
 
 
-            // Add CORS policy
+            // Add CORS policy - Allow all origins for development
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins", policy =>
                 {
-                    policy.WithOrigins(
-                            "https://localhost:7263",  // Web app HTTPS
-                            "http://localhost:5009",   // Web app HTTP
-                            "https://localhost:5009")  // Web app HTTPS (added)
+                    policy.AllowAnyOrigin()
                           .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
+                          .AllowAnyHeader();
                 });
             });
 

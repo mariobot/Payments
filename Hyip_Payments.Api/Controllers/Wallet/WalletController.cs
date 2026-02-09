@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.Wallet
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class WalletController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -21,11 +21,10 @@ namespace Hyip_Payments.Api.Controllers.Wallet
 
         // GET: api/Wallet
         [HttpGet]
-        public async Task<ActionResult<WalletModel?>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            // You may want to implement a GetAllWalletsQuery for listing all wallets
-            // For now, just return NotImplemented
-            return StatusCode(501, "GetAllWalletsQuery not implemented.");
+            var wallets = await _mediator.Send(new GetWalletListQuery());
+            return Ok(wallets);
         }
 
         // GET: api/Wallet/5

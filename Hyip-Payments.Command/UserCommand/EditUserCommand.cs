@@ -30,11 +30,13 @@ namespace Hyip_Payments.Command.UserCommand
             if (existing == null)
                 return null;
 
-            // Update properties as needed
+            // Update properties
             existing.Username = request.User.Username;
             existing.Email = request.User.Email;
             existing.PasswordHash = request.User.PasswordHash;
-            // Add other properties as needed
+            existing.FirstName = request.User.FirstName;
+            existing.LastName = request.User.LastName;
+            existing.IsActive = request.User.IsActive;
 
             await _context.SaveChangesAsync(cancellationToken);
             return existing;

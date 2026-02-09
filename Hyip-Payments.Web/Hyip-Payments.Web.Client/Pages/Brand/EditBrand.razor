@@ -18,7 +18,7 @@ else
     <EditForm Model="@brand" OnValidSubmit="HandleValidSubmit" FormName="editBrandForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
-
+        
         <div class="mb-3">
             <label for="name" class="form-label">Brand Name</label>
             <InputText id="name" class="form-control" @bind-Value="brand.Name" />
@@ -89,6 +89,8 @@ else
 
     public class BrandModel
     {
+        public int Id { get; set; }
+
         [Required]
         [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
         public string Name { get; set; } = string.Empty;

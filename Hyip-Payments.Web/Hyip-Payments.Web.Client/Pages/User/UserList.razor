@@ -1,0 +1,191 @@
+﻿@page "/user/list"
+
+@using Hyip_Payments.Models
+@using Microsoft.JSInterop
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>User List</h3>
+    <button class="btn btn-success" @onclick="CreateUser">
+        <i class="bi bi-plus-circle"></i> Create New User
+    </button>
+</div>
+
+@if (users == null)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading users...</p>
+    </div>
+}
+else if (!users.Any())
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No users found.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in users)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.Username</td>
+                        <td>@user.Email</td>
+                        <td>@user.FirstName</td>
+                        <td>@user.LastName</td>
+                        <td>@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            @if (user.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-primary" @onclick="() => ViewUser(user.Id)" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning" @onclick="() => EditUser(user.Id)" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-secondary" @onclick="() => ChangePassword(user.Id)" title="Change Password">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info" @onclick="() => ToggleUserStatus(user.Id)" title="Toggle Status">
+                                    <i class="bi bi-toggle-on"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteUser(user.Id)" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="alert alert-secondary">
+        <strong>Total Users:</strong> @users.Count
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @message
+        <button type="button" class="btn-close" @onclick="() => message = null"></button>
+    </div>
+}
+
+@code {
+    private List<UserModel>? users;
+    private string? message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            users = await Http.GetFromJsonAsync<List<UserModel>>("api/User");
+        }
+        catch (Exception ex)
+        {
+            message = $"Error loading users: {ex.Message}";
+        }
+    }
+
+    private void CreateUser()
+    {
+        NavigationManager.NavigateTo("/user/add");
+    }
+
+    private void ViewUser(int id)
+    {
+        NavigationManager.NavigateTo($"/user/view/{id}");
+    }
+
+    private void EditUser(int id)
+    {
+        NavigationManager.NavigateTo($"/user/edit/{id}");
+    }
+
+    private void ChangePassword(int id)
+    {
+        NavigationManager.NavigateTo($"/user/change-password/{id}");
+    }
+
+    private async Task ToggleUserStatus(int id)
+    {
+        try
+        {
+            var response = await Http.PutAsync($"api/User/toggle-active/{id}", null);
+            if (response.IsSuccessStatusCode)
+            {
+                message = "User status updated successfully!";
+                await LoadUsers();
+            }
+            else
+            {
+                message = "Failed to update user status.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteUser(int id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this user?"))
+        {
+            try
+            {
+                var response = await Http.DeleteAsync($"api/User/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    message = "User deleted successfully!";
+                    await LoadUsers();
+                }
+                else
+                {
+                    message = "Failed to delete user.";
+                }
+            }
+            catch (Exception ex)
+            {
+                message = $"Error: {ex.Message}";
+            }
+        }
+    }
+}
+

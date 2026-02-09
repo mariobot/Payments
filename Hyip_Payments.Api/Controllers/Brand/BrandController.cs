@@ -47,7 +47,7 @@ namespace Hyip_Payments.Api.Controllers.Brand
         }
 
         // PUT: api/Brand/5
-        [HttpPut("{id}")]
+        [HttpPut("{id}")]   
         public async Task<IActionResult> Edit(int id, [FromBody] BrandModel brand)
         {
             if (id != brand.Id)

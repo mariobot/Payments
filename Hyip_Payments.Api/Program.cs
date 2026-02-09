@@ -1,7 +1,15 @@
 using Hyip_Payments.Api.Extensions;
+using Hyip_Payments.Command.ProductCommand;
+using Hyip_Payments.Command.UserCommand;
 using Hyip_Payments.Context;
+using Hyip_Payments.Models;
+using Hyip_Payments.Query.ProductQuery;
 using Hyip_Payments.Services;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Hyip_Payments.Api
 {
@@ -25,7 +33,7 @@ namespace Hyip_Payments.Api
 
 
 
-            // Add CORS policy - Allow all origins for development
+            // Add CORS policy
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins", policy =>
@@ -37,14 +45,17 @@ namespace Hyip_Payments.Api
             });
 
 
-            // MediatR handlers are now registered via assembly scanning in AddApplicationServices()
+            builder.Services.AddScoped<IRequestHandler<AddProductCommand, ProductModel>, AddProductCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<EditProductCommand, ProductModel?>, EditProductCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<DeleteProductCommand, bool>, DeleteProductCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<GetProductListQuery, List<ProductModel>>, GetProductListQueryHandler>();
+            builder.Services.AddScoped<IRequestHandler<GetProductByIdQuery, ProductModel?>, GetProductByIdQueryHandler>();
+            builder.Services.AddScoped<IRequestHandler<RegisterUserCommand, UserModel>, RegisterUserCommandHandler>();
+            builder.Services.AddScoped<IRequestHandler<LoginUserCommand, UserModel?>, LoginUserCommandHandler>();
 
             // Add TokenService
             builder.Services.AddScoped<TokenService>();
 
-            // TODO: Temporarily disabled JWT Authentication for testing
-            // Re-enable once client authentication is properly configured
-            /*
             // Add JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -63,7 +74,6 @@ namespace Hyip_Payments.Api
                 });
 
             builder.Services.AddAuthorization();
-            */
 
             // Add Application Services
             builder.Services.AddApplicationServices(connectionString);
@@ -90,10 +100,8 @@ namespace Hyip_Payments.Api
 
             app.UseCors("AllowAllOrigins");
 
-            // TODO: Temporarily disabled authentication middleware
-            // Re-enable once JWT authentication is properly configured
-            // app.UseAuthentication();
-            // app.UseAuthorization();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
 
             app.MapControllers();

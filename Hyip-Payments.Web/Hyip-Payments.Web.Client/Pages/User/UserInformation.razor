@@ -1,49 +1,199 @@
 ﻿@page "/user/info"
 @using Hyip_Payments.Models
+@using System.Security.Claims
 @inject HttpClient Http
+@inject NavigationManager NavigationManager
 
-<h3>User Information</h3>
+<PageTitle>User Information</PageTitle>
 
-@if (user == null)
-{
-    <div>Loading user information...</div>
-}
-else
-{
-    <table class="table">
-        <tr>
-            <th>Username</th>
-            <td>@user.Username</td>
-        </tr>
-        <tr>
-            <th>Email</th>
-            <td>@user.Email</td>
-        </tr>
-        <tr>
-            <th>First Name</th>
-            <td>@user.FirstName</td>
-        </tr>
-        <tr>
-            <th>Last Name</th>
-            <td>@user.LastName</td>
-        </tr>
-        <tr>
-            <th>Created At</th>
-            <td>@user.CreatedAt</td>
-        </tr>
-        <tr>
-            <th>Active</th>
-            <td>@(user.IsActive ? "Yes" : "No")</td>
-        </tr>
-    </table>
-}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3><i class="bi bi-info-circle"></i> User Information</h3>
+                </div>
+                <div class="card-body">
+                    <AuthorizeView>
+                        <Authorized>
+                            @if (isLoading)
+                            {
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p>Loading user information...</p>
+                                </div>
+                            }
+                            else if (user == null)
+                            {
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> Unable to load user information.
+                                </div>
+                                @if (!string.IsNullOrEmpty(errorMessage))
+                                {
+                                    <div class="alert alert-warning">
+                                        <small>@errorMessage</small>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th class="bg-light" style="width: 30%;">Username</th>
+                                            <td>@user.Username</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light">Email</th>
+                                            <td>@user.Email</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light">First Name</th>
+                                            <td>@(user.FirstName ?? "N/A")</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light">Last Name</th>
+                                            <td>@(user.LastName ?? "N/A")</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light">Created At</th>
+                                            <td>@user.CreatedAt.ToString("MMMM dd, yyyy HH:mm:ss")</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light">Status</th>
+                                            <td>
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <hr />
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button class="btn btn-primary" @onclick="GoToProfile">
+                                        <i class="bi bi-person-circle"></i> Full Profile
+                                    </button>
+                                    <button class="btn btn-warning" @onclick="EditUser">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-secondary" @onclick="GoToUserList">
+                                        <i class="bi bi-people"></i> All Users
+                                    </button>
+                                </div>
+                            }
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> You need to log in to view user information.
+                            </div>
+                            <a href="/Account/Login" class="btn btn-primary">Login</a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
     private UserModel? user;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string? email;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        // Adjust the endpoint as needed to get the current user info
-        user = await Http.GetFromJsonAsync<UserModel>("api/user/me");
+        isLoading = true;
+
+        try
+        {
+            if (AuthenticationStateTask != null)
+            {
+                var authState = await AuthenticationStateTask;
+                var authUser = authState.User;
+
+                if (authUser.Identity?.IsAuthenticated == true)
+                {
+                    // Get email from authentication state
+                    email = authUser.FindFirst(ClaimTypes.Email)?.Value 
+                         ?? authUser.FindFirst("email")?.Value
+                         ?? authUser.Identity.Name;
+
+                    if (!string.IsNullOrEmpty(email))
+                    {
+                        // Call the new API endpoint with email
+                        try
+                        {
+                            user = await Http.GetFromJsonAsync<UserModel>($"api/user/by-email/{email}");
+                        }
+                        catch (Exception ex)
+                        {
+                            errorMessage = $"Failed to load user: {ex.Message}";
+
+                            // Fallback: try by username
+                            var username = authUser.Identity.Name;
+                            if (!string.IsNullOrEmpty(username) && username != email)
+                            {
+                                try
+                                {
+                                    user = await Http.GetFromJsonAsync<UserModel>($"api/user/by-username/{username}");
+                                }
+                                catch (Exception usernameEx)
+                                {
+                                    errorMessage += $" | Username lookup also failed: {usernameEx.Message}";
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        errorMessage = "Could not find email in authentication claims";
+                    }
+                }
+                else
+                {
+                    errorMessage = "User is not authenticated";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load user information: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoToProfile()
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+
+    private void EditUser()
+    {
+        if (user != null)
+        {
+            NavigationManager.NavigateTo($"/user/edit/{user.Id}");
+        }
+    }
+
+    private void GoToUserList()
+    {
+        NavigationManager.NavigateTo("/user/list");
     }
 }

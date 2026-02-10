@@ -4,6 +4,7 @@ using Hyip_Payments.Web.Components;
 using Hyip_Payments.Web.Components.Account;
 using Hyip_Payments.Web.Data;
 using Hyip_Payments.Web.Extensions;
+using Hyip_Payments.Web.Identity;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,10 +23,15 @@ namespace Hyip_Payments.Web
                 .AddInteractiveWebAssemblyComponents()
                 .AddAuthenticationStateSerialization();
 
-            // Add HttpClient for WebAssembly components
+            // Configure API endpoint based on environment
+            var apiEndpoint = builder.Environment.IsDevelopment()
+                ? "https://localhost:7263"  // Development
+                : "https://mariobot-payments-api.runasp.net";  // Production
+
+            // Add HttpClient for WebAssembly components with conditional base address
             builder.Services.AddScoped(sp => new HttpClient 
             { 
-                BaseAddress = new Uri("https://localhost:7263")
+                BaseAddress = new Uri(apiEndpoint)
             });
 
             // Identity services 
@@ -72,15 +78,25 @@ namespace Hyip_Payments.Web
             // If the method is not available, you may need to implement it or provide an alternative.
 
 
-            // Add CORS policy
-            // Add CORS policy
+            // Add CORS policy with environment-based configuration
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowSpecificOrigins", policy =>
                 {
-                    policy.WithOrigins("https://localhost:7263")
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        policy.WithOrigins("https://localhost:7263", "http://localhost:5000")
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .AllowCredentials();
+                    }
+                    else
+                    {
+                        policy.WithOrigins("https://mariobot-payments-api.runasp.net")
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .AllowCredentials();
+                    }
                 });
             });
 
@@ -97,12 +113,14 @@ namespace Hyip_Payments.Web
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddSignInManager()
-                .AddDefaultTokenProviders();
+                .AddDefaultTokenProviders()
+                .AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>(); // Add custom claims factory
 
             // TODO pending identity migrations
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-            builder.Services.AddWebApplicationServices("https://localhost:7263");
+            // Use the already configured API endpoint
+            builder.Services.AddWebApplicationServices(apiEndpoint);
 
             var app = builder.Build();
 

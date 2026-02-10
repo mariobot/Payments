@@ -10,6 +10,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Components\Payment\**" />
+    <Compile Remove="Components\Role\**" />
+    <Compile Remove="Components\User\**" />
+    <Content Remove="Components\Payment\**" />
+    <Content Remove="Components\Role\**" />
+    <Content Remove="Components\User\**" />
+    <EmbeddedResource Remove="Components\Payment\**" />
+    <EmbeddedResource Remove="Components\Role\**" />
+    <EmbeddedResource Remove="Components\User\**" />
+    <None Remove="Components\Payment\**" />
+    <None Remove="Components\Role\**" />
+    <None Remove="Components\User\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Hyip-Payments.Command\Hyip-Payments.Command.csproj" />
     <ProjectReference Include="..\..\Hyip-Payments.Query\Hyip-Payments.Query.csproj" />
     <ProjectReference Include="..\Hyip-Payments.Web.Client\Hyip-Payments.Web.Client.csproj" />
@@ -20,12 +35,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Components\Role\" />
-    <Folder Include="Components\User\" />
-    <Folder Include="Components\Payment\" />
   </ItemGroup>
 
   <ItemGroup>

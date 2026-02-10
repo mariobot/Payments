@@ -13,12 +13,22 @@ namespace Hyip_Payments.Web.Client
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddAuthenticationStateDeserialization();
 
-            string val = builder.HostEnvironment.BaseAddress;
+            // Option 1: Determine API base address based on environment (hardcoded)
+            var apiBaseAddress = builder.HostEnvironment.IsDevelopment()
+                ? "https://localhost:7263"  // Development
+                : "https://mariobot-payments-api.runasp.net";  // Production
 
-            // HttpClient - use the Web app's base address (same origin)
+            // Option 2: Get from configuration (if you prefer config-based)
+            // var apiBaseAddress = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7263";
+
+            // Log environment and API address for debugging
+            Console.WriteLine($"Environment: {builder.HostEnvironment.Environment}");
+            Console.WriteLine($"API Base Address: {apiBaseAddress}");
+
+            // HttpClient with conditional base address
             builder.Services.AddScoped(sp => new HttpClient
             {
-                BaseAddress = new Uri("https://localhost:7263")
+                BaseAddress = new Uri(apiBaseAddress)
             });
 
             await builder.Build().RunAsync();

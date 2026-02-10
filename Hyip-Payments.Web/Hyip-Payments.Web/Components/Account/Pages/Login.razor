@@ -3,12 +3,17 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 @using Hyip_Payments.Web.Data
+@using Hyip_Payments.Models
+@using Hyip_Payments.Context
 
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject PaymentsDbContext PaymentsDbContext
 
 <PageTitle>Log in</PageTitle>
 
@@ -93,6 +98,10 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
+
+            // Check if user exists in User table (PaymentsDbContext), if not create it
+            await EnsureUserExistsInPaymentsDb(Input.Email);
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
@@ -109,6 +118,56 @@
         else
         {
             errorMessage = "Error: Invalid login attempt.";
+        }
+    }
+
+    /// <summary>
+    /// Ensures the user exists in the Payments database (User table)
+    /// Creates a UserModel if it doesn't exist
+    /// </summary>
+    private async Task EnsureUserExistsInPaymentsDb(string email)
+    {
+        try
+        {
+            // Check if user already exists in PaymentsDbContext
+            var existingUser = await PaymentsDbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+            if (existingUser == null)
+            {
+                Logger.LogInformation($"User not found in Payments DB, creating entry for: {email}");
+
+                // Get the ApplicationUser to get additional info
+                var appUser = await UserManager.FindByEmailAsync(email);
+                if (appUser != null)
+                {
+                    // Create new UserModel entry
+                    var newUser = new UserModel
+                    {
+                        Username = appUser.UserName ?? email.Split('@')[0],
+                        Email = email,
+                        PasswordHash = appUser.PasswordHash ?? "IDENTITY_MANAGED", // Mark as Identity managed
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        FirstName = null, // Can be updated later
+                        LastName = null   // Can be updated later
+                    };
+
+                    PaymentsDbContext.Users.Add(newUser);
+                    await PaymentsDbContext.SaveChangesAsync();
+
+                    Logger.LogInformation($"Successfully created User entry for: {email} with ID: {newUser.Id}");
+                }
+            }
+            else
+            {
+                Logger.LogInformation($"User already exists in Payments DB: {email}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error ensuring user exists in Payments DB for: {email}");
+            // Don't fail login if this fails, just log it
         }
     }
 

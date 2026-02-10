@@ -223,6 +223,107 @@ DELETE {{host}}/api/Money/1
 
 ###
 
+### User Endpoints
+
+# Get user by email (NEW - RECOMMENDED)
+GET {{host}}/api/user/by-email/test@example.com
+Accept: application/json
+
+###
+
+# Get user by username (NEW - RECOMMENDED)
+GET {{host}}/api/user/by-username/testuser
+Accept: application/json
+
+###
+
+# Debug: View all claims for current user
+GET {{host}}/api/user/debug-claims
+Accept: application/json
+
+###
+
+# Legacy endpoint - returns 501 with instructions
+GET {{host}}/api/user/me
+Accept: application/json
+
+###
+
+# Get all users
+GET {{host}}/api/User
+Accept: application/json
+
+###
+
+# Get user by ID
+GET {{host}}/api/User/1
+Accept: application/json
+
+###
+
+# Get user by username
+GET {{host}}/api/User/username/john_doe
+Accept: application/json
+
+###
+
+# Get user by email
+GET {{host}}/api/User/email/john@example.com
+Accept: application/json
+
+###
+
+# Create new user
+POST {{host}}/api/User
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "passwordHash": "hashed_password_here",
+  "firstName": "John",
+  "lastName": "Doe",
+  "isActive": true
+}
+
+###
+
+# Update user
+PUT {{host}}/api/User/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "username": "john_doe_updated",
+  "email": "john.updated@example.com",
+  "passwordHash": "hashed_password_here",
+  "firstName": "John",
+  "lastName": "Doe",
+  "isActive": true
+}
+
+###
+
+# Toggle user active status
+PUT {{host}}/api/User/toggle-active/1
+
+###
+
+# Change user password
+PUT {{host}}/api/User/change-password/1
+Content-Type: application/json
+
+{
+  "newPassword": "newSecurePassword123"
+}
+
+###
+
+# Delete user
+DELETE {{host}}/api/User/1
+
+###
+
 ### Payment Endpoints
 
 GET {{host}}/api/Payment

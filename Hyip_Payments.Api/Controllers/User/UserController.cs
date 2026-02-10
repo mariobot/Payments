@@ -21,7 +21,7 @@ namespace Hyip_Payments.Api.Controllers.User
 
         // GET: api/User
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> GetAll()
         {
             var users = await _mediator.Send(new GetUserListQuery());
             return Ok(users);
@@ -29,7 +29,7 @@ namespace Hyip_Payments.Api.Controllers.User
 
         // GET: api/User/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> GetById(int id)
         {
             var user = await _mediator.Send(new GetUserByIdQuery(id));
             if (user == null)
@@ -41,8 +41,11 @@ namespace Hyip_Payments.Api.Controllers.User
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] UserModel model)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var result = await _mediator.Send(new AddUserCommand(model));
-            return CreatedAtAction(nameof(Details), new { id = result.Id }, result);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
         // PUT: api/User/5
@@ -50,7 +53,10 @@ namespace Hyip_Payments.Api.Controllers.User
         public async Task<IActionResult> Edit(int id, [FromBody] UserModel model)
         {
             if (id != model.Id)
-                return BadRequest();
+                return BadRequest("ID mismatch");
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             var result = await _mediator.Send(new EditUserCommand(model));
             if (result == null)
@@ -68,5 +74,54 @@ namespace Hyip_Payments.Api.Controllers.User
                 return NotFound();
             return NoContent();
         }
+
+        // GET: api/User/username/{username}
+        [HttpGet("username/{username}")]
+        public async Task<IActionResult> GetByUsername(string username)
+        {
+            var user = await _mediator.Send(new GetUserByUsernameQuery(username));
+            if (user == null)
+                return NotFound();
+            return Ok(user);
+        }
+
+        // GET: api/User/email/{email}
+        [HttpGet("email/{email}")]
+        public async Task<IActionResult> GetByEmail(string email)
+        {
+            var user = await _mediator.Send(new GetUserByEmailQuery(email));
+            if (user == null)
+                return NotFound();
+            return Ok(user);
+        }
+
+        // PUT: api/User/toggle-active/5
+        [HttpPut("toggle-active/{id}")]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            var success = await _mediator.Send(new ToggleUserActiveCommand(id));
+            if (!success)
+                return NotFound();
+            return NoContent();
+        }
+
+        // PUT: api/User/change-password/5
+        [HttpPut("change-password/{id}")]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+                return BadRequest("New password is required");
+
+            var success = await _mediator.Send(new ChangePasswordCommand(id, request.NewPassword));
+            if (!success)
+                return NotFound();
+            return NoContent();
+        }
+    }
+
+    // Request model for password change
+    public class ChangePasswordRequest
+    {
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

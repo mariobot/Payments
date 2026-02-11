@@ -1,5 +1,7 @@
 ﻿@page "/invoice/add"
 @using Hyip_Payments.Models
+@using Hyip_Payments.Web.Client.Components
+@using Hyip_Payments.Web.Client.DTOs
 @using System.Net.Http.Json
 @inject HttpClient Http
 @inject NavigationManager Navigation
@@ -9,7 +11,7 @@
         <div class="col-md-10 offset-md-1">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Create New Invoice</h3>
+                    <h3 class="mb-0"><i class="bi bi-file-earmark-plus"></i> Create New Invoice</h3>
                 </div>
                 <div class="card-body">
                     @if (isSubmitting)
@@ -27,86 +29,102 @@
                             <DataAnnotationsValidator />
                             <ValidationSummary class="alert alert-danger" />
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Invoice Number <span class="text-danger">*</span></label>
-                                    <InputText class="form-control" @bind-Value="invoice.InvoiceNumber" placeholder="e.g., INV-2025-001" />
-                                    <ValidationMessage For="@(() => invoice.InvoiceNumber)" />
+                            <!-- Invoice Details -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="bi bi-file-text"></i> Invoice Details</h5>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Invoice Date <span class="text-danger">*</span></label>
-                                    <InputDate class="form-control" @bind-Value="invoice.InvoiceDate" />
-                                    <ValidationMessage For="@(() => invoice.InvoiceDate)" />
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Invoice Number <span class="text-danger">*</span></label>
+                                            <InputText class="form-control" @bind-Value="invoice.InvoiceNumber" placeholder="e.g., INV-2025-001" />
+                                            <ValidationMessage For="@(() => invoice.InvoiceNumber)" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Invoice Date <span class="text-danger">*</span></label>
+                                            <InputDate class="form-control" @bind-Value="invoice.InvoiceDate" />
+                                            <ValidationMessage For="@(() => invoice.InvoiceDate)" />
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Description</label>
+                                        <InputTextArea class="form-control" @bind-Value="invoice.Description" rows="2" placeholder="Enter invoice description..." />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Description</label>
-                                <InputTextArea class="form-control" @bind-Value="invoice.Description" rows="3" placeholder="Enter invoice description..." />
-                            </div>
+                            <!-- Product Selector -->
+                            <ProductSelector OnProductAdded="@ProductAddedCallback" />
 
-                            <hr class="my-4" />
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Invoice Items</h5>
-                                <button type="button" class="btn btn-success btn-sm" @onclick="AddItem">
-                                    <i class="bi bi-plus-circle"></i> Add Item
-                                </button>
-                            </div>
-
-                            @if (!invoice.Items.Any())
-                            {
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle"></i> No items added yet. Click "Add Item" to start.
+                            <!-- Selected Products List -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Selected Products</h5>
+                                    <span class="badge bg-primary">@selectedProducts.Count items</span>
                                 </div>
-                            }
-                            else
-                            {
-                                <div class="table-responsive">
-                                    <table class="table table-bordered">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Item Name</th>
-                                                <th style="width: 120px;">Quantity</th>
-                                                <th style="width: 150px;">Unit Price</th>
-                                                <th style="width: 150px;">Total</th>
-                                                <th style="width: 80px;">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var (item, index) in invoice.Items.Select((item, idx) => (item, idx)))
-                                            {
-                                                <tr>
-                                                    <td>
-                                                        <InputText class="form-control form-control-sm" @bind-Value="item.ItemName" placeholder="Item name" />
-                                                    </td>
-                                                    <td>
-                                                        <InputNumber class="form-control form-control-sm" @bind-Value="item.Quantity" @oninput="@(() => CalculateTotals())" />
-                                                    </td>
-                                                    <td>
-                                                        <InputNumber class="form-control form-control-sm" @bind-Value="item.UnitPrice" @oninput="@(() => CalculateTotals())" />
-                                                    </td>
-                                                    <td class="text-end">
-                                                        <strong>@((item.Quantity * item.UnitPrice).ToString("C"))</strong>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <button type="button" class="btn btn-danger btn-sm" @onclick="@(() => RemoveItem(item))" title="Remove item">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                        <tfoot>
-                                            <tr class="table-secondary">
-                                                <td colspan="3" class="text-end fw-bold">Total Amount:</td>
-                                                <td class="text-end fw-bold">@invoice.TotalAmount.ToString("C")</td>
-                                                <td></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                <div class="card-body">
+                                    @if (!selectedProducts.Any())
+                                    {
+                                        <div class="alert alert-info mb-0">
+                                            <i class="bi bi-info-circle"></i> No products added yet. Use the product selector above to add items.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Product</th>
+                                                        <th class="text-center" style="width: 120px;">Quantity</th>
+                                                        <th class="text-end" style="width: 150px;">Unit Price</th>
+                                                        <th class="text-end" style="width: 150px;">Total</th>
+                                                        <th class="text-center" style="width: 80px;">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in selectedProducts)
+                                                    {
+                                                        <tr>
+                                                            <td>
+                                                                <strong>@item.ItemName</strong>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <input type="number" class="form-control form-control-sm text-center" @bind="item.Quantity" @oninput="StateHasChanged" min="1" style="width: 80px; display: inline-block;" />
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <input type="number" class="form-control form-control-sm text-end" @bind="item.UnitPrice" @oninput="StateHasChanged" step="0.01" style="width: 120px; display: inline-block;" />
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <strong>$@item.Total.ToString("F2")</strong>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <button type="button" class="btn btn-danger btn-sm" @onclick="@(() => RemoveProduct(item))" title="Remove">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                                <tfoot class="table-secondary">
+                                                    <tr>
+                                                        <td colspan="3" class="text-end fw-bold">Subtotal:</td>
+                                                        <td class="text-end fw-bold">$@CalculateSubtotal().ToString("F2")</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="3" class="text-end fw-bold fs-5">Total Amount:</td>
+                                                        <td class="text-end fw-bold fs-5 text-primary">$@CalculateTotal().ToString("F2")</td>
+                                                        <td></td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    }
                                 </div>
-                            }
+                            </div>
 
                             <hr class="my-4" />
 
@@ -114,8 +132,8 @@
                                 <button type="button" class="btn btn-secondary" @onclick="Cancel">
                                     <i class="bi bi-x-circle"></i> Cancel
                                 </button>
-                                <button type="submit" class="btn btn-primary" disabled="@(!invoice.Items.Any())">
-                                    <i class="bi bi-check-circle"></i> Create Invoice
+                                <button type="submit" class="btn btn-primary btn-lg" disabled="@(!selectedProducts.Any() || isSubmitting)">
+                                    <i class="bi bi-check-circle"></i> Create Invoice (@selectedProducts.Count items - $@CalculateTotal().ToString("F2"))
                                 </button>
                             </div>
                         </EditForm>
@@ -145,94 +163,102 @@
     private InvoiceModel invoice = new InvoiceModel
     {
         InvoiceDate = DateTime.Today,
-        Items = new List<InvoiceItemModel>()
+        TotalAmount = 0
     };
 
+    private List<InvoiceItemDto> selectedProducts = new();
+    private bool isSubmitting = false;
     private string? successMessage;
     private string? errorMessage;
-    private bool isSubmitting = false;
+
+    private EventCallback<InvoiceItemDto> ProductAddedCallback => EventCallback.Factory.Create<InvoiceItemDto>(this, HandleProductAdded);
+
+    private Task HandleProductAdded(InvoiceItemDto product)
+    {
+        selectedProducts.Add(product);
+        CalculateTotal();
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task RemoveProduct(InvoiceItemDto product)
+    {
+        selectedProducts.Remove(product);
+        CalculateTotal();
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private decimal CalculateSubtotal()
+    {
+        return selectedProducts.Sum(p => p.Total);
+    }
+
+    private decimal CalculateTotal()
+    {
+        var total = CalculateSubtotal();
+        invoice.TotalAmount = total;
+        return total;
+    }
 
     private async Task HandleValidSubmit()
     {
-        successMessage = null;
-        errorMessage = null;
+        if (!selectedProducts.Any())
+        {
+            errorMessage = "Please add at least one product to the invoice.";
+            return;
+        }
+
         isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
 
         try
         {
-            // Calculate final total before submission
-            CalculateTotals();
-
-            // Validate items
-            if (!invoice.Items.Any())
+            var command = new AddInvoiceWithProductsCommand
             {
-                errorMessage = "Please add at least one item to the invoice.";
-                isSubmitting = false;
-                return;
-            }
+                Invoice = new InvoiceDto
+                {
+                    InvoiceNumber = invoice.InvoiceNumber,
+                    InvoiceDate = invoice.InvoiceDate,
+                    Description = invoice.Description,
+                    TotalAmount = CalculateTotal(),
+                    IsActive = true
+                },
+                Items = selectedProducts.Select(p => new InvoiceItemDto
+                {
+                    ProductId = p.ProductId,
+                    ItemName = p.ItemName,
+                    Quantity = p.Quantity,
+                    UnitPrice = p.UnitPrice
+                }).ToList()
+            };
 
-            // Validate item details
-            var invalidItems = invoice.Items.Where(i => 
-                string.IsNullOrWhiteSpace(i.ItemName) || i.Quantity <= 0 || i.UnitPrice <= 0).ToList();
-            
-            if (invalidItems.Any())
-            {
-                errorMessage = "All items must have a name, quantity > 0, and unit price > 0.";
-                isSubmitting = false;
-                return;
-            }
+            var response = await Http.PostAsJsonAsync("api/Invoice/with-products", command);
 
-            var response = await Http.PostAsJsonAsync("/api/Invoice", invoice);
-            
             if (response.IsSuccessStatusCode)
             {
-                var createdInvoice = await response.Content.ReadFromJsonAsync<InvoiceModel>();
-                successMessage = $"Invoice {invoice.InvoiceNumber} created successfully!";
-                
-                // Reset form after short delay
+                var result = await response.Content.ReadFromJsonAsync<InvoiceWithItemsDto>();
+                successMessage = $"Invoice #{result?.InvoiceNumber} created successfully with {selectedProducts.Count} items!";
+
+                // Reset form
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/invoice/list");
             }
             else
             {
-                var errorContent = await response.Content.ReadAsStringAsync();                                                                                                   
-                errorMessage = $"Error: {response.ReasonPhrase}. {errorContent}";
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to create invoice: {error}";
             }
-        }
-        catch (HttpRequestException ex)
-        {
-            errorMessage = $"Network error: {ex.Message}. Please check if the API is running.";
         }
         catch (Exception ex)
         {
-            errorMessage = $"Unexpected error: {ex.Message}";
+            errorMessage = $"Error creating invoice: {ex.Message}";
         }
         finally
         {
             isSubmitting = false;
         }
-    }
-
-    private void AddItem()
-    {
-        invoice.Items.Add(new InvoiceItemModel 
-        { 
-            Quantity = 1,
-            UnitPrice = 0
-        });
-        CalculateTotals();
-    }
-
-    private void RemoveItem(InvoiceItemModel item)
-    {
-        invoice.Items.Remove(item);
-        CalculateTotals();
-    }
-
-    private void CalculateTotals()
-    {
-        invoice.TotalAmount = invoice.Items.Sum(i => i.Quantity * i.UnitPrice);
-        StateHasChanged();
     }
 
     private void Cancel()

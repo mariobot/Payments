@@ -90,5 +90,17 @@ namespace Hyip_Payments.Api.Controllers.Invoice
                 return NotFound();
             return Ok(result);
         }
+
+        // PUT: api/Invoice/5/with-items
+        /// <summary>
+        /// Update invoice with items in a single transaction
+        /// </summary>
+        [HttpPut("{id}/with-items")]
+        public async Task<ActionResult<InvoiceWithItemsDto>> UpdateWithItems(int id, [FromBody] UpdateInvoiceWithItemsCommand command)
+        {
+            command.InvoiceId = id; // Ensure ID from route is used
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
     }
 }

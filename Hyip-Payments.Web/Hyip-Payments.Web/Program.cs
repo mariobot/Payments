@@ -55,12 +55,20 @@ namespace Hyip_Payments.Web
 
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(connectionString, 
+                    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null)));
 
             // Add ApplicationDbContext
             // TODO pending while fix the migrations of the Identity
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(connectionString, 
+                    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null)));
 
             var apiKeyBinance = builder.Configuration.GetSection("Binance").GetRequiredSection("ApiKey").Value;
             var apiSecretBinance = builder.Configuration.GetSection("Binance").GetRequiredSection("ApiSecret").Value;

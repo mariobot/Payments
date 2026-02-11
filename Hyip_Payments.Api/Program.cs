@@ -29,7 +29,11 @@ namespace Hyip_Payments.Api
 
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(connectionString, 
+                    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null)));
 
 
 

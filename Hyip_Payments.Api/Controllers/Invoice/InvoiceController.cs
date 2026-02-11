@@ -66,5 +66,29 @@ namespace Hyip_Payments.Api.Controllers.Invoice
                 return NotFound();
             return NoContent();
         }
+
+        // POST: api/Invoice/with-products
+        /// <summary>
+        /// Create invoice with products in a single transaction
+        /// </summary>
+        [HttpPost("with-products")]
+        public async Task<ActionResult<InvoiceWithItemsDto>> CreateWithProducts([FromBody] AddInvoiceWithProductsCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return CreatedAtAction(nameof(GetWithItems), new { id = result.InvoiceId }, result);
+        }
+
+        // GET: api/Invoice/5/with-items
+        /// <summary>
+        /// Get invoice with all its items (products)
+        /// </summary>
+        [HttpGet("{id}/with-items")]
+        public async Task<ActionResult<InvoiceWithItemsResponse>> GetWithItems(int id)
+        {
+            var result = await _mediator.Send(new GetInvoiceWithItemsQuery(id));
+            if (result == null)
+                return NotFound();
+            return Ok(result);
+        }
     }
 }

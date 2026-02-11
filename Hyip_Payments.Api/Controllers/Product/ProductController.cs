@@ -65,5 +65,16 @@ namespace Hyip_Payments.Api.Controllers.Product
                 return NotFound();
             return NoContent();
         }
+
+        // GET: api/Product/for-selection
+        /// <summary>
+        /// Get simplified product list for selection dropdowns
+        /// </summary>
+        [HttpGet("for-selection")]
+        public async Task<ActionResult<List<ProductSelectionDto>>> GetForSelection()
+        {
+            var products = await _mediator.Send(new GetProductListForSelectionQuery());
+            return Ok(products);
+        }
     }
 }

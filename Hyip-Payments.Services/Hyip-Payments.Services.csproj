@@ -8,8 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Invoice\" />
-    <Folder Include="User\" />
+    <Compile Remove="Invoice\**" />
+    <Compile Remove="User\**" />
+    <EmbeddedResource Remove="Invoice\**" />
+    <EmbeddedResource Remove="User\**" />
+    <None Remove="Invoice\**" />
+    <None Remove="User\**" />
   </ItemGroup>
 
   <ItemGroup>

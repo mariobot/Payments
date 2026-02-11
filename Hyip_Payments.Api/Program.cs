@@ -78,7 +78,18 @@ namespace Hyip_Payments.Api
             // Add Application Services
             builder.Services.AddApplicationServices(connectionString);
 
-            builder.Services.AddControllers();
+            // Configure JSON serialization to handle reference loops
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // Ignore circular references
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                    // Optional: Make property names camelCase
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    // Optional: Write indented JSON for better readability
+                    options.JsonSerializerOptions.WriteIndented = false;
+                });
+
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 

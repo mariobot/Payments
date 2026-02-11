@@ -59,71 +59,78 @@ namespace Hyip_Payments.Command.InvoiceCommand
 
         public async Task<InvoiceWithItemsDto> Handle(AddInvoiceWithProductsCommand request, CancellationToken cancellationToken)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            // Use the execution strategy to handle retries and transactions
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                // 1. Create the invoice from DTO
-                var invoice = new InvoiceModel
+                // Start transaction within the execution strategy
+                using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+                try
                 {
-                    InvoiceNumber = request.Invoice.InvoiceNumber,
-                    InvoiceDate = request.Invoice.InvoiceDate,
-                    Description = request.Invoice.Description,
-                    TotalAmount = request.Invoice.TotalAmount,
-                    IsActive = request.Invoice.IsActive
-                };
-
-                _context.Invoices.Add(invoice);
-                await _context.SaveChangesAsync(cancellationToken);
-
-                // 2. Add invoice items
-                var invoiceItems = new List<InvoiceItemModel>();
-                decimal totalAmount = 0;
-
-                foreach (var item in request.Items)
-                {
-                    // Validate product exists
-                    var productExists = await _context.Products
-                        .AnyAsync(p => p.Id == item.ProductId, cancellationToken);
-
-                    if (!productExists)
+                    // 1. Create the invoice from DTO
+                    var invoice = new InvoiceModel
                     {
-                        throw new InvalidOperationException($"Product with ID {item.ProductId} not found");
-                    }
-
-                    var invoiceItem = new InvoiceItemModel
-                    {
-                        InvoiceId = invoice.Id,
-                        ItemName = item.ItemName,
-                        Quantity = item.Quantity,
-                        UnitPrice = item.UnitPrice
+                        InvoiceNumber = request.Invoice.InvoiceNumber,
+                        InvoiceDate = request.Invoice.InvoiceDate,
+                        Description = request.Invoice.Description,
+                        TotalAmount = request.Invoice.TotalAmount,
+                        IsActive = request.Invoice.IsActive
                     };
 
-                    _context.InvoiceItems.Add(invoiceItem);
-                    invoiceItems.Add(invoiceItem);
-                    totalAmount += invoiceItem.Total;
+                    _context.Invoices.Add(invoice);
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    // 2. Add invoice items
+                    var invoiceItems = new List<InvoiceItemModel>();
+                    decimal totalAmount = 0;
+
+                    foreach (var item in request.Items)
+                    {
+                        // Validate product exists
+                        var productExists = await _context.Products
+                            .AnyAsync(p => p.Id == item.ProductId, cancellationToken);
+
+                        if (!productExists)
+                        {
+                            throw new InvalidOperationException($"Product with ID {item.ProductId} not found");
+                        }
+
+                        var invoiceItem = new InvoiceItemModel
+                        {
+                            InvoiceId = invoice.Id,
+                            ItemName = item.ItemName,
+                            Quantity = item.Quantity,
+                            UnitPrice = item.UnitPrice
+                        };
+
+                        _context.InvoiceItems.Add(invoiceItem);
+                        invoiceItems.Add(invoiceItem);
+                        totalAmount += invoiceItem.Total;
+                    }
+
+                    // 3. Update invoice total
+                    invoice.TotalAmount = totalAmount;
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    // 4. Commit transaction
+                    await transaction.CommitAsync(cancellationToken);
+
+                    return new InvoiceWithItemsDto
+                    {
+                        InvoiceId = invoice.Id,
+                        InvoiceNumber = invoice.InvoiceNumber,
+                        TotalAmount = totalAmount,
+                        Items = invoiceItems
+                    };
                 }
-
-                // 3. Update invoice total
-                invoice.TotalAmount = totalAmount;
-                await _context.SaveChangesAsync(cancellationToken);
-
-                // 4. Commit transaction
-                await transaction.CommitAsync(cancellationToken);
-
-                return new InvoiceWithItemsDto
+                catch
                 {
-                    InvoiceId = invoice.Id,
-                    InvoiceNumber = invoice.InvoiceNumber,
-                    TotalAmount = totalAmount,
-                    Items = invoiceItems
-                };
-            }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
+                    await transaction.RollbackAsync(cancellationToken);
+                    throw;
+                }
+            });
         }
     }
 }

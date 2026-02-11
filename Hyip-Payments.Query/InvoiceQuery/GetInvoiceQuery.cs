@@ -22,9 +22,11 @@ namespace Hyip_Payments.Query.InvoiceQuery
 
         public async Task<List<InvoiceModel>> Handle(GetAllInvoicesQuery request, CancellationToken cancellationToken)
         {
+            // Don't include Items to avoid circular reference issues
+            // Use the /with-items endpoint to get invoice with items
             return await _context.Invoices
-                .Include(i => i.Items)
                 .AsNoTracking()
+                .OrderByDescending(i => i.InvoiceDate)
                 .ToListAsync(cancellationToken);
         }
     }

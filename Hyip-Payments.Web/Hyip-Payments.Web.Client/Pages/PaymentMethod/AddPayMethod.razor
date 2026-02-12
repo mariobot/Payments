@@ -1,0 +1,119 @@
+﻿@page "/paymentmethod/add"
+@using Hyip_Payments.Models
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Add Payment Method</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-credit-card-2-front"></i> Add New Payment Method</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@paymentMethod" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-bold">Payment Method Name <span class="text-danger">*</span></label>
+                            <InputText id="name" class="form-control" @bind-Value="paymentMethod.Name" placeholder="e.g., Credit Card, PayPal, Bank Transfer" />
+                            <ValidationMessage For="@(() => paymentMethod.Name)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-bold">Description</label>
+                            <InputTextArea id="description" class="form-control" @bind-Value="paymentMethod.Description" rows="3" placeholder="Enter description (optional)" />
+                            <ValidationMessage For="@(() => paymentMethod.Description)" />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="paymentMethod.IsActive" />
+                            <label for="isActive" class="form-check-label fw-bold">Is Active</label>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="GoToList">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                <i class="bi bi-check-circle"></i> Add Payment Method
+                            </button>
+                        </div>
+                    </EditForm>
+
+                    @if (successMessage != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                            <i class="bi bi-check-circle-fill"></i> @successMessage
+                            <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+                        </div>
+                    }
+
+                    @if (errorMessage != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+                            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private PaymentMethodModel paymentMethod = new PaymentMethodModel { IsActive = true };
+    private bool isSubmitting = false;
+    private string? successMessage;
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/PaymentMethod", paymentMethod);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = $"Payment method '{paymentMethod.Name}' added successfully!";
+
+                // Reset form
+                await Task.Delay(1500);
+                NavigationManager.NavigateTo("/paymentmethod/list");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to add payment method: {response.StatusCode} - {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding payment method: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void GoToList()
+    {
+        NavigationManager.NavigateTo("/paymentmethod/list");
+    }
+}

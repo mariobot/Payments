@@ -68,5 +68,70 @@ namespace Hyip_Payments.Api.Controllers.Payment
                 return NotFound();
             return NoContent();
         }
+
+        // POST: api/Payment/transaction
+        /// <summary>
+        /// Create a payment transaction
+        /// </summary>
+        [HttpPost("transaction")]
+        public async Task<ActionResult<PaymentTransactionModel>> CreateTransaction([FromBody] AddPaymentTransactionCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return CreatedAtAction(nameof(GetTransaction), new { id = result.Id }, result);
+        }
+
+        // GET: api/Payment/transactions
+        /// <summary>
+        /// Get all payment transactions
+        /// </summary>
+        [HttpGet("transactions")]
+        public async Task<ActionResult<IEnumerable<PaymentTransactionModel>>> GetAllTransactions()
+        {
+            var transactions = await _mediator.Send(new GetPaymentTransactionListQuery());
+            return Ok(transactions);
+        }
+
+        // GET: api/Payment/transaction/5
+        /// <summary>
+        /// Get payment transaction by ID
+        /// </summary>
+        [HttpGet("transaction/{id}")]
+        public async Task<ActionResult<PaymentTransactionModel>> GetTransaction(int id)
+        {
+            var transaction = await _mediator.Send(new GetPaymentTransactionByIdQuery(id));
+            if (transaction == null)
+                return NotFound();
+            return Ok(transaction);
+        }
+
+        // PUT: api/Payment/transaction/5
+        /// <summary>
+        /// Update payment transaction
+        /// </summary>
+        [HttpPut("transaction/{id}")]
+        public async Task<ActionResult<PaymentTransactionModel>> UpdateTransaction(int id, [FromBody] EditPaymentTransactionCommand command)
+        {
+            if (id != command.Id)
+                return BadRequest("ID mismatch");
+
+            var result = await _mediator.Send(command);
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        // DELETE: api/Payment/transaction/5
+        /// <summary>
+        /// Delete payment transaction
+        /// </summary>
+        [HttpDelete("transaction/{id}")]
+        public async Task<IActionResult> DeleteTransaction(int id)
+        {
+            var success = await _mediator.Send(new DeletePaymentTransactionCommand(id));
+            if (!success)
+                return NotFound();
+            return NoContent();
+        }
     }
 }

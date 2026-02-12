@@ -100,6 +100,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
                         var invoiceItem = new InvoiceItemModel
                         {
                             InvoiceId = invoice.Id,
+                            ProductId = item.ProductId > 0 ? item.ProductId : null, // Save ProductId if provided
                             ItemName = item.ItemName,
                             Quantity = item.Quantity,
                             UnitPrice = item.UnitPrice

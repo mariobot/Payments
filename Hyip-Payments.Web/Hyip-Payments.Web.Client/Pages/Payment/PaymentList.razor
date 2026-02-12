@@ -1,0 +1,343 @@
+﻿@page "/payment/list"
+@using Hyip_Payments.Models
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Payment Transactions</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="bi bi-cash-coin"></i> Payment Transactions</h3>
+        <button class="btn btn-success" @onclick="GoToAdd">
+            <i class="bi bi-plus-circle"></i> Add New Payment
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading payment transactions...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+        </div>
+        <button class="btn btn-primary" @onclick="LoadPayments">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+    else if (payments != null && payments.Count > 0)
+    {
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h6>Total Transactions</h6>
+                        <h3>@payments.Count</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h6>Total Amount</h6>
+                        <h3>$@payments.Sum(p => p.Amount).ToString("F2")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h6>Completed</h6>
+                        <h3>@payments.Count(p => p.Status == "Completed")</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h6>Pending</h6>
+                        <h3>@payments.Count(p => p.Status == "Pending")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Reference</th>
+                                <th class="text-end">Amount</th>
+                                <th>Status</th>
+                                <th>Description</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var payment in payments.OrderByDescending(p => p.TransactionDate))
+                            {
+                                <tr>
+                                    <td>@payment.TransactionDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(payment.Reference))
+                                        {
+                                            <small><code>@payment.Reference</code></small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">TXN-@payment.Id</span>
+                                        }
+                                    </td>
+                                    <td class="text-end"><strong>$@payment.Amount.ToString("F2")</strong></td>
+                                    <td>
+                                        @if (payment.Status == "Completed")
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                        else if (payment.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        }
+                                        else if (payment.Status == "Failed")
+                                        {
+                                            <span class="badge bg-danger">Failed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@payment.Status</span>
+                                        }
+                                    </td>
+                                    <td>@(payment.Description ?? "-")</td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-info" @onclick="() => ViewDetails(payment)" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(payment.Id)" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(payment.Id, GetPaymentReference(payment))" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle"></i> Total: <strong>@payments.Count</strong> transaction(s)
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No payment transactions found. Click "Add New Payment" to create one.
+        </div>
+    }
+
+    <!-- Delete Confirmation Modal -->
+    @if (showDeleteConfirm)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CancelDelete"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete payment transaction <strong>@paymentToDeleteRef</strong>?</p>
+                        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                        <button type="button" class="btn btn-danger" @onclick="DeletePayment">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Details Modal -->
+    @if (showDetailsModal && selectedPayment != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title"><i class="bi bi-receipt"></i> Payment Transaction Details</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseDetails"></button>
+                    </div>
+                    <div class="modal-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Transaction ID:</dt>
+                            <dd class="col-sm-8"><code>@selectedPayment.Id</code></dd>
+
+                            <dt class="col-sm-4">Amount:</dt>
+                            <dd class="col-sm-8"><strong class="fs-4 text-success">$@selectedPayment.Amount.ToString("F2")</strong></dd>
+
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                @if (selectedPayment.Status == "Completed")
+                                {
+                                    <span class="badge bg-success">Completed</span>
+                                }
+                                else if (selectedPayment.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else if (selectedPayment.Status == "Failed")
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@selectedPayment.Status</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Transaction Date:</dt>
+                            <dd class="col-sm-8">@selectedPayment.TransactionDate.ToString("MMMM dd, yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-4">Reference:</dt>
+                            <dd class="col-sm-8">@(selectedPayment.Reference ?? "N/A")</dd>
+
+                            <dt class="col-sm-4">Description:</dt>
+                            <dd class="col-sm-8">@(selectedPayment.Description ?? "N/A")</dd>
+                        </dl>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseDetails">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<PaymentTransactionModel> payments = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+    private bool showDeleteConfirm = false;
+    private bool showDetailsModal = false;
+    private int paymentToDelete = 0;
+    private string paymentToDeleteRef = string.Empty;
+    private PaymentTransactionModel? selectedPayment;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPayments();
+    }
+
+    private async Task LoadPayments()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            payments = await Http.GetFromJsonAsync<List<PaymentTransactionModel>>("api/Payment/transactions") ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading payment transactions: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoToAdd()
+    {
+        NavigationManager.NavigateTo("/payment/add");
+    }
+
+    private void GoToEdit(int id)
+    {
+        NavigationManager.NavigateTo($"/payment/edit/{id}");
+    }
+
+    private void ViewDetails(PaymentTransactionModel payment)
+    {
+        selectedPayment = payment;
+        showDetailsModal = true;
+    }
+
+    private void CloseDetails()
+    {
+        showDetailsModal = false;
+        selectedPayment = null;
+    }
+
+    private void ConfirmDelete(int id, string reference)
+    {
+        paymentToDelete = id;
+        paymentToDeleteRef = reference;
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        paymentToDelete = 0;
+        paymentToDeleteRef = string.Empty;
+        showDeleteConfirm = false;
+    }
+
+    private async Task DeletePayment()
+    {
+        showDeleteConfirm = false;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Payment/transaction/{paymentToDelete}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                payments.RemoveAll(p => p.Id == paymentToDelete);
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Failed to delete payment: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting payment: {ex.Message}";
+        }
+        finally
+        {
+            paymentToDelete = 0;
+            paymentToDeleteRef = string.Empty;
+        }
+    }
+
+    private string GetPaymentReference(PaymentTransactionModel payment)
+    {
+        return payment.Reference ?? $"TXN-{payment.Id}";
+    }
+}

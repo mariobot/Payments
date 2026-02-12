@@ -38,6 +38,7 @@ namespace Hyip_Payments.Query.InvoiceQuery
     public class InvoiceItemResponse
     {
         public int Id { get; set; }
+        public int? ProductId { get; set; } // Include ProductId
         public string ItemName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
@@ -73,6 +74,7 @@ namespace Hyip_Payments.Query.InvoiceQuery
                 Items = invoice.Items.Select(item => new InvoiceItemResponse
                 {
                     Id = item.Id,
+                    ProductId = item.ProductId, // Include ProductId in response
                     ItemName = item.ItemName,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,

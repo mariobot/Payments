@@ -217,7 +217,7 @@
             // Map items to InvoiceItemDto list for editing
             invoiceItems = invoiceData.Items.Select(item => new InvoiceItemDto
             {
-                ProductId = 0, // We don't have ProductId in the response, so set to 0
+                ProductId = item.ProductId ?? 0, // Use ProductId from response, default to 0 if null
                 ItemName = item.ItemName,
                 Quantity = item.Quantity,
                 UnitPrice = item.UnitPrice
@@ -350,6 +350,7 @@
     public class InvoiceItemResponse
     {
         public int Id { get; set; }
+        public int? ProductId { get; set; } // Include ProductId
         public string ItemName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }

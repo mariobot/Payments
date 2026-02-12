@@ -4,6 +4,7 @@ using Hyip_Payments.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hyip_Payments.Context.Migrations
 {
     [DbContext(typeof(PaymentsDbContext))]
-    partial class PaymentsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260212024050_Add_Status_ProductID")]
+    partial class Add_Status_ProductID
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -206,6 +209,10 @@ namespace Hyip_Payments.Context.Migrations
                     b.Property<int?>("PaymentMethodModelId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -314,8 +321,7 @@ namespace Hyip_Payments.Context.Migrations
 
                     b.Property<string>("Status")
                         .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)")
-                        .HasColumnName("StatusPayment");
+                        .HasColumnType("nvarchar(32)");
 
                     b.HasKey("Id");
 
@@ -351,8 +357,7 @@ namespace Hyip_Payments.Context.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)")
-                        .HasColumnName("StatusTransaction");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");

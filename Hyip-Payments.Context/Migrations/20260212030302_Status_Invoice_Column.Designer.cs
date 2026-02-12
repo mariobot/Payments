@@ -4,6 +4,7 @@ using Hyip_Payments.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hyip_Payments.Context.Migrations
 {
     [DbContext(typeof(PaymentsDbContext))]
-    partial class PaymentsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260212030302_Status_Invoice_Column")]
+    partial class Status_Invoice_Column
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -205,6 +208,12 @@ namespace Hyip_Payments.Context.Migrations
 
                     b.Property<int?>("PaymentMethodModelId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StatusInvoice")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)")
+                        .HasColumnName("StatusInvoice");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");

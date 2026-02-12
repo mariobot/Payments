@@ -24,6 +24,8 @@ namespace Hyip_Payments.Models
         [MaxLength(256)]
         public string? Description { get; set; }
 
+        // Avoid SQL reserved word - use Column attribute
+        [Column("StatusPayment")]
         [MaxLength(32)]
         public string? Status { get; set; }
 

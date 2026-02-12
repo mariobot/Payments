@@ -17,7 +17,9 @@ namespace Hyip_Payments.Models
         [Required]
         public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
 
+        // Avoid SQL reserved word - use Column attribute
         [Required]
+        [Column("StatusTransaction")]
         [MaxLength(32)]
         public string Status { get; set; } = "Pending"; // e.g., Pending, Completed, Failed
 

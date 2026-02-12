@@ -16,6 +16,12 @@ namespace Hyip_Payments.Models
         [ForeignKey(nameof(InvoiceId))]
         public InvoiceModel Invoice { get; set; } = null!;
 
+        // Optional reference to Product (nullable for custom items)
+        public int? ProductId { get; set; }
+
+        [ForeignKey(nameof(ProductId))]
+        public ProductModel? Product { get; set; }
+
         [Required]
         [MaxLength(128)]
         public string ItemName { get; set; } = string.Empty;
@@ -30,4 +36,3 @@ namespace Hyip_Payments.Models
         public decimal Total => Quantity * UnitPrice;
     }
 }
-

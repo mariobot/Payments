@@ -1,9 +1,11 @@
 ﻿@page "/payment/add"
 @using Hyip_Payments.Models
 @using System.Net.Http.Json
-@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Add Payment Transaction</PageTitle>
 
@@ -296,6 +298,13 @@
 
         try
         {
+            // Get current authenticated user ID
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                      ?? user.FindFirst("sub")?.Value
+                      ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
             var command = new
             {
                 Amount = transaction.Amount,
@@ -305,7 +314,8 @@
                 PaymentMethodId = transaction.PaymentMethodId,
                 InvoiceId = transaction.InvoiceId,
                 Reference = transaction.Reference,
-                Description = transaction.Description
+                Description = transaction.Description,
+                ProcessedByUserId = userId
             };
 
             var response = await Http.PostAsJsonAsync("api/Payment/transaction", command);
@@ -351,5 +361,6 @@
         public int? InvoiceId { get; set; }
         public string? Reference { get; set; }
         public string? Description { get; set; }
+        public string? ProcessedByUserId { get; set; }
     }
 }

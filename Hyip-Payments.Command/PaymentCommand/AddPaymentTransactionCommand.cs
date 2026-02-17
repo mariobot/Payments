@@ -15,6 +15,7 @@ namespace Hyip_Payments.Command.PaymentCommand
         public int? InvoiceId { get; set; }
         public string? Reference { get; set; }
         public string? Description { get; set; }
+        public string? ProcessedByUserId { get; set; } // User who processed this payment
     }
 
     // Handler
@@ -38,7 +39,8 @@ namespace Hyip_Payments.Command.PaymentCommand
                 PaymentMethodId = request.PaymentMethodId,
                 InvoiceId = request.InvoiceId,
                 Reference = request.Reference,
-                Description = request.Description
+                Description = request.Description,
+                ProcessedByUserId = request.ProcessedByUserId // Set the user who processed this payment
             };
 
             _context.PaymentTransactions.Add(transaction);

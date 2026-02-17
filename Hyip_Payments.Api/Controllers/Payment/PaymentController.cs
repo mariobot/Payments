@@ -76,6 +76,9 @@ namespace Hyip_Payments.Api.Controllers.Payment
         [HttpPost("transaction")]
         public async Task<ActionResult<PaymentTransactionModel>> CreateTransaction([FromBody] AddPaymentTransactionCommand command)
         {
+            // Set the current user as the processor
+            command.ProcessedByUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
             var result = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetTransaction), new { id = result.Id }, result);
         }

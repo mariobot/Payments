@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.Invoice
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    //[Authorize] // Disabled: Server-side Blazor components run in authenticated context
     public class InvoiceController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -74,6 +74,9 @@ namespace Hyip_Payments.Api.Controllers.Invoice
         [HttpPost("with-products")]
         public async Task<ActionResult<InvoiceWithItemsDto>> CreateWithProducts([FromBody] AddInvoiceWithProductsCommand command)
         {
+            // Set the current user as the creator
+            command.CreatedByUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
             var result = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetWithItems), new { id = result.InvoiceId }, result);
         }

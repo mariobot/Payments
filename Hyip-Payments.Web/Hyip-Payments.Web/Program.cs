@@ -1,5 +1,6 @@
 using CryptoExchange.Net.Authentication;
 using Hyip_Payments.Context;
+using Hyip_Payments.Web.Client.Services;
 using Hyip_Payments.Web.Components;
 using Hyip_Payments.Web.Components.Account;
 using Hyip_Payments.Web.Data;
@@ -126,6 +127,10 @@ namespace Hyip_Payments.Web
 
             // TODO pending identity migrations
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+            // Register Cart Service (Client-side WebAssembly - persists in browser memory during session)
+            // Uses Singleton to maintain cart state across component navigations within the same session
+            builder.Services.AddSingleton<ICartService, CartService>();
 
             // Use the already configured API endpoint
             builder.Services.AddWebApplicationServices(apiEndpoint);

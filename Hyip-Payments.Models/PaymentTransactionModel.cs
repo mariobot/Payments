@@ -42,5 +42,9 @@ namespace Hyip_Payments.Models
         public string? Reference { get; set; } // External reference or transaction hash
 
         public string? Description { get; set; }
+
+        // User who processed this payment
+        [MaxLength(450)] // Standard ASP.NET Identity user ID length
+        public string? ProcessedByUserId { get; set; }
     }
 }

@@ -29,6 +29,15 @@ namespace Hyip_Payments.Models
         [Required]
         public bool IsActive { get; set; } = true;
 
+        // Renamed from Status to avoid SQL reserved word conflict
+        [Column("StatusInvoice")]
+        [MaxLength(32)]
+        public string StatusInvoice { get; set; } = "Draft";
+
+        // User who created/owns this invoice
+        [MaxLength(450)] // Standard ASP.NET Identity user ID length
+        public string? CreatedByUserId { get; set; }
+
         // Navigation property for invoice items
         public List<InvoiceItemModel> Items { get; set; } = new();
     }

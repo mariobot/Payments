@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Hyip_Payments.Web.Client.Services;
 
 namespace Hyip_Payments.Web.Client
 {
@@ -12,6 +13,10 @@ namespace Hyip_Payments.Web.Client
             builder.Services.AddAuthorizationCore();
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddAuthenticationStateDeserialization();
+
+            // Register Cart Service (Client-side WebAssembly - persists in browser memory during session)
+            // Uses Singleton to maintain cart state across component navigations within the same session
+            builder.Services.AddSingleton<ICartService, CartService>();
 
             // Option 1: Determine API base address based on environment (hardcoded)
             var apiBaseAddress = builder.HostEnvironment.IsDevelopment()

@@ -5,9 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hyip_Payments.Query.ProductQuery
 {
-    // MediatR query to get all products
+    /// <summary>
+    /// Query to get all active products
+    /// By default, only returns products where IsActive = true
+    /// </summary>
     public class GetProductListQuery : IRequest<List<ProductModel>>
     {
+        public bool IncludeInactive { get; set; } = false; // Optional: Include disabled products
     }
 
     public class GetProductListQueryHandler : IRequestHandler<GetProductListQuery, List<ProductModel>>
@@ -21,11 +25,23 @@ namespace Hyip_Payments.Query.ProductQuery
 
         public async Task<List<ProductModel>> Handle(GetProductListQuery request, CancellationToken cancellationToken)
         {
-            return await _dbContext.Products
+            // Build query with eager loading
+            var query = _dbContext.Products
                 .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
-                .ToListAsync(cancellationToken);
+                .AsQueryable();
+
+            // Filter out inactive products by default
+            if (!request.IncludeInactive)
+            {
+                query = query.Where(p => p.IsActive);
+            }
+
+            // Order by name for consistent results
+            query = query.OrderBy(p => p.Name);
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

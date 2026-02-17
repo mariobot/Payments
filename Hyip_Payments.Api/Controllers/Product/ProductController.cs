@@ -57,6 +57,10 @@ namespace Hyip_Payments.Api.Controllers.Product
         }
 
         // DELETE: api/Product/5
+        /// <summary>
+        /// Disable/deactivate a product (soft delete)
+        /// Sets IsActive = false instead of removing from database
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

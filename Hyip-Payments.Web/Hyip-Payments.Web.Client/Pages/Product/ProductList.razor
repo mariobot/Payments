@@ -1,68 +1,279 @@
 @page "/product/list"
+@page "/products"
 @using Hyip_Payments.Models
+@using Hyip_Payments.Web.Client.Services
+@using System.Net.Http.Json
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject ICartService CartService
+@implements IDisposable
 
-<h3>Product List</h3>
+<PageTitle>Products</PageTitle>
 
-<button class="btn btn-primary mb-3" @onclick="GoToAdd">Add New Product</button>
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-box-seam"></i> Product Catalog</h2>
+            <p class="text-muted">Browse our products and add to market</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary me-2" @onclick="GoToMarket">
+                <i class="bi bi-cart3"></i> Market Cart
+                @if (GetCartCount() > 0)
+                {
+                    <span class="badge bg-danger">@GetCartCount()</span>
+                }
+            </button>
+            <button class="btn btn-primary" @onclick="GoToAdd">
+                <i class="bi bi-plus-circle"></i> Add Product
+            </button>
+        </div>
+    </div>
 
-@if (isLoading)
-{
-    <p>Loading products...</p>
-}
-else if (errorMessage != null)
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
-else if (products != null && products.Any())
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Price</th>
-                <th>Category</th>
-                <th>Brand</th>
-                <th>Active</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var product in products)
-            {
-                <tr>
-                    <td>@product.Name</td>
-                    <td>@product.Description</td>
-                    <td>@product.Price.ToString("C")</td>
-                    <td>@product.Category?.Name</td>
-                    <td>@product.Brand?.Name</td>
-                    <td>@(product.IsActive ? "Yes" : "No")</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary me-1" @onclick="() => GoToEdit(product.Id)">Edit</button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => GoToDelete(product.Id)">Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No products found.</p>
-}
+    <!-- View Toggle -->
+    <div class="btn-group mb-3" role="group">
+        <button class="btn btn-sm @(viewMode == "cards" ? "btn-primary" : "btn-outline-primary")" 
+                @onclick='() => viewMode = "cards"'>
+            <i class="bi bi-grid-3x3-gap"></i> Cards
+        </button>
+        <button class="btn btn-sm @(viewMode == "table" ? "btn-primary" : "btn-outline-primary")" 
+                @onclick='() => viewMode = "table"'>
+            <i class="bi bi-table"></i> Table
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading products...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+        </div>
+    }
+    else if (products != null && products.Any())
+    {
+        @if (viewMode == "cards")
+        {
+            <!-- Card View -->
+            <div class="row g-4">
+                @foreach (var product in products)
+                {
+                    <div class="col-md-4 col-lg-3">
+                        <div class="card h-100 shadow-sm product-card @(!product.IsActive ? "opacity-75" : "")">
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-box-seam display-1 text-muted"></i>
+                            </div>
+
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@product.Name</h5>
+                                <p class="card-text text-muted small flex-grow-1">
+                                    @(string.IsNullOrEmpty(product.Description) ? "No description" : 
+                                      product.Description.Length > 80 ? product.Description.Substring(0, 80) + "..." : product.Description)
+                                </p>
+
+                                <div class="mb-2">
+                                    @if (product.Category != null)
+                                    {
+                                        <span class="badge bg-info text-dark">@product.Category.Name</span>
+                                    }
+                                    @if (product.Brand != null)
+                                    {
+                                        <span class="badge bg-secondary">@product.Brand.Name</span>
+                                    }
+                                    @if (product.IsActive)
+                                    {
+                                        <span class="badge bg-success">Available</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Unavailable</span>
+                                    }
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="text-primary mb-0">$@product.Price.ToString("F2")</h4>
+                                </div>
+
+                                <div class="btn-group w-100 mb-2" role="group">
+                                    <button class="btn btn-success btn-sm" 
+                                            @onclick="() => AddToMarket(product)" 
+                                            disabled="@(!product.IsActive)">
+                                        <i class="bi bi-cart-plus"></i> Add to Market
+                                    </button>
+                                </div>
+
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-outline-primary btn-sm" @onclick="() => GoToEdit(product.Id)">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => ConfirmDelete(product.Id, product.Name)">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Table View -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th class="text-end">Price</th>
+                            <th>Category</th>
+                            <th>Brand</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in products)
+                        {
+                            <tr>
+                                <td><strong>@product.Name</strong></td>
+                                <td>@(product.Description ?? "-")</td>
+                                <td class="text-end"><strong>$@product.Price.ToString("F2")</strong></td>
+                                <td>@(product.Category?.Name ?? "-")</td>
+                                <td>@(product.Brand?.Name ?? "-")</td>
+                                <td>
+                                    @if (product.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-success" 
+                                                @onclick="() => AddToMarket(product)"
+                                                disabled="@(!product.IsActive)">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(product.Id)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(product.Id, product.Name)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="mt-3">
+            <p class="text-muted mb-0">
+                <i class="bi bi-info-circle"></i> Total: <strong>@products.Count</strong> product(s)
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No products found. 
+            <button class="btn btn-sm btn-primary ms-2" @onclick="GoToAdd">
+                Add First Product
+            </button>
+        </div>
+    }
+
+    <!-- Delete Confirmation Modal -->
+    @if (showDeleteConfirm)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CancelDelete"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete the product <strong>@productToDeleteName</strong>?</p>
+                        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                        <button type="button" class="btn btn-danger" @onclick="DeleteProduct">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Toast Notification -->
+    @if (showToast)
+    {
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div class="toast show bg-success text-white" role="alert">
+                <div class="toast-header">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong class="me-auto">Success</strong>
+                    <button type="button" class="btn-close" @onclick="() => showToast = false"></button>
+                </div>
+                <div class="toast-body">
+                    @toastMessage
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .product-card {
+        transition: transform 0.2s;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    }
+</style>
 
 @code {
-    private List<ProductModel>? products;
+    private List<ProductModel> products = new();
     private bool isLoading = true;
     private string? errorMessage;
+    private string viewMode = "cards";
+    private bool showDeleteConfirm = false;
+    private int productToDelete = 0;
+    private string productToDeleteName = string.Empty;
+    private bool showToast = false;
+    private string toastMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadProducts();
+        CartService.OnChange += StateHasChanged;
+    }
+
+    private async Task LoadProducts()
+    {
         try
         {
-            products = await Http.GetFromJsonAsync<List<ProductModel>>("api/Product");
+            products = await Http.GetFromJsonAsync<List<ProductModel>>("api/Product") ?? new();
         }
         catch (Exception ex)
         {
@@ -71,6 +282,73 @@ else
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private void AddToMarket(ProductModel product)
+    {
+        CartService.AddItem(product.Id, product.Name, product.Price, 1);
+        ShowToast($"'{product.Name}' added to market cart!");
+    }
+
+    private int GetCartCount()
+    {
+        return CartService.GetItemCount();
+    }
+
+    private void ShowToast(string message)
+    {
+        toastMessage = message;
+        showToast = true;
+        StateHasChanged();
+
+        Task.Delay(3000).ContinueWith(_ => 
+        {
+            showToast = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void ConfirmDelete(int id, string name)
+    {
+        productToDelete = id;
+        productToDeleteName = name;
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        productToDelete = 0;
+        productToDeleteName = string.Empty;
+        showDeleteConfirm = false;
+    }
+
+    private async Task DeleteProduct()
+    {
+        showDeleteConfirm = false;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Product/{productToDelete}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                products.RemoveAll(p => p.Id == productToDelete);
+                ShowToast("Product deleted successfully!");
+            }
+            else
+            {
+                errorMessage = $"Failed to delete product: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting product: {ex.Message}";
+        }
+        finally
+        {
+            productToDelete = 0;
+            productToDeleteName = string.Empty;
         }
     }
 
@@ -84,8 +362,13 @@ else
         NavigationManager.NavigateTo($"/product/edit/{id}");
     }
 
-    private void GoToDelete(int id)
+    private void GoToMarket()
     {
-        NavigationManager.NavigateTo($"/product/delete/{id}");
+        NavigationManager.NavigateTo("/market");
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
     }
 }

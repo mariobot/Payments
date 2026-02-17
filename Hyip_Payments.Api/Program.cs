@@ -1,3 +1,4 @@
+using System.Text;
 using Hyip_Payments.Api.Extensions;
 using Hyip_Payments.Command.ProductCommand;
 using Hyip_Payments.Command.UserCommand;
@@ -7,9 +8,9 @@ using Hyip_Payments.Query.ProductQuery;
 using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 namespace Hyip_Payments.Api
 {
@@ -56,6 +57,9 @@ namespace Hyip_Payments.Api
             builder.Services.AddScoped<IRequestHandler<GetProductByIdQuery, ProductModel?>, GetProductByIdQueryHandler>();
             builder.Services.AddScoped<IRequestHandler<RegisterUserCommand, UserModel>, RegisterUserCommandHandler>();
             builder.Services.AddScoped<IRequestHandler<LoginUserCommand, UserModel?>, LoginUserCommandHandler>();
+
+            // Uses Singleton to maintain cart state across component navigations within the same session
+            //builder.Services.AddSingleton<ICartService, CartService>();
 
             // Add TokenService
             builder.Services.AddScoped<TokenService>();

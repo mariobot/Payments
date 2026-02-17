@@ -127,8 +127,7 @@ namespace Hyip_Payments.Web
 
             // TODO pending identity migrations
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-
-            // Register Cart Service (Client-side WebAssembly - persists in browser memory during session)
+            
             // Uses Singleton to maintain cart state across component navigations within the same session
             builder.Services.AddSingleton<ICartService, CartService>();
 

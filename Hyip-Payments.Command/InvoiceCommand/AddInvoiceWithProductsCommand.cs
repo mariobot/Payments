@@ -15,6 +15,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
         public bool IsActive { get; set; } = true;
+        public string? CreatedByUserId { get; set; } // User who created this invoice
     }
 
     /// <summary>
@@ -24,6 +25,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
     {
         public InvoiceDto Invoice { get; set; } = null!;
         public List<InvoiceItemDto> Items { get; set; } = new();
+        public string? CreatedByUserId { get; set; } // Set by controller from authenticated user
     }
 
     /// <summary>
@@ -76,7 +78,8 @@ namespace Hyip_Payments.Command.InvoiceCommand
                         InvoiceDate = request.Invoice.InvoiceDate,
                         Description = request.Invoice.Description,
                         TotalAmount = request.Invoice.TotalAmount,
-                        IsActive = request.Invoice.IsActive
+                        IsActive = request.Invoice.IsActive,
+                        CreatedByUserId = request.CreatedByUserId // Set the user who created this invoice
                     };
 
                     _context.Invoices.Add(invoice);

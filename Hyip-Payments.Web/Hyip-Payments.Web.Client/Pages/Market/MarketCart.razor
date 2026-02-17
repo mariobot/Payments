@@ -1,0 +1,247 @@
+@page "/market"
+@page "/cart"
+@using Hyip_Payments.Models
+@using Hyip_Payments.Web.Client.Services
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ICartService CartService
+@implements IDisposable
+
+<PageTitle>Market Cart</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-cart3"></i> Market Cart</h2>
+        <button class="btn btn-outline-secondary" @onclick="GoToProducts">
+            <i class="bi bi-arrow-left"></i> Continue Shopping
+        </button>
+    </div>
+
+    @if (cartItems == null || !cartItems.Any())
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="bi bi-cart-x display-1 d-block mb-3"></i>
+            <h4>Your cart is empty</h4>
+            <p class="text-muted">Add some products to your cart to create an invoice</p>
+            <button class="btn btn-primary mt-3" @onclick="GoToProducts">
+                <i class="bi bi-box-seam"></i> Browse Products
+            </button>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Cart Items (@cartItems.Count)</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var item in cartItems)
+                        {
+                            <div class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-0">@item.ProductName</h6>
+                                        <small class="text-muted">$@item.UnitPrice.ToString("F2") each</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="input-group input-group-sm">
+                                            <button class="btn btn-outline-secondary" @onclick="() => DecreaseQuantity(item)">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <input type="number" class="form-control text-center" @bind="item.Quantity" min="1" />
+                                            <button class="btn btn-outline-secondary" @onclick="() => IncreaseQuantity(item)">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <strong>$@item.Total.ToString("F2")</strong>
+                                    </div>
+                                    <div class="col-md-1 text-end">
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveItem(item)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong>$@GetSubtotal().ToString("F2")</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Items:</span>
+                            <span>@cartItems.Sum(c => c.Quantity)</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5>Total:</h5>
+                            <h5 class="text-primary">$@GetSubtotal().ToString("F2")</h5>
+                        </div>
+                        
+                        <button class="btn btn-success w-100 mb-2" @onclick="CreateInvoiceFromCart" disabled="@isCreatingInvoice">
+                            @if (isCreatingInvoice)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            <i class="bi bi-file-earmark-text"></i> Create Invoice
+                        </button>
+                        
+                        <button class="btn btn-outline-danger w-100" @onclick="ClearCart">
+                            <i class="bi bi-trash"></i> Clear Cart
+                        </button>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger mt-3">
+                        <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CartItem> cartItems = new();
+    private bool isCreatingInvoice = false;
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        LoadCart();
+        CartService.OnChange += OnCartChanged;
+    }
+
+    private void OnCartChanged()
+    {
+        LoadCart();
+        StateHasChanged();
+    }
+
+    private void LoadCart()
+    {
+        cartItems = CartService.GetItems();
+    }
+
+    private decimal GetSubtotal()
+    {
+        return CartService.GetTotal();
+    }
+
+    private void IncreaseQuantity(CartItem item)
+    {
+        CartService.UpdateQuantity(item.ProductId, item.Quantity + 1);
+    }
+
+    private void DecreaseQuantity(CartItem item)
+    {
+        if (item.Quantity > 1)
+        {
+            CartService.UpdateQuantity(item.ProductId, item.Quantity - 1);
+        }
+    }
+
+    private void RemoveItem(CartItem item)
+    {
+        CartService.RemoveItem(item.ProductId);
+    }
+
+    private void ClearCart()
+    {
+        CartService.ClearCart();
+    }
+
+    private async Task CreateInvoiceFromCart()
+    {
+        if (!cartItems.Any())
+        {
+            errorMessage = "Cart is empty";
+            return;
+        }
+
+        isCreatingInvoice = true;
+        errorMessage = null;
+
+        try
+        {
+            // Create invoice with products command
+            var command = new
+            {
+                Invoice = new
+                {
+                    InvoiceNumber = $"INV-{DateTime.Now:yyyyMMdd-HHmmss}",
+                    InvoiceDate = DateTime.Now,
+                    Description = $"Market Cart Invoice - {cartItems.Count} items",
+                    TotalAmount = GetSubtotal(),
+                    IsActive = true
+                },
+                Items = cartItems.Select(c => new
+                {
+                    ProductId = c.ProductId,
+                    ItemName = c.ProductName,
+                    Quantity = c.Quantity,
+                    UnitPrice = c.UnitPrice
+                }).ToList()
+            };
+
+            var response = await Http.PostAsJsonAsync("api/Invoice/with-products", command);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<InvoiceWithItemsDto>();
+
+                // Clear cart
+                CartService.ClearCart();
+
+                // Navigate to invoice view
+                NavigationManager.NavigateTo($"/invoice/view/{result?.InvoiceId}");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to create invoice: {response.StatusCode} - {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating invoice: {ex.Message}";
+        }
+        finally
+        {
+            isCreatingInvoice = false;
+        }
+    }
+
+    private void GoToProducts()
+    {
+        NavigationManager.NavigateTo("/products");
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= OnCartChanged;
+    }
+
+    public class InvoiceWithItemsDto
+    {
+        public int InvoiceId { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+    }
+}

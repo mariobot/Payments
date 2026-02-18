@@ -37,32 +37,32 @@
             </div>
         </div>
 
-        <!-- Brands Stats -->
+        <!-- Payments Stats -->
         <div class="col-md-3 mb-4">
             <div class="stat-card" style="border-left: 4px solid #e74c3c;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">Brands</h6>
-                        <h4 class="mb-0">@("🏷️")</h4>
+                        <h6 class="text-muted mb-2">Payments</h6>
+                        <h4 class="mb-0">@("💳")</h4>
                     </div>
                 </div>
-                <button class="btn btn-sm btn-primary mt-3 w-100" @onclick="GoToBrands">
-                    View Brands
+                <button class="btn btn-sm btn-danger mt-3 w-100" @onclick="GoToPayments">
+                    View Payments
                 </button>
             </div>
         </div>
 
-        <!-- Categories Stats -->
+        <!-- Payment History Stats -->
         <div class="col-md-3 mb-4">
             <div class="stat-card" style="border-left: 4px solid #f39c12;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-2">Categories</h6>
-                        <h4 class="mb-0">@("📂")</h4>
+                        <h6 class="text-muted mb-2">Payment History</h6>
+                        <h4 class="mb-0">@("💰")</h4>
                     </div>
                 </div>
-                <button class="btn btn-sm btn-primary mt-3 w-100" @onclick="GoToCategories">
-                    View Categories
+                <button class="btn btn-sm btn-warning mt-3 w-100" @onclick="GoToPayments">
+                    View History
                 </button>
             </div>
         </div>
@@ -88,13 +88,13 @@
                             </button>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <button class="btn btn-outline-primary w-100" @onclick="GoToAddBrand">
-                                ➕ Add Brand
+                            <button class="btn btn-outline-danger w-100" @onclick="GoToCreatePayment">
+                                ➕ Create Payment
                             </button>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <button class="btn btn-outline-primary w-100" @onclick="GoToAddCategory">
-                                ➕ Add Category
+                            <button class="btn btn-outline-warning w-100" @onclick="GoToPayments">
+                                📊 Payment Reports
                             </button>
                         </div>
                     </div>
@@ -114,6 +114,9 @@
                     <ul class="list-unstyled">
                         <li class="mb-2">
                             <a href="/invoice" class="text-decoration-none"> Invoices</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/payment/list" class="text-decoration-none">💳 Payments</a>
                         </li>
                         <li class="mb-2">
                             <a href="/money/list" class="text-decoration-none"> Currency Management</a>
@@ -177,12 +180,10 @@
     // View navigation methods
     private void GoToInvoices() => NavigationManager.NavigateTo("/invoice");
     private void GoToProducts() => NavigationManager.NavigateTo("/product/list");
-    private void GoToBrands() => NavigationManager.NavigateTo("/brand/list");
-    private void GoToCategories() => NavigationManager.NavigateTo("/category/list");
-    
+    private void GoToPayments() => NavigationManager.NavigateTo("/payment/list");
+
     // Add navigation methods
     private void GoToCreateInvoice() => NavigationManager.NavigateTo("/invoice/add");
     private void GoToAddProduct() => NavigationManager.NavigateTo("/product/add");
-    private void GoToAddBrand() => NavigationManager.NavigateTo("/brand/add");
-    private void GoToAddCategory() => NavigationManager.NavigateTo("/category/add");
+    private void GoToCreatePayment() => NavigationManager.NavigateTo("/payment/add");
 }

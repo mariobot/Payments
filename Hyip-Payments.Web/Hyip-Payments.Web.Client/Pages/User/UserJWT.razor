@@ -1,0 +1,324 @@
+﻿@page "/user/jwt"
+@rendermode InteractiveAuto
+@using Hyip_Payments.Web.Client.Services
+@using System.IdentityModel.Tokens.Jwt
+@using System.Security.Claims
+@using Microsoft.JSInterop
+@inject IAuthTokenService TokenService
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>JWT Token Information</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">🔐 JWT Token Information</h3>
+                    @if (isAuthenticated)
+                    {
+                        <button class="btn btn-danger btn-sm" @onclick="Logout">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading token information...</p>
+                        </div>
+                    }
+                    else if (!isAuthenticated)
+                    {
+                        <div class="alert alert-warning">
+                            <h4><i class="bi bi-exclamation-triangle"></i> Not Authenticated</h4>
+                            <p>You are not currently logged in. Please login to view your JWT token information.</p>
+                            <a href="/api-login" class="btn btn-primary">Go to Login</a>
+                        </div>
+                    }
+                    else if (tokenData != null)
+                    {
+                        <!-- Token Status -->
+                        <div class="mb-4">
+                            <h5>Token Status</h5>
+                            <div class="alert @(isTokenExpired ? "alert-danger" : "alert-success")">
+                                <strong>Status:</strong> @(isTokenExpired ? "Expired ❌" : "Active ✅")
+                                @if (expirationTime.HasValue)
+                                {
+                                    <br />
+                                    <strong>Expires:</strong> @expirationTime.Value.ToString("yyyy-MM-dd HH:mm:ss") <text>UTC</text>
+                                    @if (!isTokenExpired)
+                                    {
+                                        <br />
+                                        <strong>Time Remaining:</strong> @GetTimeRemaining()
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <!-- User Claims -->
+                        <div class="mb-4">
+                            <h5>User Claims</h5>
+                            <table class="table table-striped table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Claim Type</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in claims)
+                                    {
+                                        <tr>
+                                            <td><strong>@GetFriendlyClaimName(claim.Type)</strong></td>
+                                            <td>@claim.Value</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Raw Token -->
+                        <div class="mb-4">
+                            <h5>Raw JWT Token</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <small class="text-muted">Click to copy</small>
+                                        <button class="btn btn-sm btn-outline-primary" @onclick="CopyToken">
+                                            <i class="bi bi-clipboard"></i> Copy
+                                        </button>
+                                    </div>
+                                    <pre style="white-space: pre-wrap; word-break: break-all; font-size: 0.85rem;">@rawToken</pre>
+                                    @if (showCopyMessage)
+                                    {
+                                        <div class="alert alert-success mt-2 mb-0">
+                                            Token copied to clipboard!
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Token Sections -->
+                        <div class="mb-4">
+                            <h5>Token Sections</h5>
+                            <div class="card mb-2">
+                                <div class="card-header" style="cursor: pointer;" @onclick="() => showHeader = !showHeader">
+                                    <strong>Header</strong> <span class="float-end">@(showHeader ? "▼" : "►")</span>
+                                </div>
+                                @if (showHeader)
+                                {
+                                    <div class="card-body">
+                                        <pre style="margin: 0;">@tokenData.Header</pre>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card">
+                                <div class="card-header" style="cursor: pointer;" @onclick="() => showPayload = !showPayload">
+                                    <strong>Payload</strong> <span class="float-end">@(showPayload ? "▼" : "►")</span>
+                                </div>
+                                @if (showPayload)
+                                {
+                                    <div class="card-body">
+                                        <pre style="margin: 0;">@tokenData.Payload</pre>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-danger" @onclick="Logout">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">
+                            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success mt-3">
+                            <i class="bi bi-check-circle"></i> @successMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool isAuthenticated = false;
+    private bool isTokenExpired = false;
+    private bool showCopyMessage = false;
+    private bool showHeader = false;
+    private bool showPayload = false;
+    private string? rawToken;
+    private string? errorMessage;
+    private string? successMessage;
+    private DateTime? expirationTime;
+    private List<Claim> claims = new();
+    private TokenData? tokenData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTokenInformation();
+    }
+
+    private async Task LoadTokenInformation()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Get token from storage
+            rawToken = await TokenService.GetTokenAsync();
+
+            if (string.IsNullOrEmpty(rawToken))
+            {
+                isAuthenticated = false;
+                isLoading = false;
+                return;
+            }
+
+            isAuthenticated = true;
+
+            // Parse JWT token
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(rawToken);
+
+            // Extract claims
+            claims = jwtToken.Claims.ToList();
+
+            // Check expiration
+            expirationTime = jwtToken.ValidTo;
+            isTokenExpired = DateTime.UtcNow > expirationTime;
+
+            // Parse token sections
+            tokenData = new TokenData
+            {
+                Header = System.Text.Json.JsonSerializer.Serialize(
+                    jwtToken.Header,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }
+                ),
+                Payload = System.Text.Json.JsonSerializer.Serialize(
+                    jwtToken.Payload,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }
+                )
+            };
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading token information: {ex.Message}";
+            isAuthenticated = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetFriendlyClaimName(string claimType)
+    {
+        return claimType switch
+        {
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" => "User ID",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" => "Username",
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress" => "Email",
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" => "Role",
+            "exp" => "Expiration",
+            "iss" => "Issuer",
+            "aud" => "Audience",
+            "nbf" => "Not Before",
+            "iat" => "Issued At",
+            "jti" => "JWT ID",
+            _ => claimType
+        };
+    }
+
+    private string GetTimeRemaining()
+    {
+        if (!expirationTime.HasValue || isTokenExpired)
+            return "N/A";
+
+        var remaining = expirationTime.Value - DateTime.UtcNow;
+
+        if (remaining.TotalDays >= 1)
+            return $"{(int)remaining.TotalDays} days, {remaining.Hours} hours";
+        else if (remaining.TotalHours >= 1)
+            return $"{(int)remaining.TotalHours} hours, {remaining.Minutes} minutes";
+        else
+            return $"{(int)remaining.TotalMinutes} minutes";
+    }
+
+    private async Task CopyToken()
+    {
+        if (!string.IsNullOrEmpty(rawToken))
+        {
+            try
+            {
+                // Use JS Interop to copy to clipboard
+                await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", rawToken);
+                showCopyMessage = true;
+                StateHasChanged();
+
+                // Hide message after 3 seconds
+                await Task.Delay(3000);
+                showCopyMessage = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to copy token: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            // Call logout endpoint
+            var response = await Http.PostAsync("https://localhost:7263/api/Auth/logout", null);
+
+            // Clear token from storage
+            await TokenService.RemoveTokenAsync();
+
+            successMessage = "Logged out successfully!";
+            StateHasChanged();
+
+            // Wait a moment to show message, then redirect
+            await Task.Delay(1500);
+            Navigation.NavigateTo("/api-login", true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Logout failed: {ex.Message}";
+            // Still clear token locally even if API call fails
+            await TokenService.RemoveTokenAsync();
+            await Task.Delay(1500);
+            Navigation.NavigateTo("/api-login", true);
+        }
+    }
+
+    private class TokenData
+    {
+        public string Header { get; set; } = string.Empty;
+        public string Payload { get; set; } = string.Empty;
+    }
+}

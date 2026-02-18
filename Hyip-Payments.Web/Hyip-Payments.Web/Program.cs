@@ -30,10 +30,36 @@ namespace Hyip_Payments.Web
                 ? "https://localhost:7263"  // Development
                 : "https://mariobot-payments-api.runasp.net";  // Production
 
-            // Add HttpClient for WebAssembly components with conditional base address
-            builder.Services.AddScoped(sp => new HttpClient 
-            { 
-                BaseAddress = new Uri(apiEndpoint)
+            // Add HttpClient with automatic JWT token injection for API calls
+            builder.Services.AddScoped(sp =>
+            {
+                var tokenService = sp.GetService<IAuthTokenService>();
+
+                // Create HttpClient with base address
+                var httpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(apiEndpoint)
+                };
+
+                // If token service is available (WebAssembly/interactive mode), add token
+                if (tokenService != null)
+                {
+                    try
+                    {
+                        var token = tokenService.GetTokenAsync().GetAwaiter().GetResult();
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            httpClient.DefaultRequestHeaders.Authorization = 
+                                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        }
+                    }
+                    catch
+                    {
+                        // Token not available, continue without it
+                    }
+                }
+
+                return httpClient;
             });
 
             // Identity services 

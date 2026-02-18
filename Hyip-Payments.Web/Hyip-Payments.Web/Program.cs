@@ -1,5 +1,6 @@
 using CryptoExchange.Net.Authentication;
 using Hyip_Payments.Context;
+using Hyip_Payments.Services;
 using Hyip_Payments.Web.Client.Services;
 using Hyip_Payments.Web.Components;
 using Hyip_Payments.Web.Components.Account;
@@ -127,9 +128,18 @@ namespace Hyip_Payments.Web
 
             // TODO pending identity migrations
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-            
-            // Uses Singleton to maintain cart state across component navigations within the same session
+
+            // Register TokenService for JWT token generation (shared with API)
+            builder.Services.AddScoped<TokenService>();
+
+            // Register Cart Service (Server-side - persists during session)
             builder.Services.AddSingleton<ICartService, CartService>();
+
+            // Register Auth Token Service (Server-side - for JWT token management)
+            builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
+
+            // Register Authorization Message Handler (Server-side - adds Bearer token to HTTP requests)
+            builder.Services.AddScoped<AuthorizationMessageHandler>();
 
             // Use the already configured API endpoint
             builder.Services.AddWebApplicationServices(apiEndpoint);

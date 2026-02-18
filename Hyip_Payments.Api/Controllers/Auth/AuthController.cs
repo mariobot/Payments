@@ -36,7 +36,7 @@ namespace Hyip_Payments.Api.Controllers.Auth
                 return Unauthorized(new { message = "Invalid email or password" });
 
             // Get user roles
-            var roles = user.UserRoles?.Select(ur => ur.Role?.Name ?? "User").ToList() ?? new List<string>();
+            var roles = user.UserRoles?.Select(ur => ur.Role?.Name ?? "Admin").ToList() ?? new List<string>();
 
             // Generate JWT token for API calls
             var token = _tokenService.GenerateToken(user.Id, user.Username, user.Email, roles);

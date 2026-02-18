@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
     <ProjectReference Include="..\..\Hyip-Payments.Command\Hyip-Payments.Command.csproj" />
     <ProjectReference Include="..\..\Hyip-Payments.Query\Hyip-Payments.Query.csproj" />
     <ProjectReference Include="..\..\Hyip-Payments.Services\Hyip-Payments.Services.csproj" />

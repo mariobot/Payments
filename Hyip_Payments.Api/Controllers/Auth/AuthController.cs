@@ -2,6 +2,9 @@ using Hyip_Payments.Command.UserCommand;
 using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 namespace Hyip_Payments.Api.Controllers.Auth
 {
@@ -19,6 +22,10 @@ namespace Hyip_Payments.Api.Controllers.Auth
         }
 
         // POST: api/Auth/login
+        /// <summary>
+        /// Hybrid login: Returns JWT token AND sets authentication cookie
+        /// This allows both API authentication and Blazor component authentication
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -31,9 +38,37 @@ namespace Hyip_Payments.Api.Controllers.Auth
             // Get user roles
             var roles = user.UserRoles?.Select(ur => ur.Role?.Name ?? "User").ToList() ?? new List<string>();
 
-            // Generate JWT token
+            // Generate JWT token for API calls
             var token = _tokenService.GenerateToken(user.Id, user.Username, user.Email, roles);
 
+            // ALSO create claims for cookie-based authentication (Blazor components)
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            // Add role claims
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
+            // Sign in with cookie (for Blazor components)
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                claimsPrincipal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = true, // Remember me
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+                });
+
+            // Return JWT token (for API calls)
             return Ok(new
             {
                 token,
@@ -45,6 +80,17 @@ namespace Hyip_Payments.Api.Controllers.Auth
                     roles
                 }
             });
+        }
+
+        // POST: api/Auth/logout
+        /// <summary>
+        /// Logout - clears both cookie and client should clear JWT token
+        /// </summary>
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Ok(new { message = "Logged out successfully" });
         }
     }
 

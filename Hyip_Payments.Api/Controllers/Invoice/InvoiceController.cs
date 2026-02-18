@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.Invoice
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize] // Disabled: Server-side Blazor components run in authenticated context
+    [Authorize] // Disabled: Server-side Blazor components run in authenticated context
     public class InvoiceController : ControllerBase
     {
         private readonly IMediator _mediator;

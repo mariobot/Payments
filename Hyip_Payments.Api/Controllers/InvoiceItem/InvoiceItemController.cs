@@ -10,7 +10,7 @@ namespace Hyip_Payments.Api.Controllers.InvoiceItem
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class InvoiceItemController : ControllerBase
     {
         private readonly IMediator _mediator;

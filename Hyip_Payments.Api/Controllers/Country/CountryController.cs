@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.Country
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Authorize] // Temporarily commented for testing
+    [Authorize] // Temporarily commented for testing
     public class CountryController : ControllerBase
     {
         private readonly IMediator _mediator;

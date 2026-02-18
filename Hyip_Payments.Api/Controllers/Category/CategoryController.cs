@@ -9,7 +9,7 @@ namespace Hyip_Payments.Api.Controllers.Category
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class CategoryController : ControllerBase
     {
         private readonly IMediator _mediator;

@@ -64,8 +64,12 @@ namespace Hyip_Payments.Api
             // Add TokenService
             builder.Services.AddScoped<TokenService>();
 
-            // Add JWT Authentication
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            // Add DUAL Authentication: JWT Bearer (for API) + Cookie (for Blazor components)
+            builder.Services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
@@ -79,6 +83,14 @@ namespace Hyip_Payments.Api
                         IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                     };
+                })
+                .AddCookie(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme, options =>
+                {
+                    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+                    options.SlidingExpiration = true;
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SameSite = SameSiteMode.Lax;
                 });
 
             builder.Services.AddAuthorization();

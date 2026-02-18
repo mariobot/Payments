@@ -33,12 +33,19 @@ namespace Hyip_Payments.Web.Client
             Console.WriteLine($"Environment: {builder.HostEnvironment.Environment}");
             Console.WriteLine($"API Base Address: {apiBaseAddress}");
 
-            // HttpClient with conditional base address and automatic token injection
+            // HttpClient with automatic JWT Bearer token injection
             builder.Services.AddScoped(sp =>
             {
-                var handler = sp.GetRequiredService<AuthorizationMessageHandler>();
-                handler.InnerHandler = new HttpClientHandler();
+                // Get the token service
+                var tokenService = sp.GetRequiredService<IAuthTokenService>();
 
+                // Create the handler directly (don't try to get from DI)
+                var handler = new AuthorizationMessageHandler(tokenService)
+                {
+                    InnerHandler = new HttpClientHandler()
+                };
+
+                // Create HttpClient with the handler
                 return new HttpClient(handler)
                 {
                     BaseAddress = new Uri(apiBaseAddress)

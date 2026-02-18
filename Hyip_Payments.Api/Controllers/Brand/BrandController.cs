@@ -10,7 +10,7 @@ namespace Hyip_Payments.Api.Controllers.Brand
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
+    [Authorize]
     public class BrandController : ControllerBase
     {
         private readonly IMediator _mediator;

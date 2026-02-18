@@ -18,6 +18,9 @@ namespace Hyip_Payments.Web.Client
             // Uses Singleton to maintain cart state across component navigations within the same session
             builder.Services.AddSingleton<ICartService, CartService>();
 
+            // Register Auth Token Service (stores JWT token in localStorage)
+            builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
+
             // Option 1: Determine API base address based on environment (hardcoded)
             var apiBaseAddress = builder.HostEnvironment.IsDevelopment()
                 ? "https://localhost:7263"  // Development
@@ -30,10 +33,16 @@ namespace Hyip_Payments.Web.Client
             Console.WriteLine($"Environment: {builder.HostEnvironment.Environment}");
             Console.WriteLine($"API Base Address: {apiBaseAddress}");
 
-            // HttpClient with conditional base address
-            builder.Services.AddScoped(sp => new HttpClient
+            // HttpClient with conditional base address and automatic token injection
+            builder.Services.AddScoped(sp =>
             {
-                BaseAddress = new Uri(apiBaseAddress)
+                var handler = sp.GetRequiredService<AuthorizationMessageHandler>();
+                handler.InnerHandler = new HttpClientHandler();
+
+                return new HttpClient(handler)
+                {
+                    BaseAddress = new Uri(apiBaseAddress)
+                };
             });
 
             await builder.Build().RunAsync();

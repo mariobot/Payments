@@ -48,6 +48,20 @@ namespace Hyip_Payments.Command.PaymentCommand
             transaction.Reference = request.Reference;
             transaction.Description = request.Description;
 
+            // If payment status is changed to "Completed" and there's a linked invoice, update invoice status to "Paid"
+            if (request.Status == "Completed" && request.InvoiceId.HasValue)
+            {
+                var invoice = await _context.Invoices
+                    .FirstOrDefaultAsync(i => i.Id == request.InvoiceId.Value, cancellationToken);
+
+                if (invoice != null)
+                {
+                    // Update invoice status to "Paid"
+                    invoice.StatusInvoice = "Paid";
+                    _context.Invoices.Update(invoice);
+                }
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
             return transaction;
         }

@@ -46,6 +46,7 @@
                                 <th>Description</th>
                                 <th class="text-end">Total Amount</th>
                                 <th>Status</th>
+                                <th>Status Invoice</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -58,6 +59,26 @@
                                     <td>@(string.IsNullOrEmpty(invoice.Description) ? "-" : invoice.Description)</td>
                                     <td class="text-end"><strong>$@invoice.TotalAmount.ToString("F2")</strong></td>
                                     <td>
+                                        @switch (invoice.StatusInvoice)
+                                        {
+                                            case "Draft":
+                                                <span class="badge bg-secondary"><i class="bi bi-pencil"></i> Draft</span>
+                                                break;
+                                            case "Pending":
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pending</span>
+                                                break;
+                                            case "Paid":
+                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
+                                                break;
+                                            case "Cancelled":
+                                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Cancelled</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-light text-dark">@invoice.StatusInvoice</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
                                         @if (invoice.IsActive)
                                         {
                                             <span class="badge bg-success">Active</span>
@@ -69,18 +90,35 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
-                                            <button class="btn btn-sm btn-success" @onclick="() => GoToPayment(invoice.Id)" title="Send to Payment">
-                                                <i class="bi bi-cash-coin"></i>
-                                            </button>
+                                            @if (invoice.StatusInvoice == "Draft")
+                                            {
+                                                <!-- Only show payment button for Draft invoices -->
+                                                <button class="btn btn-sm btn-success" @onclick="() => GoToPayment(invoice.Id)" title="Send to Payment">
+                                                    <i class="bi bi-cash-coin"></i> Pay
+                                                </button>
+                                            }
+                                            else if (invoice.StatusInvoice == "Paid")
+                                            {
+                                                <!-- Show view payments for Paid invoices -->
+                                                <button class="btn btn-sm btn-info" @onclick="() => ViewPayments(invoice.Id)" title="View Payment Details">
+                                                    <i class="bi bi-receipt"></i> Payment
+                                                </button>
+                                            }
+
                                             <button class="btn btn-sm btn-info" @onclick="() => GoToView(invoice.Id)" title="View">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(invoice.Id)" title="Edit">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(invoice.Id)" title="Delete">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+
+                                            @if (invoice.StatusInvoice == "Draft")
+                                            {
+                                                <!-- Only allow editing Draft invoices -->
+                                                <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(invoice.Id)" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(invoice.Id)" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -128,14 +166,119 @@
             </div>
         </div>
     }
+
+    <!-- Payment Transaction Details Modal -->
+    @if (showPaymentModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title"><i class="bi bi-receipt"></i> Payment Transaction Details</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="ClosePaymentModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (loadingPayments)
+                        {
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading payment transactions...</p>
+                            </div>
+                        }
+                        else if (paymentTransactions != null && paymentTransactions.Any())
+                        {
+                            @foreach (var payment in paymentTransactions)
+                            {
+                                <div class="card mb-3">
+                                    <div class="card-header @GetStatusColor(payment.Status)">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">
+                                                <i class="bi bi-credit-card"></i> Transaction #@payment.Id
+                                            </h6>
+                                            <span class="badge @GetStatusBadgeColor(payment.Status)">
+                                                @payment.Status
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p class="mb-2">
+                                                    <strong><i class="bi bi-calendar"></i> Date:</strong> 
+                                                    @payment.TransactionDate.ToString("MMMM dd, yyyy HH:mm")
+                                                </p>
+                                                <p class="mb-2">
+                                                    <strong><i class="bi bi-cash"></i> Amount:</strong> 
+                                                    <span class="text-success fs-5 fw-bold">$@payment.Amount.ToString("F2")</span>
+                                                </p>
+                                                @if (!string.IsNullOrEmpty(payment.Reference))
+                                                {
+                                                    <p class="mb-2">
+                                                        <strong><i class="bi bi-hash"></i> Reference:</strong> 
+                                                        @payment.Reference
+                                                    </p>
+                                                }
+                                            </div>
+                                            <div class="col-md-6">
+                                                @if (!string.IsNullOrEmpty(payment.Description))
+                                                {
+                                                    <p class="mb-2">
+                                                        <strong><i class="bi bi-file-text"></i> Description:</strong> 
+                                                        @payment.Description
+                                                    </p>
+                                                }
+                                                @if (!string.IsNullOrEmpty(payment.ProcessedByUserId))
+                                                {
+                                                    <p class="mb-2">
+                                                        <strong><i class="bi bi-person"></i> Processed By:</strong> 
+                                                        User #@payment.ProcessedByUserId
+                                                    </p>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Total Transactions: <strong>@paymentTransactions.Count</strong>
+                                <br />
+                                <i class="bi bi-cash-stack"></i> Total Amount Paid: <strong>$@paymentTransactions.Sum(p => p.Amount).ToString("F2")</strong>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> No payment transactions found for this invoice.
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="ClosePaymentModal">
+                            <i class="bi bi-x-circle"></i> Close
+                        </button>
+                        <button type="button" class="btn btn-primary" @onclick="() => NavigateToPaymentList(selectedInvoiceId)">
+                            <i class="bi bi-list"></i> View All Payments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     private List<InvoiceModel> invoices = new();
+    private List<PaymentTransactionDto> paymentTransactions = new();
     private bool isLoading = true;
+    private bool loadingPayments = false;
     private string? errorMessage;
     private bool showDeleteConfirm = false;
+    private bool showPaymentModal = false;
     private int invoiceToDelete = 0;
+    private int selectedInvoiceId = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,7 +293,13 @@
         try
         {
             // Try with leading slash first
-            invoices = await Http.GetFromJsonAsync<List<InvoiceModel>>("api/Invoice") ?? new();
+            var allInvoices = await Http.GetFromJsonAsync<List<InvoiceModel>>("api/Invoice") ?? new();
+
+            // Sort invoices: Draft first, then by date descending
+            invoices = allInvoices
+                .OrderBy(i => i.StatusInvoice == "Draft" ? 0 : 1) // Draft invoices first
+                .ThenByDescending(i => i.InvoiceDate) // Then by date (newest first)
+                .ToList();
         }
         catch (HttpRequestException httpEx)
         {
@@ -193,6 +342,77 @@
         NavigationManager.NavigateTo($"/payment/add?invoiceId={id}");
     }
 
+    private void ViewPayments(int id)
+    {
+        selectedInvoiceId = id;
+        showPaymentModal = true;
+        _ = LoadPaymentTransactions(id); // Fire and forget
+    }
+
+    private async Task LoadPaymentTransactions(int invoiceId)
+    {
+        loadingPayments = true;
+        paymentTransactions = new();
+
+        try
+        {
+            // Load all payment transactions - CORRECT endpoint is "transactions" (plural)
+            var allTransactions = await Http.GetFromJsonAsync<List<PaymentTransactionDto>>("api/Payment/transactions") ?? new();
+
+            // Filter by invoice ID
+            paymentTransactions = allTransactions
+                .Where(p => p.InvoiceId == invoiceId)
+                .OrderByDescending(p => p.TransactionDate)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading payment transactions: {ex.Message}");
+            errorMessage = $"Error loading payment transactions: {ex.Message}";
+        }
+        finally
+        {
+            loadingPayments = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ClosePaymentModal()
+    {
+        showPaymentModal = false;
+        selectedInvoiceId = 0;
+        paymentTransactions = new();
+    }
+
+    private void NavigateToPaymentList(int invoiceId)
+    {
+        NavigationManager.NavigateTo($"/payment/list?invoiceId={invoiceId}");
+    }
+
+    private string GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Completed" => "bg-success text-white",
+            "Pending" => "bg-warning text-dark",
+            "Failed" => "bg-danger text-white",
+            "Cancelled" => "bg-secondary text-white",
+            _ => "bg-light"
+        };
+    }
+
+    private string GetStatusBadgeColor(string status)
+    {
+        return status switch
+        {
+            "Completed" => "bg-success",
+            "Pending" => "bg-warning text-dark",
+            "Failed" => "bg-danger",
+            "Cancelled" => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
+    }
+
     private void ConfirmDelete(int id)
     {
         invoiceToDelete = id;
@@ -232,5 +452,18 @@
         {
             invoiceToDelete = 0;
         }
+    }
+
+    // DTO for payment transactions
+    public class PaymentTransactionDto
+    {
+        public int Id { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime TransactionDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public int? InvoiceId { get; set; }
+        public string? Reference { get; set; }
+        public string? Description { get; set; }
+        public string? ProcessedByUserId { get; set; }
     }
 }

@@ -72,13 +72,21 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="status" class="form-label fw-bold">Status <span class="text-danger">*</span></label>
-                                        <InputSelect id="status" class="form-select" @bind-Value="transaction.Status">
+                                        <InputSelect id="status" class="form-select" @bind-Value="transaction.Status" disabled="@markAsCompleted">
                                             <option value="Pending">Pending</option>
                                             <option value="Completed">Completed</option>
                                             <option value="Failed">Failed</option>
                                             <option value="Cancelled">Cancelled</option>
                                         </InputSelect>
                                         <ValidationMessage For="@(() => transaction.Status)" />
+
+                                        <!-- Quick Complete Checkbox -->
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" id="markCompleted" @bind="markAsCompleted" @bind:after="OnMarkAsCompletedChanged">
+                                            <label class="form-check-label text-success" for="markCompleted">
+                                                <i class="bi bi-check-circle"></i> Mark this transaction as completed
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
@@ -206,6 +214,7 @@
     private bool loadingInvoice = false;
     private bool isSubmitting = false;
     private bool fromInvoice = false;
+    private bool markAsCompleted = false;
     private string? successMessage;
     private string? errorMessage;
 
@@ -261,6 +270,19 @@
 
         // Load the selected invoice and update amount
         await LoadLinkedInvoice(transaction.InvoiceId.Value);
+    }
+
+    private void OnMarkAsCompletedChanged()
+    {
+        if (markAsCompleted)
+        {
+            transaction.Status = "Completed";
+            transaction.TransactionDate = DateTime.Now; // Set to current time when marking as completed
+        }
+        else
+        {
+            transaction.Status = "Pending";
+        }
     }
 
     private async Task LoadDropdownData()

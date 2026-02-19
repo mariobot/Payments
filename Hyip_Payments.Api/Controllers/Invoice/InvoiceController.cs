@@ -74,8 +74,18 @@ namespace Hyip_Payments.Api.Controllers.Invoice
         [HttpPost("with-products")]
         public async Task<ActionResult<InvoiceWithItemsDto>> CreateWithProducts([FromBody] AddInvoiceWithProductsCommand command)
         {
-            // Set the current user as the creator
-            command.CreatedByUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            // Extract user ID from JWT token claims
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                command.CreatedByUserId = null;
+            }
+            else
+            {
+                // Set the current user as the creator
+                command.CreatedByUserId = userIdClaim;
+            }
 
             var result = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetWithItems), new { id = result.InvoiceId }, result);

@@ -294,9 +294,13 @@
             paymentMethods = await Http.GetFromJsonAsync<List<PaymentMethodModel>>("api/PaymentMethod") ?? new();
             paymentMethodsLoading = false;
 
-            // Load invoices
+            // Load invoices - only show Draft invoices for payment
             invoicesLoading = true;
-            invoices = await Http.GetFromJsonAsync<List<InvoiceModel>>("api/Invoice") ?? new();
+            var allInvoices = await Http.GetFromJsonAsync<List<InvoiceModel>>("api/Invoice") ?? new();
+            invoices = allInvoices
+                .Where(i => i.StatusInvoice == "Draft") // Only Draft invoices can receive payments
+                .OrderByDescending(i => i.InvoiceDate) // Newest first
+                .ToList();
             invoicesLoading = false;
         }
         catch (Exception ex)

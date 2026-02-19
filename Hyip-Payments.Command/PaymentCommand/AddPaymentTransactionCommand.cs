@@ -1,6 +1,7 @@
 ﻿using Hyip_Payments.Models;
 using Hyip_Payments.Context;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Hyip_Payments.Command.PaymentCommand
 {
@@ -30,6 +31,7 @@ namespace Hyip_Payments.Command.PaymentCommand
 
         public async Task<PaymentTransactionModel> Handle(AddPaymentTransactionCommand request, CancellationToken cancellationToken)
         {
+            // Create the payment transaction
             var transaction = new PaymentTransactionModel
             {
                 Amount = request.Amount,
@@ -40,10 +42,25 @@ namespace Hyip_Payments.Command.PaymentCommand
                 InvoiceId = request.InvoiceId,
                 Reference = request.Reference,
                 Description = request.Description,
-                ProcessedByUserId = request.ProcessedByUserId // Set the user who processed this payment
+                ProcessedByUserId = request.ProcessedByUserId
             };
 
             _context.PaymentTransactions.Add(transaction);
+
+            // If this payment is linked to an invoice and the payment is completed, update the invoice status
+            if (request.InvoiceId.HasValue)
+            {
+                var invoice = await _context.Invoices
+                    .FirstOrDefaultAsync(i => i.Id == request.InvoiceId.Value, cancellationToken);
+
+                if (invoice != null)
+                {
+                    // Update invoice status to "Paid"
+                    invoice.StatusInvoice = "Paid";
+                    _context.Invoices.Update(invoice);
+                }
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
 
             return transaction;

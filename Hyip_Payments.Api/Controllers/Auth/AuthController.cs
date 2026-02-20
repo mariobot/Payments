@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
 namespace Hyip_Payments.Api.Controllers.Auth
@@ -26,6 +27,7 @@ namespace Hyip_Payments.Api.Controllers.Auth
         /// Hybrid login: Returns JWT token AND sets authentication cookie
         /// This allows both API authentication and Blazor component authentication
         /// </summary>
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {

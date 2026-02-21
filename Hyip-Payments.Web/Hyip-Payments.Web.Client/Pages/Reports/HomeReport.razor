@@ -1,0 +1,264 @@
+﻿@page "/reports"
+@page "/reports/home"
+@inject NavigationManager Navigation
+
+<PageTitle>Reports Dashboard - HYIP Payments</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-graph-up"></i> Reports & Analytics Dashboard</h2>
+            <p class="text-muted">Comprehensive reporting and analytics for your payment management system</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Reports</h6>
+                            <h3 class="mb-0 text-primary">12</h3>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-file-earmark-bar-graph" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Categories</h6>
+                            <h3 class="mb-0 text-success">4</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-folder" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Last Generated</h6>
+                            <h6 class="mb-0 text-info">@DateTime.Now.ToString("MMM dd")</h6>
+                        </div>
+                        <div class="text-info">
+                            <i class="bi bi-calendar-check" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Export Formats</h6>
+                            <h6 class="mb-0 text-warning">PDF, Excel, CSV</h6>
+                        </div>
+                        <div class="text-warning">
+                            <i class="bi bi-download" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Categories -->
+    <div class="row">
+        <!-- Financial Reports -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Financial Reports</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Track revenue, expenses, and financial performance</p>
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/revenue")'>
+                            <i class="bi bi-graph-up-arrow text-success"></i> Revenue Report
+                            <span class="badge bg-success float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/expenses")'>
+                            <i class="bi bi-graph-down-arrow text-danger"></i> Expense Report
+                            <span class="badge bg-danger float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/profit-loss")'>
+                            <i class="bi bi-bar-chart"></i> Profit & Loss Statement
+                            <span class="badge bg-info float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/cash-flow")'>
+                            <i class="bi bi-currency-dollar"></i> Cash Flow Analysis
+                            <span class="badge bg-warning text-dark float-end">Coming Soon</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Reports -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Invoice Reports</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Analyze invoice status, aging, and trends</p>
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/invoice-summary")'>
+                            <i class="bi bi-list-check"></i> Invoice Summary
+                            <span class="badge bg-success float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/invoice-aging")'>
+                            <i class="bi bi-clock-history"></i> Invoice Aging Report
+                            <span class="badge bg-success float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/draft-invoices")'>
+                            <i class="bi bi-pencil-square"></i> Draft Invoices
+                            <span class="badge bg-secondary float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/paid-invoices")'>
+                            <i class="bi bi-check-circle"></i> Paid Invoices
+                            <span class="badge bg-success float-end">Active</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Reports -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-credit-card"></i> Payment Reports</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Monitor payment transactions and methods</p>
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/payment-summary")'>
+                            <i class="bi bi-receipt"></i> Payment Summary
+                            <span class="badge bg-success float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/payment-methods")'>
+                            <i class="bi bi-wallet2"></i> Payment Methods Analysis
+                            <span class="badge bg-info float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/transactions")'>
+                            <i class="bi bi-arrow-left-right"></i> Transaction Log
+                            <span class="badge bg-primary float-end">Active</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/payment-status")'>
+                            <i class="bi bi-hourglass-split"></i> Payment Status Report
+                            <span class="badge bg-warning text-dark float-end">Coming Soon</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User & Activity Reports -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> User & Activity Reports</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Track user activity and system usage</p>
+                    <div class="list-group list-group-flush">
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/user-activity")'>
+                            <i class="bi bi-activity"></i> User Activity Log
+                            <span class="badge bg-warning text-dark float-end">Coming Soon</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/active-users")'>
+                            <i class="bi bi-person-check"></i> Active Users
+                            <span class="badge bg-warning text-dark float-end">Coming Soon</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/user-roles")'>
+                            <i class="bi bi-shield-check"></i> User Roles Report
+                            <span class="badge bg-warning text-dark float-end">Coming Soon</span>
+                        </button>
+                        <button class="list-group-item list-group-item-action" @onclick='() => NavigateTo("/reports/audit-trail")'>
+                            <i class="bi bi-journal-text"></i> Audit Trail
+                            <span class="badge bg-warning text-dark float-end">Coming Soon</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Reports Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-sliders"></i> Custom Reports</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Create and manage custom reports based on your specific needs</p>
+                    <button class="btn btn-primary me-2" @onclick='() => NavigateTo("/reports/custom/create")'>
+                        <i class="bi bi-plus-circle"></i> Create Custom Report
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick='() => NavigateTo("/reports/custom/saved")'>
+                        <i class="bi bi-folder"></i> View Saved Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="row mt-4 mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-download"></i> Export & Scheduling</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-file-earmark-arrow-down"></i> Export Formats</h6>
+                            <p class="text-muted">All reports can be exported in multiple formats:</p>
+                            <ul>
+                                <li><i class="bi bi-file-pdf text-danger"></i> PDF - Professional formatted documents</li>
+                                <li><i class="bi bi-file-excel text-success"></i> Excel - Detailed spreadsheets with formulas</li>
+                                <li><i class="bi bi-file-earmark-spreadsheet text-info"></i> CSV - Raw data for analysis</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-calendar3"></i> Scheduled Reports</h6>
+                            <p class="text-muted">Automate report generation and delivery:</p>
+                            <button class="btn btn-outline-primary btn-sm me-2" disabled>
+                                <i class="bi bi-clock"></i> Schedule Report
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="bi bi-envelope"></i> Email Reports
+                            </button>
+                            <p class="text-warning mt-2"><small><i class="bi bi-info-circle"></i> Coming Soon</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void NavigateTo(string url)
+    {
+        Navigation.NavigateTo(url);
+    }
+}
+

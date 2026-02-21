@@ -1,0 +1,435 @@
+@page "/reports/payment-methods"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+
+<PageTitle>Payment Methods Analysis Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-wallet2"></i> Payment Methods Analysis Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">Payment Methods</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filter Options</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" @bind="startDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" @bind="endDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading payment methods data...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Payment Methods</h6>
+                        <h2 class="text-primary mb-0">@reportData.TotalPaymentMethods</h2>
+                        <small class="text-muted">@reportData.Summary.ActiveMethods active</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Transactions</h6>
+                        <h2 class="text-success mb-0">@reportData.TotalTransactions</h2>
+                        <small class="text-muted">@((reportData.EndDate - reportData.StartDate).Days) days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Revenue</h6>
+                        <h2 class="text-success mb-0">$@reportData.TotalAmount.ToString("N2")</h2>
+                        <small class="text-muted">All methods</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Avg Success Rate</h6>
+                        <h2 class="text-info mb-0">@reportData.Summary.AverageSuccessRate.ToString("N1")%</h2>
+                        <small class="text-muted">Across all methods</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performers -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-trophy text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Most Used</h6>
+                        <h4 class="mb-1">@reportData.Summary.MostUsedMethod</h4>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-warning text-dark">Most Popular</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cash-stack text-success" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Highest Revenue</h6>
+                        <h4 class="mb-1">@reportData.Summary.HighestRevenueMethod</h4>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-success">Top Earner</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-all text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Best Success Rate</h6>
+                        <h4 class="mb-1">@reportData.Summary.BestSuccessRateMethod</h4>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-primary">Most Reliable</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods Detailed Analysis -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Payment Methods Performance</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.PaymentMethods.Any(m => m.TotalTransactions > 0))
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Payment Method</th>
+                                    <th class="text-end">Transactions</th>
+                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Average</th>
+                                    <th class="text-end">Success Rate</th>
+                                    <th class="text-center">Completed</th>
+                                    <th class="text-center">Failed</th>
+                                    <th class="text-end">Market Share</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var method in reportData.PaymentMethods.Where(m => m.TotalTransactions > 0))
+                                {
+                                    <tr class="@GetRowClass(method.SuccessRate)">
+                                        <td>
+                                            <strong>@method.MethodName</strong>
+                                            @if (!string.IsNullOrEmpty(method.Description))
+                                            {
+                                                <br /><small class="text-muted">@method.Description</small>
+                                            }
+                                        </td>
+                                        <td class="text-end">@method.TotalTransactions</td>
+                                        <td class="text-end text-success fw-bold">$@method.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end">$@method.AverageTransactionAmount.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <span class="badge @GetSuccessRateBadge(method.SuccessRate)">
+                                                @method.SuccessRate.ToString("N1")%
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">@method.CompletedCount</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-danger">@method.FailedCount</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-info">@method.Percentage.ToString("N1")%</span>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (method.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-end"><strong>@reportData.TotalTransactions</strong></td>
+                                    <td class="text-end"><strong>$@reportData.TotalAmount.ToString("N2")</strong></td>
+                                    <td colspan="6"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Visual Market Share Distribution -->
+                    <div class="mt-3">
+                        <h6>Market Share Distribution</h6>
+                        @foreach (var method in reportData.PaymentMethods.Where(m => m.TotalTransactions > 0 && m.Percentage > 0).OrderByDescending(m => m.Percentage))
+                        {
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small><strong>@method.MethodName</strong> - @method.TotalTransactions transaction(s)</small>
+                                    <small>@method.Percentage.ToString("N1")%</small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                         style="width: @method.Percentage%" 
+                                         aria-valuenow="@method.Percentage" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> No payment method transactions found for the selected date range.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Transaction Range Analysis -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-bar-chart-line"></i> Transaction Range Analysis</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.PaymentMethods.Any(m => m.TotalTransactions > 0))
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Payment Method</th>
+                                    <th class="text-end">Smallest</th>
+                                    <th class="text-end">Average</th>
+                                    <th class="text-end">Largest</th>
+                                    <th class="text-end">Range</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var method in reportData.PaymentMethods.Where(m => m.TotalTransactions > 0))
+                                {
+                                    var range = method.LargestTransaction - method.SmallestTransaction;
+                                    <tr>
+                                        <td><strong>@method.MethodName</strong></td>
+                                        <td class="text-end">$@method.SmallestTransaction.ToString("N2")</td>
+                                        <td class="text-end text-primary">$@method.AverageTransactionAmount.ToString("N2")</td>
+                                        <td class="text-end">$@method.LargestTransaction.ToString("N2")</td>
+                                        <td class="text-end text-info">$@range.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Performance Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Method Status</h6>
+                        <ul>
+                            <li>
+                                <strong class="text-success">@reportData.Summary.ActiveMethods Active Methods</strong>
+                            </li>
+                            <li>
+                                <strong class="text-secondary">@reportData.Summary.InactiveMethods Inactive Methods</strong>
+                            </li>
+                        </ul>
+
+                        <h6 class="mt-3">Revenue Analysis</h6>
+                        <ul>
+                            <li>
+                                <strong>Successful Revenue:</strong> $@reportData.Summary.TotalSuccessfulAmount.ToString("N2")
+                            </li>
+                            <li>
+                                <strong>Failed Revenue:</strong> $@reportData.Summary.TotalFailedAmount.ToString("N2")
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Recommendations</h6>
+                        <ul>
+                            @{
+                                var lowPerformers = reportData.PaymentMethods
+                                    .Where(m => m.TotalTransactions > 0 && m.SuccessRate < 70)
+                                    .ToList();
+                                var highPerformers = reportData.PaymentMethods
+                                    .Where(m => m.TotalTransactions > 0 && m.SuccessRate >= 90)
+                                    .ToList();
+                            }
+                            @if (lowPerformers.Any())
+                            {
+                                <li class="text-danger">
+                                    <strong>@lowPerformers.Count method(s)</strong> with success rate below 70%. Consider review.
+                                </li>
+                            }
+                            @if (highPerformers.Any())
+                            {
+                                <li class="text-success">
+                                    <strong>@highPerformers.Count method(s)</strong> performing excellently (≥90% success).
+                                </li>
+                            }
+                            @if (reportData.Summary.InactiveMethods > 0)
+                            {
+                                <li class="text-warning">
+                                    <strong>@reportData.Summary.InactiveMethods inactive method(s)</strong>. Archive if no longer needed.
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime startDate = DateTime.Now.AddMonths(-1).Date;
+    private DateTime endDate = DateTime.Now.Date;
+    private bool isLoading = false;
+    private PaymentMethodsReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load report with default date range (last month)
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/PaymentReport/methods?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            reportData = await Http.GetFromJsonAsync<PaymentMethodsReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading payment methods report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetSuccessRateBadge(decimal successRate)
+    {
+        return successRate switch
+        {
+            >= 90 => "bg-success",
+            >= 70 => "bg-info",
+            >= 50 => "bg-warning text-dark",
+            _ => "bg-danger"
+        };
+    }
+
+    private string GetRowClass(decimal successRate)
+    {
+        return successRate switch
+        {
+            >= 90 => "table-success",
+            < 50 => "table-warning",
+            _ => ""
+        };
+    }
+}

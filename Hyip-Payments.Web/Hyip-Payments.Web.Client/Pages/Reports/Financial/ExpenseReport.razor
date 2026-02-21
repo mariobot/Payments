@@ -1,0 +1,437 @@
+@page "/reports/expenses"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+
+<PageTitle>Expense Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-graph-down-arrow"></i> Expense Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">Expenses</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filter Options</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" @bind="startDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" @bind="endDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading expense data...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Expenses</h6>
+                        <h2 class="text-danger mb-0">$@reportData.TotalExpenses.ToString("N2")</h2>
+                        <small class="text-muted">@((reportData.EndDate - reportData.StartDate).Days) days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Transactions</h6>
+                        <h2 class="text-warning mb-0">@reportData.TotalExpenseTransactions</h2>
+                        <small class="text-muted">Expense items</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Average Expense</h6>
+                        <h2 class="text-info mb-0">$@reportData.AverageExpenseAmount.ToString("N2")</h2>
+                        <small class="text-muted">Per transaction</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-secondary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Largest Expense</h6>
+                        <h2 class="text-secondary mb-0">$@reportData.Summary.LargestExpense.ToString("N2")</h2>
+                        <small class="text-muted">Maximum</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Category Summary -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Failed Transactions</h6>
+                        <h4 class="mb-1">@reportData.Summary.FailedTransactionsCount</h4>
+                        <small class="text-muted">$@reportData.Summary.FailedTransactionCosts.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-danger">Losses</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-credit-card text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Processing Fees</h6>
+                        <h4 class="mb-1">@reportData.Summary.ProcessingFeesCount</h4>
+                        <small class="text-muted">$@reportData.Summary.ProcessingFeesExpense.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-primary">Operational</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Transaction Fees</h6>
+                        <h4 class="mb-1">@reportData.Summary.TransactionFeesCount</h4>
+                        <small class="text-muted">$@reportData.Summary.TransactionFeesExpense.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-warning text-dark">Charges</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-secondary shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-three-dots text-secondary" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Other Expenses</h6>
+                        <h4 class="mb-1">-</h4>
+                        <small class="text-muted">$@reportData.Summary.OtherExpenses.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-secondary">Miscellaneous</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses by Date -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-calendar3"></i> Expenses by Date</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.ExpensesByDate.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th class="text-end">Expense Count</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in reportData.ExpensesByDate)
+                                {
+                                    <tr>
+                                        <td>@item.Date.ToString("MMM dd, yyyy")</td>
+                                        <td class="text-end">@item.ExpenseCount</td>
+                                        <td class="text-end text-danger fw-bold">$@item.TotalAmount.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-end"><strong>@reportData.TotalExpenseTransactions</strong></td>
+                                    <td class="text-end"><strong>$@reportData.TotalExpenses.ToString("N2")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle"></i> Excellent! No expenses recorded for the selected date range.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Expenses by Category -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-tags"></i> Expenses by Category</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.ExpensesByCategory.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-end">Count</th>
+                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Average</th>
+                                    <th class="text-end">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var category in reportData.ExpensesByCategory)
+                                {
+                                    <tr>
+                                        <td><strong>@category.Category</strong></td>
+                                        <td class="text-end">@category.ExpenseCount</td>
+                                        <td class="text-end text-danger fw-bold">$@category.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end">$@category.AverageAmount.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-danger">@category.Percentage.ToString("N1")%</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Visual Distribution -->
+                    <div class="mt-3">
+                        <h6>Expense Distribution</h6>
+                        @foreach (var category in reportData.ExpensesByCategory)
+                        {
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small><strong>@category.Category</strong> - @category.ExpenseCount item(s)</small>
+                                    <small>@category.Percentage.ToString("N1")%</small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger" role="progressbar" 
+                                         style="width: @category.Percentage%" 
+                                         aria-valuenow="@category.Percentage" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle"></i> No expense categories to display.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Expense Analysis -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-bar-chart-line"></i> Expense Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Expense Range</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Smallest Expense:</strong></td>
+                                    <td class="text-end">$@reportData.Summary.SmallestExpense.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Average Expense:</strong></td>
+                                    <td class="text-end text-info">$@reportData.AverageExpenseAmount.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Median Expense:</strong></td>
+                                    <td class="text-end">$@reportData.Summary.MedianExpense.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Largest Expense:</strong></td>
+                                    <td class="text-end text-danger">$@reportData.Summary.LargestExpense.ToString("N2")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Expense Breakdown</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="bi bi-circle-fill text-danger"></i>
+                                <strong>Failed Transaction Costs:</strong> $@reportData.Summary.FailedTransactionCosts.ToString("N2")
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-circle-fill text-primary"></i>
+                                <strong>Processing Fees:</strong> $@reportData.Summary.ProcessingFeesExpense.ToString("N2")
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-circle-fill text-warning"></i>
+                                <strong>Transaction Fees:</strong> $@reportData.Summary.TransactionFeesExpense.ToString("N2")
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-circle-fill text-secondary"></i>
+                                <strong>Other Expenses:</strong> $@reportData.Summary.OtherExpenses.ToString("N2")
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Optimization Insights -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Cost Optimization Insights</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    @{
+                        var failedPercentage = reportData.TotalExpenses > 0 
+                            ? reportData.Summary.FailedTransactionCosts / reportData.TotalExpenses * 100 
+                            : 0;
+                        var processingPercentage = reportData.TotalExpenses > 0 
+                            ? reportData.Summary.ProcessingFeesExpense / reportData.TotalExpenses * 100 
+                            : 0;
+                    }
+                    @if (failedPercentage > 20)
+                    {
+                        <li class="text-danger mb-2">
+                            <strong>⚠️ High Failed Transaction Costs (@failedPercentage.ToString("N1")%)</strong> - 
+                            Review payment gateway reliability and fraud prevention.
+                        </li>
+                    }
+                    @if (processingPercentage > 50)
+                    {
+                        <li class="text-warning mb-2">
+                            <strong>💡 Processing Fees Dominate (@processingPercentage.ToString("N1")%)</strong> - 
+                            Consider negotiating better rates with payment processors.
+                        </li>
+                    }
+                    @if (reportData.TotalExpenses > 0)
+                    {
+                        <li class="text-info mb-2">
+                            <strong>📊 Total Expense Load:</strong> $@reportData.TotalExpenses.ToString("N2") over @((reportData.EndDate - reportData.StartDate).Days) days.
+                        </li>
+                    }
+                    @if (reportData.Summary.FailedTransactionsCount > 0)
+                    {
+                        <li class="text-primary">
+                            <strong>🎯 Opportunity:</strong> Reducing failed transactions by 10% could save 
+                            $@((reportData.Summary.FailedTransactionCosts * 0.10m).ToString("N2")).
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime startDate = DateTime.Now.AddMonths(-1).Date;
+    private DateTime endDate = DateTime.Now.Date;
+    private bool isLoading = false;
+    private ExpenseReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load report with default date range (last month)
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/FinancialReport/expenses?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            reportData = await Http.GetFromJsonAsync<ExpenseReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading expense report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

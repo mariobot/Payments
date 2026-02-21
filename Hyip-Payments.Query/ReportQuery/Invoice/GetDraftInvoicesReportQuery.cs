@@ -24,7 +24,7 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
             // Get all draft invoices
             var draftInvoices = await _context.Invoices
                 .Where(i => i.StatusInvoice == "Draft")
-                .Include(i => i.InvoiceItems)
+                .Include(i => i.Items)
                 .Select(i => new
                 {
                     i.Id,
@@ -33,8 +33,8 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
                     i.TotalAmount,
                     i.Description,
                     i.IsActive,
-                    i.CreatedBy,
-                    ItemCount = i.InvoiceItems != null ? i.InvoiceItems.Count : 0
+                    CreatedBy = i.CreatedByUserId,
+                    ItemCount = i.Items != null ? i.Items.Count : 0
                 })
                 .ToListAsync(cancellationToken);
 

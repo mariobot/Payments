@@ -111,7 +111,7 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
                 Days31To60Amount = agingBuckets[1].TotalAmount,
                 Days61To90Amount = agingBuckets[2].TotalAmount,
                 Over90DaysAmount = agingBuckets[3].TotalAmount,
-                AverageAgeDays = agingDetails.Any() ? agingDetails.Average(i => i.DaysOld) : 0,
+                AverageAgeDays = agingDetails.Any() ? Convert.ToDecimal(agingDetails.Average(i => i.DaysOld)) : 0,
                 OldestInvoiceDays = agingDetails.Any() ? agingDetails.Max(i => i.DaysOld) : 0
             };
 

@@ -55,5 +55,30 @@ namespace Hyip_Payments.Api.Controllers.Report
             var result = await _mediator.Send(query);
             return Ok(result);
         }
+
+        // GET: api/PaymentReport/transactions?startDate=2024-01-01&endDate=2024-12-31&status=Completed
+        /// <summary>
+        /// Get transaction log report with optional filters
+        /// </summary>
+        [HttpGet("transactions")]
+        public async Task<ActionResult<TransactionLogReportModel>> GetTransactions(
+            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime endDate,
+            [FromQuery] string? status = null,
+            [FromQuery] string? paymentMethod = null,
+            [FromQuery] string? searchTerm = null)
+        {
+            var query = new GetTransactionLogReportQuery 
+            { 
+                StartDate = startDate, 
+                EndDate = endDate,
+                Status = status,
+                PaymentMethod = paymentMethod,
+                SearchTerm = searchTerm
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
     }
 }

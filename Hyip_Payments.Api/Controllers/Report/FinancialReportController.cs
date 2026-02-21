@@ -32,7 +32,45 @@ namespace Hyip_Payments.Api.Controllers.Report
                 StartDate = startDate, 
                 EndDate = endDate 
             };
-            
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        // GET: api/FinancialReport/expenses?startDate=2024-01-01&endDate=2024-12-31
+        /// <summary>
+        /// Get expense report for a specific date range
+        /// </summary>
+        [HttpGet("expenses")]
+        public async Task<ActionResult<ExpenseReportModel>> GetExpenses(
+            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime endDate)
+        {
+            var query = new GetExpenseReportQuery 
+            { 
+                StartDate = startDate, 
+                EndDate = endDate 
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        // GET: api/FinancialReport/profit-loss?startDate=2024-01-01&endDate=2024-12-31
+        /// <summary>
+        /// Get profit & loss statement for a specific date range
+        /// </summary>
+        [HttpGet("profit-loss")]
+        public async Task<ActionResult<ProfitLossReportModel>> GetProfitLoss(
+            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime endDate)
+        {
+            var query = new GetProfitLossReportQuery 
+            { 
+                StartDate = startDate, 
+                EndDate = endDate 
+            };
+
             var result = await _mediator.Send(query);
             return Ok(result);
         }

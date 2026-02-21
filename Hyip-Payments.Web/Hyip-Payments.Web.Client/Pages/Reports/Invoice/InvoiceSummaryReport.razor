@@ -1,0 +1,357 @@
+@page "/reports/invoice-summary"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+
+<PageTitle>Invoice Summary Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-file-earmark-text"></i> Invoice Summary Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">Invoice Summary</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filter Options</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" @bind="startDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" @bind="endDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading invoice data...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Invoices</h6>
+                        <h2 class="text-primary mb-0">@reportData.TotalInvoices</h2>
+                        <small class="text-muted">@((reportData.EndDate - reportData.StartDate).Days) days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Value</h6>
+                        <h2 class="text-success mb-0">$@reportData.TotalInvoiceValue.ToString("N2")</h2>
+                        <small class="text-muted">All invoices</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Average Invoice</h6>
+                        <h2 class="text-info mb-0">$@reportData.AverageInvoiceAmount.ToString("N2")</h2>
+                        <small class="text-muted">Per invoice</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-secondary shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-pencil text-secondary" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Draft</h6>
+                        <h4 class="mb-1">@reportData.StatusSummary.DraftCount</h4>
+                        <small class="text-muted">$@reportData.StatusSummary.DraftAmount.ToString("N2")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Pending</h6>
+                        <h4 class="mb-1">@reportData.StatusSummary.PendingCount</h4>
+                        <small class="text-muted">$@reportData.StatusSummary.PendingAmount.ToString("N2")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Paid</h6>
+                        <h4 class="mb-1">@reportData.StatusSummary.PaidCount</h4>
+                        <small class="text-muted">$@reportData.StatusSummary.PaidAmount.ToString("N2")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Cancelled</h6>
+                        <h4 class="mb-1">@reportData.StatusSummary.CancelledCount</h4>
+                        <small class="text-muted">$@reportData.StatusSummary.CancelledAmount.ToString("N2")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices by Status -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Invoices by Status</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.InvoicesByStatus.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Status</th>
+                                    <th class="text-end">Count</th>
+                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var status in reportData.InvoicesByStatus.OrderByDescending(s => s.Count))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge @GetStatusBadge(status.Status)">
+                                                <i class="@GetStatusIcon(status.Status)"></i> @status.Status
+                                            </span>
+                                        </td>
+                                        <td class="text-end"><strong>@status.Count</strong></td>
+                                        <td class="text-end text-success fw-bold">$@status.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-info">@status.Percentage.ToString("N1")%</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Visual Distribution -->
+                    <div class="mt-3">
+                        <h6>Status Distribution</h6>
+                        @foreach (var status in reportData.InvoicesByStatus.OrderByDescending(s => s.Count))
+                        {
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small><strong>@status.Status</strong> - @status.Count invoice(s)</small>
+                                    <small>@status.Percentage.ToString("N1")%</small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar @GetProgressBarColor(status.Status)" 
+                                         role="progressbar" 
+                                         style="width: @status.Percentage%" 
+                                         aria-valuenow="@status.Percentage" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No invoice status data available.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Monthly Trend -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-calendar3"></i> Monthly Invoice Trend</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.InvoicesByMonth.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Month</th>
+                                    <th class="text-end">Invoice Count</th>
+                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Average Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var month in reportData.InvoicesByMonth)
+                                {
+                                    <tr>
+                                        <td><strong>@month.MonthName @month.Year</strong></td>
+                                        <td class="text-end">@month.InvoiceCount</td>
+                                        <td class="text-end text-success fw-bold">$@month.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end">$@((month.InvoiceCount > 0 ? month.TotalAmount / month.InvoiceCount : 0).ToString("N2"))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <td><strong>Total</strong></td>
+                                    <td class="text-end"><strong>@reportData.TotalInvoices</strong></td>
+                                    <td class="text-end"><strong>$@reportData.TotalInvoiceValue.ToString("N2")</strong></td>
+                                    <td class="text-end"><strong>$@reportData.AverageInvoiceAmount.ToString("N2")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No monthly trend data available.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime startDate = DateTime.Now.AddMonths(-3).Date;
+    private DateTime endDate = DateTime.Now.Date;
+    private bool isLoading = false;
+    private InvoiceSummaryReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load report with default date range (last 3 months)
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/InvoiceReport/summary?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            reportData = await Http.GetFromJsonAsync<InvoiceSummaryReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading invoice summary report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Draft" => "bg-secondary",
+            "Pending" => "bg-warning text-dark",
+            "Paid" => "bg-success",
+            "Cancelled" => "bg-danger",
+            _ => "bg-light text-dark"
+        };
+    }
+
+    private string GetStatusIcon(string status)
+    {
+        return status switch
+        {
+            "Draft" => "bi bi-pencil",
+            "Pending" => "bi bi-clock",
+            "Paid" => "bi bi-check-circle",
+            "Cancelled" => "bi bi-x-circle",
+            _ => "bi bi-question-circle"
+        };
+    }
+
+    private string GetProgressBarColor(string status)
+    {
+        return status switch
+        {
+            "Draft" => "bg-secondary",
+            "Pending" => "bg-warning",
+            "Paid" => "bg-success",
+            "Cancelled" => "bg-danger",
+            _ => "bg-info"
+        };
+    }
+}

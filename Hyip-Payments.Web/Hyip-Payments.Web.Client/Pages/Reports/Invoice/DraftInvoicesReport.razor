@@ -1,0 +1,370 @@
+@page "/reports/draft-invoices"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Draft Invoices Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-pencil-square"></i> Draft Invoices Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">Draft Invoices</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Report Date Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Report Date</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">As of Date</label>
+                    <input type="date" class="form-control" @bind="reportDate" />
+                    <small class="form-text text-muted">Days in draft calculated from this date</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading draft invoices...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-secondary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Draft Invoices</h6>
+                        <h2 class="text-secondary mb-0">@reportData.TotalDraftInvoices</h2>
+                        <small class="text-muted">As of @reportData.ReportDate.ToString("MMM dd, yyyy")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Draft Amount</h6>
+                        <h2 class="text-warning mb-0">$@reportData.TotalDraftAmount.ToString("N2")</h2>
+                        <small class="text-muted">Potential revenue</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Average Amount</h6>
+                        <h2 class="text-info mb-0">$@reportData.AverageDraftAmount.ToString("N2")</h2>
+                        <small class="text-muted">Per draft invoice</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Oldest Draft</h6>
+                        <h2 class="text-danger mb-0">@reportData.Summary.OldestDraftDays days</h2>
+                        <small class="text-muted">In draft status</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Draft Age Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-star text-success" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">New (0-7 days)</h6>
+                        <h4 class="mb-1">@reportData.Summary.NewDrafts0To7Days</h4>
+                        <small class="text-muted">$@reportData.Summary.NewDraftsAmount.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-success">Recent</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Medium (8-30 days)</h6>
+                        <h4 class="mb-1">@reportData.Summary.Medium8To30Days</h4>
+                        <small class="text-muted">$@reportData.Summary.MediumDraftsAmount.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-warning text-dark">Needs Attention</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Old (Over 30 days)</h6>
+                        <h4 class="mb-1">@reportData.Summary.OldOver30Days</h4>
+                        <small class="text-muted">$@reportData.Summary.OldDraftsAmount.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-danger">Urgent</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Draft Invoices List -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Draft Invoices Detail</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.DraftInvoices.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Invoice Date</th>
+                                    <th class="text-end">Days in Draft</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-center">Items</th>
+                                    <th>Description</th>
+                                    <th>Created By</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var invoice in reportData.DraftInvoices)
+                                {
+                                    <tr class="@GetRowClass(invoice.DaysInDraft)">
+                                        <td><strong>@invoice.InvoiceNumber</strong></td>
+                                        <td>@invoice.InvoiceDate.ToString("MMM dd, yyyy")</td>
+                                        <td class="text-end">
+                                            <span class="badge @GetDaysBadgeColor(invoice.DaysInDraft)">
+                                                @invoice.DaysInDraft days
+                                            </span>
+                                        </td>
+                                        <td class="text-end text-success fw-bold">$@invoice.TotalAmount.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">@invoice.ItemCount</span>
+                                        </td>
+                                        <td>
+                                            <small>@(string.IsNullOrEmpty(invoice.Description) ? "-" : invoice.Description)</small>
+                                        </td>
+                                        <td><small>@invoice.CreatedBy</small></td>
+                                        <td class="text-center">
+                                            @if (invoice.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a href="/invoice/view/@invoice.InvoiceId" class="btn btn-sm btn-info" title="View Invoice">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="/invoice/edit/@invoice.InvoiceId" class="btn btn-sm btn-warning" title="Edit Invoice">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-success" @onclick="() => ConvertToPayment(invoice.InvoiceId)" title="Send to Payment">
+                                                    <i class="bi bi-cash-coin"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <td colspan="3"><strong>Total</strong></td>
+                                    <td class="text-end"><strong>$@reportData.TotalDraftAmount.ToString("N2")</strong></td>
+                                    <td colspan="5"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Additional Info -->
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Quick Stats:</strong> 
+                        Largest Draft: $@reportData.Summary.LargestDraftAmount.ToString("N2") | 
+                        Oldest Draft: @reportData.Summary.OldestDraftDays days | 
+                        Average: $@reportData.AverageDraftAmount.ToString("N2")
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle"></i> Excellent! No draft invoices found. All invoices have been completed.
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (reportData.DraftInvoices.Any())
+        {
+            <!-- Action Recommendations -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Action Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        @if (reportData.Summary.OldOver30Days > 0)
+                        {
+                            <li class="mb-2">
+                                <strong class="text-danger">Urgent:</strong> 
+                                @reportData.Summary.OldOver30Days draft invoice(s) over 30 days old. 
+                                Review and complete or cancel them.
+                            </li>
+                        }
+                        @if (reportData.Summary.Medium8To30Days > 0)
+                        {
+                            <li class="mb-2">
+                                <strong class="text-warning">Attention:</strong> 
+                                @reportData.Summary.Medium8To30Days draft invoice(s) between 8-30 days old. 
+                                Follow up to complete these invoices.
+                            </li>
+                        }
+                        @if (reportData.Summary.NewDrafts0To7Days > 0)
+                        {
+                            <li class="mb-2">
+                                <strong class="text-success">Recent:</strong> 
+                                @reportData.Summary.NewDrafts0To7Days recent draft invoice(s). 
+                                These are within normal processing time.
+                            </li>
+                        }
+                        <li>
+                            <strong>Total Potential Revenue:</strong> 
+                            $@reportData.TotalDraftAmount.ToString("N2") waiting to be finalized.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime reportDate = DateTime.Today;
+    private bool isLoading = false;
+    private DraftInvoicesReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load report with today's date
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/InvoiceReport/drafts?reportDate={reportDate:yyyy-MM-dd}";
+            reportData = await Http.GetFromJsonAsync<DraftInvoicesReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading draft invoices report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetDaysBadgeColor(int daysInDraft)
+    {
+        return daysInDraft switch
+        {
+            <= 7 => "bg-success",
+            <= 30 => "bg-warning text-dark",
+            _ => "bg-danger"
+        };
+    }
+
+    private string GetRowClass(int daysInDraft)
+    {
+        return daysInDraft switch
+        {
+            > 30 => "table-danger",
+            > 7 => "table-warning",
+            _ => ""
+        };
+    }
+
+    private void ConvertToPayment(int invoiceId)
+    {
+        Navigation.NavigateTo($"/payment/add?invoiceId={invoiceId}");
+    }
+}

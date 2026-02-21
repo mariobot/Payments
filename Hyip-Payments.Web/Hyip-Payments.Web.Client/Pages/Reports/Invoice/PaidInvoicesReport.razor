@@ -1,0 +1,391 @@
+@page "/reports/paid-invoices"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+
+<PageTitle>Paid Invoices Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-check-circle"></i> Paid Invoices Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">Paid Invoices</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filter Options</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" @bind="startDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" @bind="endDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading paid invoices...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Paid Invoices</h6>
+                        <h2 class="text-success mb-0">@reportData.TotalPaidInvoices</h2>
+                        <small class="text-muted">@((reportData.EndDate - reportData.StartDate).Days) days period</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Revenue</h6>
+                        <h2 class="text-success mb-0">$@reportData.TotalPaidAmount.ToString("N2")</h2>
+                        <small class="text-muted">Total collected</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Average Payment</h6>
+                        <h2 class="text-info mb-0">$@reportData.AveragePaidAmount.ToString("N2")</h2>
+                        <small class="text-muted">Per invoice</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Avg Days to Pay</h6>
+                        <h2 class="text-primary mb-0">@reportData.Summary.AverageDaysToPay.ToString("N0")</h2>
+                        <small class="text-muted">Days</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Speed Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-lightning text-success" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Quick (0-7 days)</h6>
+                        <h4 class="mb-1">@reportData.Summary.PaidWithin7Days</h4>
+                        <small class="text-muted">$@reportData.Summary.PaidWithin7DaysAmount.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-success">Fast Payment</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock text-info" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Normal (8-30 days)</h6>
+                        <h4 class="mb-1">@reportData.Summary.Paid8To30Days</h4>
+                        <small class="text-muted">$@reportData.Summary.Paid8To30DaysAmount.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-info">Average Speed</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Slow (Over 30 days)</h6>
+                        <h4 class="mb-1">@reportData.Summary.PaidOver30Days</h4>
+                        <small class="text-muted">$@reportData.Summary.PaidOver30DaysAmount.ToString("N2")</small>
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-warning text-dark">Delayed Payment</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paid Invoices List -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-list-check"></i> Paid Invoices Detail</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.PaidInvoices.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Invoice Date</th>
+                                    <th>Paid Date</th>
+                                    <th class="text-end">Days to Pay</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-center">Items</th>
+                                    <th>Payment Method</th>
+                                    <th>Description</th>
+                                    <th>Processed By</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var invoice in reportData.PaidInvoices)
+                                {
+                                    <tr class="@GetRowClass(invoice.DaysToPay)">
+                                        <td><strong>@invoice.InvoiceNumber</strong></td>
+                                        <td>@invoice.InvoiceDate.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @if (invoice.PaidDate.HasValue)
+                                            {
+                                                @invoice.PaidDate.Value.ToString("MMM dd, yyyy")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge @GetDaysBadgeColor(invoice.DaysToPay)">
+                                                @invoice.DaysToPay days
+                                            </span>
+                                        </td>
+                                        <td class="text-end text-success fw-bold">$@invoice.TotalAmount.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">@invoice.ItemCount</span>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(invoice.PaymentMethod))
+                                            {
+                                                <span class="badge bg-primary">@invoice.PaymentMethod</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small>@(string.IsNullOrEmpty(invoice.Description) ? "-" : invoice.Description)</small>
+                                        </td>
+                                        <td><small>@invoice.ProcessedBy</small></td>
+                                        <td class="text-center">
+                                            <a href="/invoice/view/@invoice.InvoiceId" class="btn btn-sm btn-info" title="View Invoice">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <td colspan="4"><strong>Total</strong></td>
+                                    <td class="text-end"><strong>$@reportData.TotalPaidAmount.ToString("N2")</strong></td>
+                                    <td colspan="5"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Additional Statistics -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="alert alert-success">
+                                <i class="bi bi-graph-up"></i> 
+                                <strong>Largest Payment:</strong> $@reportData.Summary.LargestPayment.ToString("N2")
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <i class="bi bi-graph-down"></i> 
+                                <strong>Smallest Payment:</strong> $@reportData.Summary.SmallestPayment.ToString("N2")
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> No paid invoices found for the selected date range.
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (reportData.PaidInvoices.Any())
+        {
+            <!-- Performance Insights -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Payment Performance Insights</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Payment Speed Analysis</h6>
+                            <ul class="mb-0">
+                                @{
+                                    var quickPercent = reportData.TotalPaidInvoices > 0 
+                                        ? (decimal)reportData.Summary.PaidWithin7Days / reportData.TotalPaidInvoices * 100 
+                                        : 0;
+                                    var normalPercent = reportData.TotalPaidInvoices > 0 
+                                        ? (decimal)reportData.Summary.Paid8To30Days / reportData.TotalPaidInvoices * 100 
+                                        : 0;
+                                    var slowPercent = reportData.TotalPaidInvoices > 0 
+                                        ? (decimal)reportData.Summary.PaidOver30Days / reportData.TotalPaidInvoices * 100 
+                                        : 0;
+                                }
+                                <li>
+                                    <strong class="text-success">@quickPercent.ToString("N1")%</strong> paid within 7 days (Quick)
+                                </li>
+                                <li>
+                                    <strong class="text-info">@normalPercent.ToString("N1")%</strong> paid in 8-30 days (Normal)
+                                </li>
+                                <li>
+                                    <strong class="text-warning">@slowPercent.ToString("N1")%</strong> paid after 30 days (Slow)
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Collection Efficiency</h6>
+                            <ul class="mb-0">
+                                <li>
+                                    <strong>Average Collection Time:</strong> @reportData.Summary.AverageDaysToPay.ToString("N1") days
+                                </li>
+                                <li>
+                                    <strong>Total Revenue Collected:</strong> $@reportData.TotalPaidAmount.ToString("N2")
+                                </li>
+                                <li>
+                                    <strong>Total Invoices Paid:</strong> @reportData.TotalPaidInvoices
+                                </li>
+                                <li>
+                                    <strong>Average Invoice Value:</strong> $@reportData.AveragePaidAmount.ToString("N2")
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime startDate = DateTime.Now.AddMonths(-1).Date;
+    private DateTime endDate = DateTime.Now.Date;
+    private bool isLoading = false;
+    private PaidInvoicesReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load report with default date range (last month)
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/InvoiceReport/paid?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            reportData = await Http.GetFromJsonAsync<PaidInvoicesReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading paid invoices report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetDaysBadgeColor(int daysToPay)
+    {
+        return daysToPay switch
+        {
+            <= 7 => "bg-success",
+            <= 30 => "bg-info",
+            _ => "bg-warning text-dark"
+        };
+    }
+
+    private string GetRowClass(int daysToPay)
+    {
+        return daysToPay switch
+        {
+            <= 7 => "table-success",
+            _ => ""
+        };
+    }
+}

@@ -1,0 +1,486 @@
+@page "/reports/payment-status"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+
+<PageTitle>Payment Status Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-check2-circle"></i> Payment Status Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">Payment Status</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filter Options</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" @bind="startDate" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" @bind="endDate" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Status</label>
+                    <select class="form-select" @bind="selectedStatus">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading payment status data...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Success Rate Banner -->
+        @if (reportData.Summary.SuccessRate < 70)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle"></i> Low Success Rate Alert
+                </h5>
+                <hr>
+                <p class="mb-0">
+                    <strong>Success Rate: @reportData.Summary.SuccessRate.ToString("N1")%</strong> - 
+                    Review failed transactions and payment processing issues.
+                </p>
+            </div>
+        }
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Payments</h6>
+                        <h2 class="text-primary mb-0">@reportData.TotalPayments</h2>
+                        <small class="text-muted">$@reportData.TotalAmount.ToString("N2")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Success Rate</h6>
+                        <h2 class="text-success mb-0">@reportData.Summary.SuccessRate.ToString("N1")%</h2>
+                        <small class="text-muted">@reportData.Summary.CompletedCount completed</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Failure Rate</h6>
+                        <h2 class="text-danger mb-0">@reportData.Summary.FailureRate.ToString("N1")%</h2>
+                        <small class="text-muted">Failed + Cancelled</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Pending</h6>
+                        <h2 class="text-warning mb-0">@reportData.Summary.PendingCount</h2>
+                        <small class="text-muted">$@reportData.Summary.PendingAmount.ToString("N2")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Breakdown Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock-history text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Pending</h6>
+                        <h3 class="mb-1">@reportData.Summary.PendingCount</h3>
+                        <p class="mb-0 text-success">$@reportData.Summary.PendingAmount.ToString("N2")</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Completed</h6>
+                        <h3 class="mb-1">@reportData.Summary.CompletedCount</h3>
+                        <p class="mb-0 text-success">$@reportData.Summary.CompletedAmount.ToString("N2")</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Failed</h6>
+                        <h3 class="mb-1">@reportData.Summary.FailedCount</h3>
+                        <p class="mb-0 text-danger">$@reportData.Summary.FailedAmount.ToString("N2")</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-secondary shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-slash-circle text-secondary" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Cancelled</h6>
+                        <h3 class="mb-1">@reportData.Summary.CancelledCount</h3>
+                        <p class="mb-0 text-muted">$@reportData.Summary.CancelledAmount.ToString("N2")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Impact -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Successful Revenue</h6>
+                        <h2 class="text-success mb-0">$@reportData.Summary.SuccessfulRevenue.ToString("N2")</h2>
+                        <small class="text-muted">From completed payments</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Lost Revenue</h6>
+                        <h2 class="text-danger mb-0">$@reportData.Summary.LostRevenue.ToString("N2")</h2>
+                        <small class="text-muted">Failed + Cancelled</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Pending Revenue</h6>
+                        <h2 class="text-warning mb-0">$@reportData.Summary.PendingRevenue.ToString("N2")</h2>
+                        <small class="text-muted">Awaiting completion</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Details Table -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Payment Status Breakdown</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.PaymentsByStatus.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Status</th>
+                                    <th class="text-end">Count</th>
+                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Average Amount</th>
+                                    <th class="text-end">Percentage</th>
+                                    <th class="text-center">Visual</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var status in reportData.PaymentsByStatus)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge @GetStatusBadge(status.Status)">
+                                                <i class="@GetStatusIcon(status.Status)"></i> @status.Status
+                                            </span>
+                                        </td>
+                                        <td class="text-end"><strong>@status.Count</strong></td>
+                                        <td class="text-end">$@status.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end">$@status.AverageAmount.ToString("N2")</td>
+                                        <td class="text-end">@status.Percentage.ToString("N1")%</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar @GetStatusProgressColor(status.Status)" 
+                                                     role="progressbar" 
+                                                     style="width: @status.Percentage%">
+                                                    @status.Percentage.ToString("N0")%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No payment status data available.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Payments by Status -->
+        @foreach (var statusGroup in reportData.PaymentsByStatus.Where(s => s.RecentPayments.Any()))
+        {
+            <div class="card mb-4">
+                <div class="card-header @GetStatusHeaderClass(statusGroup.Status)">
+                    <h5 class="mb-0">
+                        <i class="@GetStatusIcon(statusGroup.Status)"></i> 
+                        Recent @statusGroup.Status Payments
+                        <span class="badge bg-white text-dark float-end">@statusGroup.RecentPayments.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reference</th>
+                                    <th>Invoice</th>
+                                    <th>Payment Method</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var payment in statusGroup.RecentPayments)
+                                {
+                                    <tr>
+                                        <td>
+                                            <small>@payment.TransactionDate.ToString("MMM dd, yyyy")</small>
+                                        </td>
+                                        <td>
+                                            <small class="font-monospace">@(payment.Reference ?? "N/A")</small>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(payment.InvoiceNumber))
+                                            {
+                                                <span class="badge bg-info">@payment.InvoiceNumber</span>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">-</small>
+                                            }
+                                        </td>
+                                        <td><small>@payment.PaymentMethod</small></td>
+                                        <td class="text-end"><strong>$@payment.Amount.ToString("N2")</strong></td>
+                                        <td><small>@(payment.Description ?? "-")</small></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Performance Insights -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Payment Processing Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Status Overview</h6>
+                        <ul>
+                            <li>
+                                <strong>Most Common Status:</strong> 
+                                <span class="badge @GetStatusBadge(reportData.Summary.MostCommonStatus)">
+                                    @reportData.Summary.MostCommonStatus
+                                </span>
+                            </li>
+                            <li><strong>Completion Rate:</strong> @reportData.Summary.CompletionRate.ToString("N1")%</li>
+                            <li><strong>Average Successful:</strong> $@reportData.Summary.AverageSuccessfulAmount.ToString("N2")</li>
+                            <li><strong>Average Failed:</strong> $@reportData.Summary.AverageFailedAmount.ToString("N2")</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Recommendations</h6>
+                        <ul>
+                            @if (reportData.Summary.SuccessRate < 70)
+                            {
+                                <li class="text-danger">
+                                    <strong>⚠️ Low Success Rate:</strong> Investigate payment gateway issues and failed transaction patterns.
+                                </li>
+                            }
+                            @if (reportData.Summary.PendingCount > reportData.Summary.CompletedCount)
+                            {
+                                <li class="text-warning">
+                                    <strong>💡 High Pending Count:</strong> Review pending payments and automate completion processes.
+                                </li>
+                            }
+                            @if (reportData.Summary.LostRevenue > 1000)
+                            {
+                                <li class="text-danger">
+                                    <strong>💸 Significant Lost Revenue:</strong> $@reportData.Summary.LostRevenue.ToString("N2") in failed/cancelled payments.
+                                </li>
+                            }
+                            @if (reportData.Summary.SuccessRate >= 90)
+                            {
+                                <li class="text-success">
+                                    <strong>✅ Excellent Success Rate:</strong> Payment processing is performing well.
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime startDate = DateTime.Now.AddMonths(-1).Date;
+    private DateTime endDate = DateTime.Now.Date;
+    private string selectedStatus = "";
+    private bool isLoading = false;
+    private PaymentStatusReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/PaymentReport/status?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
+            
+            if (!string.IsNullOrEmpty(selectedStatus))
+                url += $"&statusFilter={selectedStatus}";
+
+            reportData = await Http.GetFromJsonAsync<PaymentStatusReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading payment status report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusBadge(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning text-dark",
+            "Completed" => "bg-success",
+            "Failed" => "bg-danger",
+            "Cancelled" => "bg-secondary",
+            _ => "bg-info"
+        };
+    }
+
+    private string GetStatusIcon(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bi bi-clock-history",
+            "Completed" => "bi bi-check-circle-fill",
+            "Failed" => "bi bi-x-circle-fill",
+            "Cancelled" => "bi bi-slash-circle",
+            _ => "bi bi-question-circle"
+        };
+    }
+
+    private string GetStatusProgressColor(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning",
+            "Completed" => "bg-success",
+            "Failed" => "bg-danger",
+            "Cancelled" => "bg-secondary",
+            _ => "bg-info"
+        };
+    }
+
+    private string GetStatusHeaderClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning text-dark",
+            "Completed" => "bg-success text-white",
+            "Failed" => "bg-danger text-white",
+            "Cancelled" => "bg-secondary text-white",
+            _ => "bg-light"
+        };
+    }
+}

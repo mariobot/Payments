@@ -63,5 +63,39 @@ namespace Hyip_Payments.Api.Controllers.Report
             var result = await _mediator.Send(query);
             return Ok(result);
         }
+
+        // GET: api/UserReport/active-users?reportDate=2024-12-31
+        /// <summary>
+        /// Get active users report showing currently active users and engagement metrics
+        /// </summary>
+        [HttpGet("active-users")]
+        public async Task<ActionResult<ActiveUsersReportModel>> GetActiveUsers(
+            [FromQuery] DateTime? reportDate = null)
+        {
+            var query = new GetActiveUsersReportQuery 
+            { 
+                ReportDate = reportDate ?? DateTime.UtcNow
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        // GET: api/UserReport/user-roles?reportDate=2024-12-31
+        /// <summary>
+        /// Get user roles report showing distribution and activity by role
+        /// </summary>
+        [HttpGet("user-roles")]
+        public async Task<ActionResult<UserRolesReportModel>> GetUserRoles(
+            [FromQuery] DateTime? reportDate = null)
+        {
+            var query = new GetUserRolesReportQuery 
+            { 
+                ReportDate = reportDate ?? DateTime.UtcNow
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
     }
 }

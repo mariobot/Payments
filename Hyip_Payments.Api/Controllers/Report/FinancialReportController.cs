@@ -74,5 +74,24 @@ namespace Hyip_Payments.Api.Controllers.Report
             var result = await _mediator.Send(query);
             return Ok(result);
         }
+
+        // GET: api/FinancialReport/cash-flow?startDate=2024-01-01&endDate=2024-12-31
+        /// <summary>
+        /// Get cash flow report showing inflows, outflows, and cash position
+        /// </summary>
+        [HttpGet("cash-flow")]
+        public async Task<ActionResult<CashFlowReportModel>> GetCashFlow(
+            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime endDate)
+        {
+            var query = new GetCashFlowReportQuery 
+            { 
+                StartDate = startDate, 
+                EndDate = endDate 
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
     }
 }

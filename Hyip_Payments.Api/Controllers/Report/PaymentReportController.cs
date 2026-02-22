@@ -80,5 +80,26 @@ namespace Hyip_Payments.Api.Controllers.Report
             var result = await _mediator.Send(query);
             return Ok(result);
         }
+
+        // GET: api/PaymentReport/status?startDate=2024-01-01&endDate=2024-12-31&statusFilter=Completed
+        /// <summary>
+        /// Get payment status report with breakdown of Pending, Completed, Failed, and Cancelled payments
+        /// </summary>
+        [HttpGet("status")]
+        public async Task<ActionResult<PaymentStatusReportModel>> GetStatus(
+            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime endDate,
+            [FromQuery] string? statusFilter = null)
+        {
+            var query = new GetPaymentStatusReportQuery 
+            { 
+                StartDate = startDate, 
+                EndDate = endDate,
+                StatusFilter = statusFilter
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
     }
 }

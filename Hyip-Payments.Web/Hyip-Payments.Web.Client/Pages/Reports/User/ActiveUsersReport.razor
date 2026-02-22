@@ -1,0 +1,477 @@
+@page "/reports/active-users"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+
+<PageTitle>Active Users Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-people-fill"></i> Active Users Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">Active Users</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Report Date Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-calendar3"></i> Report Date</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Report Date</label>
+                    <input type="date" class="form-control" @bind="reportDate" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading active users data...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Users</h6>
+                        <h2 class="text-primary mb-0">@reportData.TotalUsers</h2>
+                        <small class="text-muted">In system</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Active Users</h6>
+                        <h2 class="text-success mb-0">@reportData.ActiveUsers</h2>
+                        <small class="text-muted">@reportData.ActivePercentage.ToString("N1")% of total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Inactive Users</h6>
+                        <h2 class="text-danger mb-0">@reportData.InactiveUsers</h2>
+                        <small class="text-muted">Disabled accounts</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Dormant Users</h6>
+                        <h2 class="text-warning mb-0">@reportData.Summary.DormantUsers</h2>
+                        <small class="text-muted">No recent activity</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Breakdown -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check text-success" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Active Today</h6>
+                        <h3 class="mb-1">@reportData.Summary.ActiveToday</h3>
+                        <small class="text-muted">Last 24 hours</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-week text-info" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Active This Week</h6>
+                        <h3 class="mb-1">@reportData.Summary.ActiveThisWeek</h3>
+                        <small class="text-muted">Last 7 days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-month text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Active This Month</h6>
+                        <h3 class="mb-1">@reportData.Summary.ActiveThisMonth</h3>
+                        <small class="text-muted">Last 30 days</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Engagement Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Avg Invoices/User</h6>
+                        <h2 class="text-info mb-0">@reportData.Summary.AverageInvoicesPerActiveUser.ToString("N1")</h2>
+                        <small class="text-muted">Per active user</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Avg Payments/User</h6>
+                        <h2 class="text-primary mb-0">@reportData.Summary.AveragePaymentsPerActiveUser.ToString("N1")</h2>
+                        <small class="text-muted">Per active user</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Avg Revenue/User</h6>
+                        <h2 class="text-success mb-0">$@reportData.Summary.AverageRevenuePerActiveUser.ToString("N2")</h2>
+                        <small class="text-muted">Per active user</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performer -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-trophy text-warning" style="font-size: 2.5rem;"></i>
+                        <h5 class="mt-2 mb-1">Most Active User</h5>
+                        <h3 class="text-warning mb-1">@reportData.Summary.MostActiveUser</h3>
+                        <p class="mb-0">
+                            <strong>@reportData.Summary.MostActiveUserActions</strong> total actions
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Users Table -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-check-circle"></i> Active Users (@reportData.ActiveUsers)</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.ActiveUsersList.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Last Activity</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-end">Invoices</th>
+                                    <th class="text-end">Payments</th>
+                                    <th class="text-end">Revenue</th>
+                                    <th class="text-center">Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in reportData.ActiveUsersList)
+                                {
+                                    <tr class="@GetActivityRowClass(user.ActivityStatus)">
+                                        <td>
+                                            <strong>@user.Username</strong>
+                                            <br />
+                                            <small class="text-muted">@user.Email</small>
+                                        </td>
+                                        <td>
+                                            @if (user.LastLoginDate.HasValue)
+                                            {
+                                                <small>
+                                                    @user.LastLoginDate.Value.ToString("MMM dd, yyyy")
+                                                    <br />
+                                                    <span class="text-muted">@user.DaysSinceLastLogin day(s) ago</span>
+                                                </small>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">Never</small>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (user.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">@user.TotalInvoices</td>
+                                        <td class="text-end">@user.TotalPayments</td>
+                                        <td class="text-end text-success">$@user.TotalRevenue.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <span class="badge @GetActivityBadge(user.ActivityStatus)">
+                                                @user.ActivityStatus
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No active users found.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Inactive Users Table -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-x-circle"></i> Inactive Users (@reportData.InactiveUsers)</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.InactiveUsersList.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Last Activity</th>
+                                    <th>Days Since Login</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in reportData.InactiveUsersList.Take(20))
+                                {
+                                    <tr class="table-secondary">
+                                        <td>
+                                            <strong>@user.Username</strong>
+                                            <br />
+                                            <small class="text-muted">@user.Email</small>
+                                        </td>
+                                        <td>
+                                            @if (user.LastLoginDate.HasValue)
+                                            {
+                                                <small>@user.LastLoginDate.Value.ToString("MMM dd, yyyy")</small>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">Never</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (user.DaysSinceLastLogin < 999)
+                                            {
+                                                <span>@user.DaysSinceLastLogin days</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge @GetInactiveReasonBadge(user.InactiveReason)">
+                                                @user.InactiveReason
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @if (reportData.InactiveUsersList.Count > 20)
+                    {
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-info-circle"></i> Showing top 20 of @reportData.InactiveUsersList.Count inactive users
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle"></i> No inactive users!
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> User Activity Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Activity Overview</h6>
+                        <ul>
+                            <li>
+                                <strong>Active Rate:</strong> @reportData.ActivePercentage.ToString("N1")% 
+                                (@reportData.ActiveUsers of @reportData.TotalUsers)
+                            </li>
+                            <li><strong>Never Logged In:</strong> @reportData.Summary.UsersNeverLoggedIn users</li>
+                            <li><strong>Dormant Users:</strong> @reportData.Summary.DormantUsers users need re-engagement</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Recommendations</h6>
+                        <ul>
+                            @if (reportData.ActivePercentage < 50)
+                            {
+                                <li class="text-danger">
+                                    <strong>⚠️ Low Activation Rate:</strong> Less than 50% of users are active. Consider re-engagement campaigns.
+                                </li>
+                            }
+                            @if (reportData.Summary.UsersNeverLoggedIn > 0)
+                            {
+                                <li class="text-warning">
+                                    <strong>💡 Onboarding Opportunity:</strong> @reportData.Summary.UsersNeverLoggedIn users never logged in. Send welcome emails.
+                                </li>
+                            }
+                            @if (reportData.Summary.DormantUsers > reportData.Summary.ActiveThisMonth)
+                            {
+                                <li class="text-warning">
+                                    <strong>📧 Re-engagement Needed:</strong> More dormant users than active. Launch retention campaign.
+                                </li>
+                            }
+                            @if (reportData.ActivePercentage >= 80)
+                            {
+                                <li class="text-success">
+                                    <strong>✅ Excellent Engagement:</strong> High user activation rate!
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime reportDate = DateTime.Now.Date;
+    private bool isLoading = false;
+    private ActiveUsersReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/UserReport/active-users?reportDate={reportDate:yyyy-MM-dd}";
+            reportData = await Http.GetFromJsonAsync<ActiveUsersReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading active users report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetActivityBadge(string status)
+    {
+        return status switch
+        {
+            "Active Today" => "bg-success",
+            "Active This Week" => "bg-info",
+            "Active This Month" => "bg-primary",
+            "Dormant" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetActivityRowClass(string status)
+    {
+        return status switch
+        {
+            "Active Today" => "table-success",
+            "Dormant" => "table-warning",
+            _ => ""
+        };
+    }
+
+    private string GetInactiveReasonBadge(string reason)
+    {
+        return reason switch
+        {
+            "Never Logged In" => "bg-info",
+            "Long Term Dormant" => "bg-warning text-dark",
+            "Disabled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

@@ -1,0 +1,503 @@
+@page "/reports/user-roles"
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+
+<PageTitle>User Roles Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-person-badge"></i> User Roles Report</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item active">User Roles</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Report Date Filter -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-calendar3"></i> Report Date</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Report Date</label>
+                    <input type="date" class="form-control" @bind="reportDate" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" @onclick="LoadReport" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-search"></i> Generate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading user roles data...</p>
+        </div>
+    }
+    else if (reportData != null)
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Users</h6>
+                        <h2 class="text-primary mb-0">@reportData.TotalUsers</h2>
+                        <small class="text-muted">In system</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Total Roles</h6>
+                        <h2 class="text-info mb-0">@reportData.TotalRoles</h2>
+                        <small class="text-muted">Active roles</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Users with Roles</h6>
+                        <h2 class="text-success mb-0">@reportData.Summary.UsersWithRoles</h2>
+                        <small class="text-muted">Assigned roles</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Without Roles</h6>
+                        <h2 class="text-warning mb-0">@reportData.Summary.UsersWithoutRoles</h2>
+                        <small class="text-muted">Need assignment</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Roles Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Most Popular Role</h6>
+                        <h3 class="text-primary mb-1">@reportData.Summary.MostPopularRole</h3>
+                        <p class="mb-0">
+                            <strong>@reportData.Summary.MostPopularRoleCount</strong> users
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-info shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-activity text-info" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Most Active Role</h6>
+                        <h3 class="text-info mb-1">@reportData.Summary.MostActiveRole</h3>
+                        <p class="mb-0">
+                            <strong>@reportData.Summary.MostActiveRoleActions</strong> actions
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cash-stack text-success" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mb-1 mt-2">Highest Revenue Role</h6>
+                        <h3 class="text-success mb-1">@reportData.Summary.HighestRevenueRole</h3>
+                        <p class="mb-0">
+                            <strong>$@reportData.Summary.HighestRevenueRoleAmount.ToString("N2")</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Distribution -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Role Distribution</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.RoleDistribution.Any())
+                {
+                    <div class="row">
+                        @foreach (var role in reportData.RoleDistribution)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card @GetRoleBorderClass(role.RoleName)">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h5 class="mb-0">
+                                                <span class="badge @GetRoleBadge(role.RoleName)">
+                                                    <i class="@GetRoleIcon(role.RoleName)"></i> @role.RoleName
+                                                </span>
+                                            </h5>
+                                            <h4 class="mb-0 text-primary">@role.UserCount</h4>
+                                        </div>
+                                        
+                                        <div class="progress mb-2" style="height: 25px;">
+                                            <div class="progress-bar @GetRoleProgressColor(role.RoleName)" 
+                                                 role="progressbar" 
+                                                 style="width: @role.Percentage%">
+                                                @role.Percentage.ToString("N1")%
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <small class="text-muted">Active</small>
+                                                <h6 class="text-success mb-0">@role.ActiveUsers</h6>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Inactive</small>
+                                                <h6 class="text-danger mb-0">@role.InactiveUsers</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No role distribution data available.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Role Activity Analysis -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-bar-chart-line"></i> Role Activity Analysis</h5>
+            </div>
+            <div class="card-body">
+                @if (reportData.RoleActivities.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Role</th>
+                                    <th class="text-end">Invoices</th>
+                                    <th class="text-end">Payments</th>
+                                    <th class="text-end">Products</th>
+                                    <th class="text-end">Total Actions</th>
+                                    <th class="text-end">Revenue</th>
+                                    <th class="text-end">Avg Revenue/User</th>
+                                    <th class="text-center">Activity %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var activity in reportData.RoleActivities)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge @GetRoleBadge(activity.RoleName)">
+                                                <i class="@GetRoleIcon(activity.RoleName)"></i> @activity.RoleName
+                                            </span>
+                                        </td>
+                                        <td class="text-end">@activity.TotalInvoices</td>
+                                        <td class="text-end">@activity.TotalPayments</td>
+                                        <td class="text-end">@activity.TotalProducts</td>
+                                        <td class="text-end"><strong>@activity.TotalActions</strong></td>
+                                        <td class="text-end text-success">$@activity.TotalRevenue.ToString("N2")</td>
+                                        <td class="text-end">$@activity.AverageRevenuePerUser.ToString("N2")</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-info" 
+                                                     role="progressbar" 
+                                                     style="width: @activity.ActivityPercentage%">
+                                                    @activity.ActivityPercentage.ToString("N0")%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No role activity data available.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Users by Role -->
+        @foreach (var role in reportData.RoleDistribution.Where(r => r.Users.Any()))
+        {
+            <div class="card mb-4">
+                <div class="card-header @GetRoleHeaderClass(role.RoleName)">
+                    <h5 class="mb-0">
+                        <i class="@GetRoleIcon(role.RoleName)"></i> 
+                        @role.RoleName Users
+                        <span class="badge bg-white text-dark float-end">@role.UserCount</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-end">Total Actions</th>
+                                    <th class="text-end">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in role.Users.Take(10))
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@user.Username</strong>
+                                            <br />
+                                            <small class="text-muted">@user.Email</small>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (user.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td class="text-end"><strong>@user.TotalActions</strong></td>
+                                        <td class="text-end text-success">$@user.TotalRevenue.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @if (role.Users.Count > 10)
+                    {
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-info-circle"></i> Showing top 10 of @role.Users.Count users in @role.RoleName role
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Performance Insights -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Role Performance Insights</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Role Statistics</h6>
+                        <ul>
+                            <li><strong>Average Users per Role:</strong> @reportData.Summary.AverageUsersPerRole.ToString("N1")</li>
+                            <li><strong>Average Actions per Role:</strong> @reportData.Summary.AverageActionsPerRole.ToString("N1")</li>
+                            <li><strong>Average Revenue per Role:</strong> $@reportData.Summary.AverageRevenuePerRole.ToString("N2")</li>
+                            <li><strong>Users with Multiple Roles:</strong> @reportData.Summary.UsersWithMultipleRoles</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Recommendations</h6>
+                        <ul>
+                            @if (reportData.Summary.UsersWithoutRoles > 0)
+                            {
+                                <li class="text-warning">
+                                    <strong>⚠️ Role Assignment Needed:</strong> @reportData.Summary.UsersWithoutRoles users without roles. Assign appropriate permissions.
+                                </li>
+                            }
+                            @if (reportData.RoleDistribution.Any(r => r.UserCount == 0))
+                            {
+                                <li class="text-info">
+                                    <strong>💡 Unused Roles:</strong> Some roles have no users assigned. Consider cleanup.
+                                </li>
+                            }
+                            @if (reportData.Summary.UsersWithMultipleRoles > reportData.TotalUsers * 0.2m)
+                            {
+                                <li class="text-warning">
+                                    <strong>📋 Multiple Role Assignment:</strong> Many users have multiple roles. Review role structure.
+                                </li>
+                            }
+                            @if (reportData.Summary.UsersWithoutRoles == 0)
+                            {
+                                <li class="text-success">
+                                    <strong>✅ Complete Coverage:</strong> All users have assigned roles!
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                @if (reportData.Summary.TopUserByRole.Any())
+                {
+                    <hr />
+                    <h6>Top Performer by Role</h6>
+                    <div class="row">
+                        @foreach (var (roleName, username) in reportData.Summary.TopUserByRole)
+                        {
+                            <div class="col-md-4 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span class="badge @GetRoleBadge(roleName)">@roleName</span>
+                                    <strong>@username</strong>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
+                <button class="btn btn-danger me-2" disabled>
+                    <i class="bi bi-file-pdf"></i> Export to PDF
+                </button>
+                <button class="btn btn-success me-2" disabled>
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+                <button class="btn btn-info" disabled>
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                </button>
+                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+        <button class="btn btn-primary" @onclick="LoadReport">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
+    }
+</div>
+
+@code {
+    private DateTime reportDate = DateTime.Now.Date;
+    private bool isLoading = false;
+    private UserRolesReportModel? reportData;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+        reportData = null;
+
+        try
+        {
+            var url = $"api/UserReport/user-roles?reportDate={reportDate:yyyy-MM-dd}";
+            reportData = await Http.GetFromJsonAsync<UserRolesReportModel>(url);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading user roles report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetRoleBadge(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Manager" => "bg-warning text-dark",
+            "User" => "bg-primary",
+            "Guest" => "bg-secondary",
+            _ => "bg-info"
+        };
+    }
+
+    private string GetRoleIcon(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bi bi-shield-fill-exclamation",
+            "Manager" => "bi bi-person-gear",
+            "User" => "bi bi-person-fill",
+            "Guest" => "bi bi-person",
+            _ => "bi bi-person-badge"
+        };
+    }
+
+    private string GetRoleBorderClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "border-danger",
+            "Manager" => "border-warning",
+            "User" => "border-primary",
+            "Guest" => "border-secondary",
+            _ => "border-info"
+        };
+    }
+
+    private string GetRoleProgressColor(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Manager" => "bg-warning",
+            "User" => "bg-primary",
+            "Guest" => "bg-secondary",
+            _ => "bg-info"
+        };
+    }
+
+    private string GetRoleHeaderClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger text-white",
+            "Manager" => "bg-warning text-dark",
+            "User" => "bg-primary text-white",
+            "Guest" => "bg-secondary text-white",
+            _ => "bg-info text-white"
+        };
+    }
+}

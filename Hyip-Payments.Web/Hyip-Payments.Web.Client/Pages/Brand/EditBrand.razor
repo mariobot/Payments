@@ -39,9 +39,47 @@
                             <DataAnnotationsValidator />
                             <ValidationSummary class="alert alert-danger" />
 
-                            <div class="mb-3 form-check">
-                                <InputCheckbox id="isActive" class="form-check-input" @bind-Value="brand.IsActive" />
-                                <label for="isActive" class="form-check-label fw-bold">Is Active</label>
+                            <!-- Brand Name -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-bookmark text-warning"></i> Brand Name
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <InputText class="form-control form-control-lg" 
+                                          @bind-Value="brand.Name" 
+                                          placeholder="Enter brand name (e.g., Nike, Apple)" />
+                                <ValidationMessage For="@(() => brand.Name)" class="text-danger small" />
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-file-text text-warning"></i> Description
+                                </label>
+                                <InputTextArea class="form-control" 
+                                              @bind-Value="brand.Description" 
+                                              rows="3"
+                                              placeholder="Describe the brand (optional)..." />
+                                <ValidationMessage For="@(() => brand.Description)" class="text-danger small" />
+                            </div>
+
+                            <!-- Active Status -->
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <InputCheckbox id="isActive" class="form-check-input" @bind-Value="brand.IsActive" style="cursor: pointer; width: 3em; height: 1.5em;" />
+                                    <label for="isActive" class="form-check-label fw-bold" style="cursor: pointer;">
+                                        @if (brand.IsActive)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                            <span class="text-success">Brand is Active</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle-fill text-secondary"></i>
+                                            <span class="text-secondary">Brand is Inactive</span>
+                                        }
+                                    </label>
+                                </div>
                             </div>
 
                             <hr class="my-4" />

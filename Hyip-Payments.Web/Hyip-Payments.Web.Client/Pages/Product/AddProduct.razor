@@ -3,77 +3,256 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<h3>Add Product</h3>
+<PageTitle>Add New Product - HYIP Payments</PageTitle>
 
-<EditForm Model="@product" OnValidSubmit="HandleValidSubmit" FormName="addProductForm">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="mb-3">
-        <label class="form-label">Product Name</label>
-        <InputText class="form-control" @bind-Value="product.Name" />
-        <ValidationMessage For="@(() => product.Name)" />
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/product/list">Products</a></li>
+                    <li class="breadcrumb-item active">Add New Product</li>
+                </ol>
+            </nav>
+            <h2><i class="bi bi-plus-circle-fill text-primary"></i> Add New Product</h2>
+            <p class="text-muted">Create a new product to add to your catalog</p>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Description</label>
-        <InputTextArea class="form-control" @bind-Value="product.Description" rows="3" />
-        <ValidationMessage For="@(() => product.Description)" />
-    </div>
+    <!-- Success/Error Messages -->
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>Success!</strong> @successMessage
+            <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+        </div>
+    }
 
-    <div class="mb-3">
-        <label class="form-label">Price</label>
-        <InputNumber class="form-control" @bind-Value="product.Price" />
-        <ValidationMessage For="@(() => product.Price)" />
-    </div>
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Error!</strong> @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+        </div>
+    }
 
-    <div class="mb-3">
-        <label class="form-label">Category</label>
-        <InputSelect class="form-select" @bind-Value="product.CategoryId">
-            <option value="0">-- Select Category --</option>
-            @if (categories != null)
-            {
-                @foreach (var category in categories)
-                {
-                    <option value="@category.Id">@category.Name</option>
-                }
-            }
-        </InputSelect>
-        <ValidationMessage For="@(() => product.CategoryId)" />
-    </div>
+    @if (isLoadingData)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading form data...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Product Form -->
+        <div class="row">
+            <div class="col-lg-8 col-xl-7 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-box-seam"></i> Product Information</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <EditForm Model="@product" OnValidSubmit="HandleValidSubmit" FormName="addProductForm">
+                            <DataAnnotationsValidator />
 
-    <div class="mb-3">
-        <label class="form-label">Brand</label>
-        <InputSelect class="form-select" @bind-Value="product.BrandId">
-            <option value="0">-- Select Brand --</option>
-            @if (brands != null)
-            {
-                @foreach (var brand in brands)
-                {
-                    <option value="@brand.Id">@brand.Name</option>
-                }
-            }
-        </InputSelect>
-        <ValidationMessage For="@(() => product.BrandId)" />
-    </div>
+                            <!-- Product Name -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-tag-fill text-primary"></i> Product Name
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <InputText class="form-control form-control-lg" 
+                                          @bind-Value="product.Name" 
+                                          placeholder="Enter product name (e.g., Premium Widget)" />
+                                <ValidationMessage For="@(() => product.Name)" class="text-danger small" />
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Enter a clear, descriptive name for your product
+                                </small>
+                            </div>
 
-    <div class="mb-3 form-check">
-        <InputCheckbox class="form-check-input" id="isActive" @bind-Value="product.IsActive" />
-        <label class="form-check-label" for="isActive">Active</label>
-    </div>
+                            <!-- Description -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-file-text text-primary"></i> Description
+                                </label>
+                                <InputTextArea class="form-control" 
+                                              @bind-Value="product.Description" 
+                                              rows="4" 
+                                              placeholder="Describe the product features, benefits, and specifications..." />
+                                <ValidationMessage For="@(() => product.Description)" class="text-danger small" />
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Provide detailed information about the product
+                                </small>
+                            </div>
 
-    <button type="submit" class="btn btn-primary">Add Product</button>
-    <button type="button" class="btn btn-secondary ms-2" @onclick="GoBack">Cancel</button>
-</EditForm>
+                            <!-- Price -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-currency-dollar text-success"></i> Price (USD)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-cash-stack"></i> $
+                                    </span>
+                                    <InputNumber class="form-control" 
+                                                @bind-Value="product.Price" 
+                                                placeholder="0.00"
+                                                step="0.01" />
+                                </div>
+                                <ValidationMessage For="@(() => product.Price)" class="text-danger small" />
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Set the price in US dollars (e.g., 99.99)
+                                </small>
+                            </div>
 
-@if (successMessage != null)
-{
-    <div class="alert alert-success mt-3">@successMessage</div>
-}
-@if (errorMessage != null)
-{
-    <div class="alert alert-danger mt-3">@errorMessage</div>
-}
+                            <!-- Category and Brand Row -->
+                            <div class="row mb-4">
+                                <!-- Category -->
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-folder-fill text-info"></i> Category
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <InputSelect class="form-select form-select-lg" @bind-Value="product.CategoryId">
+                                        <option value="0">-- Select Category --</option>
+                                        @if (categories != null && categories.Any())
+                                        {
+                                            @foreach (var category in categories)
+                                            {
+                                                <option value="@category.Id">@category.Name</option>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <option value="0" disabled>No categories available</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => product.CategoryId)" class="text-danger small" />
+                                    @if (categories == null || !categories.Any())
+                                    {
+                                        <small class="form-text text-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> 
+                                            <a href="/category/add" class="text-decoration-none">Create a category first</a>
+                                        </small>
+                                    }
+                                </div>
+
+                                <!-- Brand -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-bookmark-fill text-warning"></i> Brand
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <InputSelect class="form-select form-select-lg" @bind-Value="product.BrandId">
+                                        <option value="0">-- Select Brand --</option>
+                                        @if (brands != null && brands.Any())
+                                        {
+                                            @foreach (var brand in brands)
+                                            {
+                                                <option value="@brand.Id">@brand.Name</option>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <option value="0" disabled>No brands available</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => product.BrandId)" class="text-danger small" />
+                                    @if (brands == null || !brands.Any())
+                                    {
+                                        <small class="form-text text-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> 
+                                            <a href="/brand/add" class="text-decoration-none">Create a brand first</a>
+                                        </small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Active Status -->
+                            <div class="mb-4">
+                                <div class="card @(product.IsActive ? "border-success" : "border-secondary")">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <InputCheckbox class="form-check-input" 
+                                                          id="isActive" 
+                                                          @bind-Value="product.IsActive" 
+                                                          style="cursor: pointer; width: 3em; height: 1.5em;" />
+                                            <label class="form-check-label fw-bold" for="isActive" style="cursor: pointer;">
+                                                @if (product.IsActive)
+                                                {
+                                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                                    <span class="text-success">Product is Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-x-circle-fill text-secondary"></i>
+                                                    <span class="text-secondary">Product is Inactive</span>
+                                                }
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted d-block mt-2">
+                                            <i class="bi bi-info-circle"></i> 
+                                            @if (product.IsActive)
+                                            {
+                                                <text>This product will be available for purchase and visible in the catalog</text>
+                                            }
+                                            else
+                                            {
+                                                <text>This product will be hidden and unavailable for purchase</text>
+                                            }
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary btn-lg" @onclick="GoBack">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-lg px-5" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        <text>Saving...</text>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-plus-circle-fill"></i>
+                                        <text>Add Product</text>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+
+                <!-- Help Card -->
+                <div class="card mt-4 border-info">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-lightbulb text-warning"></i> Quick Tips
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Use clear, descriptive product names that customers will easily understand</li>
+                            <li>Provide detailed descriptions including features, specifications, and benefits</li>
+                            <li>Set competitive pricing based on market research</li>
+                            <li>Make sure to select the correct category and brand for better organization</li>
+                            <li>Products marked as "Active" will be immediately available in your catalog</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     private ProductModel product = new() { IsActive = true };
@@ -81,41 +260,78 @@
     private List<BrandModel>? brands;
     private string? successMessage;
     private string? errorMessage;
+    private bool isLoadingData = true;
+    private bool isSubmitting = false;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadFormData();
+    }
+
+    private async Task LoadFormData()
+    {
+        isLoadingData = true;
+        errorMessage = null;
+
         try
         {
             // Load categories and brands for dropdowns
-            categories = await Http.GetFromJsonAsync<List<CategoryModel>>("api/Category");
-            brands = await Http.GetFromJsonAsync<List<BrandModel>>("api/Brand");
+            var categoryTask = Http.GetFromJsonAsync<List<CategoryModel>>("api/Category");
+            var brandTask = Http.GetFromJsonAsync<List<BrandModel>>("api/Brand");
+
+            await Task.WhenAll(categoryTask, brandTask);
+
+            categories = categoryTask.Result ?? new();
+            brands = brandTask.Result ?? new();
+
+            if (!categories.Any() || !brands.Any())
+            {
+                errorMessage = "Please create at least one Category and one Brand before adding products.";
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading data: {ex.Message}";
+            errorMessage = $"Error loading form data: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingData = false;
         }
     }
 
     private async Task HandleValidSubmit()
     {
+        isSubmitting = true;
         successMessage = null;
         errorMessage = null;
+
         try
         {
             var response = await Http.PostAsJsonAsync("api/Product", product);
+
             if (response.IsSuccessStatusCode)
             {
-                successMessage = "Product added successfully!";
-                product = new() { IsActive = true };
+                successMessage = $"Product '{product.Name}' has been added successfully!";
+
+                // Wait a moment to show success message, then navigate
+                await Task.Delay(1500);
+                NavigationManager.NavigateTo("/product/list");
             }
             else
             {
-                errorMessage = $"Error: {response.ReasonPhrase}";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to add product: {response.ReasonPhrase}. {errorContent}";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Exception: {ex.Message}";
+            errorMessage = $"An error occurred: {ex.Message}";
+            Console.WriteLine($"Exception: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
         }
     }
 

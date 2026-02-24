@@ -1,0 +1,802 @@
+@page "/reports/custom/edit/{ReportId:int}"
+@using Hyip_Payments.Models
+@using System.Text.Json
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Custom Report - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                    <li class="breadcrumb-item"><a href="/reports/custom/saved">Saved Reports</a></li>
+                    <li class="breadcrumb-item active">Edit Report</li>
+                </ol>
+            </nav>
+            <h2><i class="bi bi-pencil-square text-warning"></i> Edit Custom Report</h2>
+            <p class="text-muted">Update your custom report configuration</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading report configuration...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Error!</strong> @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+        </div>
+        <button class="btn btn-secondary" @onclick="BackToSavedReports">
+            <i class="bi bi-arrow-left"></i> Back to Saved Reports
+        </button>
+    }
+    else
+    {
+        <!-- Success Message -->
+        @if (successMessage != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Success!</strong> @successMessage
+                <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+            </div>
+        }
+
+        <!-- Step Indicator -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="step @(currentStep >= 1 ? "active" : "")">
+                            <div class="step-icon @(currentStep >= 1 ? "bg-warning" : "bg-secondary")">
+                                <i class="bi bi-1-circle-fill text-white"></i>
+                            </div>
+                            <div class="step-title mt-2">
+                                <strong>Basic Info</strong>
+                                <br /><small class="text-muted">Report name & type</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step @(currentStep >= 2 ? "active" : "")">
+                            <div class="step-icon @(currentStep >= 2 ? "bg-warning" : "bg-secondary")">
+                                <i class="bi bi-2-circle-fill text-white"></i>
+                            </div>
+                            <div class="step-title mt-2">
+                                <strong>Data Source</strong>
+                                <br /><small class="text-muted">Select data</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step @(currentStep >= 3 ? "active" : "")">
+                            <div class="step-icon @(currentStep >= 3 ? "bg-warning" : "bg-secondary")">
+                                <i class="bi bi-3-circle-fill text-white"></i>
+                            </div>
+                            <div class="step-title mt-2">
+                                <strong>Filters</strong>
+                                <br /><small class="text-muted">Define criteria</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step @(currentStep >= 4 ? "active" : "")">
+                            <div class="step-icon @(currentStep >= 4 ? "bg-warning" : "bg-secondary")">
+                                <i class="bi bi-4-circle-fill text-white"></i>
+                            </div>
+                            <div class="step-title mt-2">
+                                <strong>Preview</strong>
+                                <br /><small class="text-muted">Review & save</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step Content -->
+        @if (currentStep == 1)
+        {
+            <!-- Step 1: Basic Information -->
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Step 1: Basic Information</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-file-text text-warning"></i> Report Name
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       @bind="reportConfig.ReportName" 
+                                       placeholder="Enter a descriptive name (e.g., Monthly Sales by Category)" />
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Choose a clear name that describes what this report shows
+                                </small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-chat-left-text text-warning"></i> Description
+                                </label>
+                                <textarea class="form-control" 
+                                          @bind="reportConfig.Description" 
+                                          rows="3"
+                                          placeholder="Describe the purpose and content of this report..."></textarea>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Optional: Add details about when and why to use this report
+                                </small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-graph-up text-success"></i> Report Type
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select form-select-lg" @bind="reportConfig.ReportType">
+                                    <option value="">-- Select Report Type --</option>
+                                    <option value="Financial">💰 Financial Report</option>
+                                    <option value="Invoice">📄 Invoice Report</option>
+                                    <option value="Payment">💳 Payment Report</option>
+                                    <option value="User">👥 User Activity Report</option>
+                                    <option value="Product">📦 Product Report</option>
+                                    <option value="Custom">🔧 Custom Query Report</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Select the category that best matches your report needs
+                                </small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-eye text-info"></i> Visibility
+                                </label>
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" id="isPublic" @bind="reportConfig.IsPublic">
+                                            <label class="form-check-label" for="isPublic">
+                                                <strong>Make Public</strong>
+                                            </label>
+                                        </div>
+                                        <small class="text-muted">
+                                            @if (reportConfig.IsPublic)
+                                            {
+                                                <text>✅ This report will be visible to all users</text>
+                                            }
+                                            else
+                                            {
+                                                <text>🔒 This report will be private to you only</text>
+                                            }
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (currentStep == 2)
+        {
+            <!-- Step 2: Data Source & Columns -->
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-database"></i> Step 2: Data Source & Columns</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row">
+                                <!-- Data Source Selection -->
+                                <div class="col-md-6 mb-4">
+                                    <h6 class="fw-bold"><i class="bi bi-hdd-stack text-warning"></i> Select Data Source</h6>
+                                    <div class="list-group">
+                                        @foreach (var source in dataSources)
+                                        {
+                                            <label class="list-group-item list-group-item-action">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" 
+                                                           name="dataSource" 
+                                                           value="@source.Key"
+                                                           checked="@(reportConfig.DataSource == source.Key)"
+                                                           @onclick="() => SelectDataSource(source.Key)">
+                                                    <label class="form-check-label w-100">
+                                                        <strong>@source.Value.Name</strong>
+                                                        <br /><small class="text-muted">@source.Value.Description</small>
+                                                    </label>
+                                                </div>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Column Selection -->
+                                <div class="col-md-6 mb-4">
+                                    <h6 class="fw-bold"><i class="bi bi-list-columns text-success"></i> Select Columns to Display</h6>
+                                    @if (!string.IsNullOrEmpty(reportConfig.DataSource))
+                                    {
+                                        <div class="card border">
+                                            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                                @foreach (var column in GetAvailableColumns())
+                                                {
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               id="col-@column.Key"
+                                                               checked="@reportConfig.SelectedColumns.Contains(column.Key)"
+                                                               @onchange="(e) => ToggleColumn(column.Key, (bool)e.Value!)">
+                                                        <label class="form-check-label" for="col-@column.Key">
+                                                            <i class="@column.Value.Icon"></i> @column.Value.Name
+                                                            <br /><small class="text-muted">@column.Value.Description</small>
+                                                        </label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <small class="text-muted mt-2 d-block">
+                                            <i class="bi bi-info-circle"></i> Selected: <strong>@reportConfig.SelectedColumns.Count</strong> column(s)
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-arrow-left"></i> Please select a data source first
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (currentStep == 3)
+        {
+            <!-- Step 3: Filters & Parameters -->
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-funnel"></i> Step 3: Filters & Parameters</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Date Range -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-calendar-range text-warning"></i> Date Range</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Start Date</label>
+                                            <input type="date" class="form-control" @bind="reportConfig.StartDate" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">End Date</label>
+                                            <input type="date" class="form-control" @bind="reportConfig.EndDate" />
+                                        </div>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => SetDateRange(7)">Last 7 Days</button>
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => SetDateRange(30)">Last 30 Days</button>
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => SetDateRange(90)">Last 90 Days</button>
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="SetCurrentMonth">This Month</button>
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="SetCurrentYear">This Year</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-filter text-success"></i> Status Filter</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="statusCompleted" 
+                                                       checked="@reportConfig.IncludeCompleted"
+                                                       @onchange="(e) => reportConfig.IncludeCompleted = (bool)e.Value!">
+                                                <label class="form-check-label" for="statusCompleted">
+                                                    <span class="badge bg-success">Completed</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="statusPending"
+                                                       checked="@reportConfig.IncludePending"
+                                                       @onchange="(e) => reportConfig.IncludePending = (bool)e.Value!">
+                                                <label class="form-check-label" for="statusPending">
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="statusFailed"
+                                                       checked="@reportConfig.IncludeFailed"
+                                                       @onchange="(e) => reportConfig.IncludeFailed = (bool)e.Value!">
+                                                <label class="form-check-label" for="statusFailed">
+                                                    <span class="badge bg-danger">Failed</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="statusCancelled"
+                                                       checked="@reportConfig.IncludeCancelled"
+                                                       @onchange="(e) => reportConfig.IncludeCancelled = (bool)e.Value!">
+                                                <label class="form-check-label" for="statusCancelled">
+                                                    <span class="badge bg-secondary">Cancelled</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Grouping & Sorting -->
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-collection text-info"></i> Grouping & Sorting</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Group By</label>
+                                            <select class="form-select" @bind="reportConfig.GroupBy">
+                                                <option value="">None</option>
+                                                <option value="Date">Date</option>
+                                                <option value="Status">Status</option>
+                                                <option value="Category">Category</option>
+                                                <option value="User">User</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Sort By</label>
+                                            <select class="form-select" @bind="reportConfig.SortBy">
+                                                <option value="Date-Desc">Date (Newest First)</option>
+                                                <option value="Date-Asc">Date (Oldest First)</option>
+                                                <option value="Amount-Desc">Amount (High to Low)</option>
+                                                <option value="Amount-Asc">Amount (Low to High)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (currentStep == 4)
+        {
+            <!-- Step 4: Preview & Save -->
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-eye"></i> Step 4: Preview & Update</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Report Summary -->
+                            <div class="alert alert-info">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-info-circle"></i> Report Configuration Summary
+                                </h5>
+                                <hr>
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Report Name:</dt>
+                                    <dd class="col-sm-9">@reportConfig.ReportName</dd>
+
+                                    <dt class="col-sm-3">Type:</dt>
+                                    <dd class="col-sm-9">@reportConfig.ReportType</dd>
+
+                                    <dt class="col-sm-3">Data Source:</dt>
+                                    <dd class="col-sm-9">@reportConfig.DataSource</dd>
+
+                                    <dt class="col-sm-3">Selected Columns:</dt>
+                                    <dd class="col-sm-9">@string.Join(", ", reportConfig.SelectedColumns)</dd>
+
+                                    <dt class="col-sm-3">Date Range:</dt>
+                                    <dd class="col-sm-9">
+                                        @reportConfig.StartDate?.ToString("MMM dd, yyyy") - @reportConfig.EndDate?.ToString("MMM dd, yyyy")
+                                    </dd>
+
+                                    <dt class="col-sm-3">Visibility:</dt>
+                                    <dd class="col-sm-9">
+                                        @if (reportConfig.IsPublic)
+                                        {
+                                            <span class="badge bg-success">Public</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Private</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+
+                            <!-- Preview Note -->
+                            <div class="card bg-light mb-4">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-check-circle display-1 text-warning"></i>
+                                    <h4 class="mt-3">Ready to Update!</h4>
+                                    <p class="text-muted">
+                                        Your changes will be saved and the report will be updated.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                <button class="btn btn-warning btn-lg px-5" @onclick="UpdateReport" disabled="@isSaving">
+                                    @if (isSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        <text>Updating...</text>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <text>Update Report</text>
+                                    }
+                                </button>
+                                <button class="btn btn-outline-secondary btn-lg" @onclick="CancelEdit">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Navigation Buttons -->
+        <div class="row mt-4 mb-5">
+            <div class="col-lg-10 mx-auto">
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-outline-secondary btn-lg" 
+                            @onclick="PreviousStep" 
+                            disabled="@(currentStep == 1)">
+                        <i class="bi bi-arrow-left"></i> Previous
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg" @onclick="CancelEdit">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button class="btn btn-warning btn-lg" 
+                            @onclick="NextStep" 
+                            disabled="@(currentStep == 4 || !CanProceedToNextStep())">
+                        Next <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s;
+    }
+
+    .step.active .step-icon {
+        transform: scale(1.1);
+    }
+
+    .step-title {
+        min-height: 60px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int ReportId { get; set; }
+
+    private int currentStep = 1;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string? successMessage;
+    private string? errorMessage;
+    private CustomReportModel? existingReport;
+
+    private ReportConfiguration reportConfig = new()
+    {
+        StartDate = DateTime.Now.AddMonths(-1),
+        EndDate = DateTime.Now,
+        IncludeCompleted = true,
+        IncludePending = true,
+        IncludeFailed = false,
+        IncludeCancelled = false,
+        SortBy = "Date-Desc"
+    };
+
+    private Dictionary<string, DataSourceInfo> dataSources = new()
+    {
+        { "Invoices", new DataSourceInfo { Name = "Invoices", Description = "Invoice data including amounts, dates, and status" } },
+        { "Payments", new DataSourceInfo { Name = "Payment Transactions", Description = "Payment transaction history and details" } },
+        { "Users", new DataSourceInfo { Name = "User Activity", Description = "User actions and engagement metrics" } },
+        { "Products", new DataSourceInfo { Name = "Products", Description = "Product catalog and sales data" } }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Load existing report from database
+            existingReport = await Http.GetFromJsonAsync<CustomReportModel>($"api/CustomReport/{ReportId}");
+
+            if (existingReport == null)
+            {
+                errorMessage = "Report not found.";
+                return;
+            }
+
+            // Deserialize the configuration JSON
+            reportConfig = JsonSerializer.Deserialize<ReportConfiguration>(existingReport.ConfigurationJson) ?? new();
+
+            // Ensure SelectedColumns is initialized
+            reportConfig.SelectedColumns ??= new List<string>();
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private Dictionary<string, ColumnInfo> GetAvailableColumns()
+    {
+        return reportConfig.DataSource switch
+        {
+            "Invoices" => new Dictionary<string, ColumnInfo>
+            {
+                { "InvoiceNumber", new ColumnInfo { Name = "Invoice Number", Icon = "bi bi-hash", Description = "Unique invoice identifier" } },
+                { "Date", new ColumnInfo { Name = "Invoice Date", Icon = "bi bi-calendar", Description = "Date invoice was created" } },
+                { "Amount", new ColumnInfo { Name = "Total Amount", Icon = "bi bi-currency-dollar", Description = "Total invoice amount" } },
+                { "Status", new ColumnInfo { Name = "Status", Icon = "bi bi-check-circle", Description = "Invoice status" } },
+                { "Customer", new ColumnInfo { Name = "Customer", Icon = "bi bi-person", Description = "Customer name" } }
+            },
+            "Payments" => new Dictionary<string, ColumnInfo>
+            {
+                { "Reference", new ColumnInfo { Name = "Reference", Icon = "bi bi-hash", Description = "Payment reference number" } },
+                { "Date", new ColumnInfo { Name = "Transaction Date", Icon = "bi bi-calendar", Description = "Payment date" } },
+                { "Amount", new ColumnInfo { Name = "Amount", Icon = "bi bi-currency-dollar", Description = "Payment amount" } },
+                { "Status", new ColumnInfo { Name = "Status", Icon = "bi bi-check-circle", Description = "Payment status" } },
+                { "Method", new ColumnInfo { Name = "Payment Method", Icon = "bi bi-credit-card", Description = "Payment method used" } }
+            },
+            "Users" => new Dictionary<string, ColumnInfo>
+            {
+                { "Username", new ColumnInfo { Name = "Username", Icon = "bi bi-person", Description = "User's username" } },
+                { "Email", new ColumnInfo { Name = "Email", Icon = "bi bi-envelope", Description = "User's email address" } },
+                { "Date", new ColumnInfo { Name = "Created Date", Icon = "bi bi-calendar", Description = "When user was created" } },
+                { "Status", new ColumnInfo { Name = "Status", Icon = "bi bi-check-circle", Description = "Active or Inactive" } },
+                { "Role", new ColumnInfo { Name = "Role", Icon = "bi bi-shield", Description = "User role" } }
+            },
+            "Products" => new Dictionary<string, ColumnInfo>
+            {
+                { "Name", new ColumnInfo { Name = "Product Name", Icon = "bi bi-box", Description = "Name of the product" } },
+                { "SKU", new ColumnInfo { Name = "SKU", Icon = "bi bi-upc", Description = "Stock keeping unit" } },
+                { "Price", new ColumnInfo { Name = "Price", Icon = "bi bi-currency-dollar", Description = "Product price" } },
+                { "Category", new ColumnInfo { Name = "Category", Icon = "bi bi-tag", Description = "Product category" } },
+                { "Brand", new ColumnInfo { Name = "Brand", Icon = "bi bi-bookmark", Description = "Product brand" } },
+                { "Stock", new ColumnInfo { Name = "Stock", Icon = "bi bi-boxes", Description = "Available quantity" } },
+                { "Status", new ColumnInfo { Name = "Status", Icon = "bi bi-check-circle", Description = "Active or Inactive" } }
+            },
+            _ => new Dictionary<string, ColumnInfo>()
+        };
+    }
+
+    private void NextStep()
+    {
+        if (currentStep < 4 && CanProceedToNextStep())
+        {
+            currentStep++;
+        }
+    }
+
+    private void PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+        }
+    }
+
+    private bool CanProceedToNextStep()
+    {
+        return currentStep switch
+        {
+            1 => !string.IsNullOrWhiteSpace(reportConfig.ReportName) && !string.IsNullOrWhiteSpace(reportConfig.ReportType),
+            2 => !string.IsNullOrWhiteSpace(reportConfig.DataSource) && reportConfig.SelectedColumns.Any(),
+            3 => true,
+            _ => false
+        };
+    }
+
+    private void SelectDataSource(string source)
+    {
+        reportConfig.DataSource = source;
+        reportConfig.SelectedColumns.Clear();
+    }
+
+    private void ToggleColumn(string columnKey, bool isChecked)
+    {
+        if (isChecked)
+        {
+            if (!reportConfig.SelectedColumns.Contains(columnKey))
+            {
+                reportConfig.SelectedColumns.Add(columnKey);
+            }
+        }
+        else
+        {
+            reportConfig.SelectedColumns.Remove(columnKey);
+        }
+    }
+
+    private void SetDateRange(int days)
+    {
+        reportConfig.EndDate = DateTime.Now;
+        reportConfig.StartDate = DateTime.Now.AddDays(-days);
+    }
+
+    private void SetCurrentMonth()
+    {
+        var now = DateTime.Now;
+        reportConfig.StartDate = new DateTime(now.Year, now.Month, 1);
+        reportConfig.EndDate = reportConfig.StartDate.Value.AddMonths(1).AddDays(-1);
+    }
+
+    private void SetCurrentYear()
+    {
+        var now = DateTime.Now;
+        reportConfig.StartDate = new DateTime(now.Year, 1, 1);
+        reportConfig.EndDate = new DateTime(now.Year, 12, 31);
+    }
+
+    private async Task UpdateReport()
+    {
+        isSaving = true;
+        successMessage = null;
+        errorMessage = null;
+
+        try
+        {
+            // Serialize the complete reportConfig to JSON
+            var configJson = JsonSerializer.Serialize(reportConfig);
+
+            // Update CustomReportModel for API
+            var updatedReport = new CustomReportModel
+            {
+                Id = ReportId,
+                ReportName = reportConfig.ReportName,
+                Description = reportConfig.Description ?? string.Empty,
+                ReportType = reportConfig.ReportType,
+                DataSource = reportConfig.DataSource,
+                ConfigurationJson = configJson,
+                IsPublic = reportConfig.IsPublic,
+                CreatedByUserId = existingReport?.CreatedByUserId ?? string.Empty,
+                CreatedDate = existingReport?.CreatedDate ?? DateTime.UtcNow,
+                RunCount = existingReport?.RunCount ?? 0,
+                LastRunDate = existingReport?.LastRunDate,
+                IsActive = true
+            };
+
+            // PUT to API
+            var response = await Http.PutAsJsonAsync($"api/CustomReport/{ReportId}", updatedReport);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = $"Custom report '{reportConfig.ReportName}' has been updated successfully!";
+
+                // Redirect to view the updated report
+                await Task.Delay(1500);
+                Navigation.NavigateTo($"/reports/custom/view/{ReportId}");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to update report: {response.ReasonPhrase}. {errorContent}";
+            }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void CancelEdit()
+    {
+        Navigation.NavigateTo("/reports/custom/saved");
+    }
+
+    private void BackToSavedReports()
+    {
+        Navigation.NavigateTo("/reports/custom/saved");
+    }
+
+    // Helper classes
+    private class ReportConfiguration
+    {
+        public string ReportName { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ReportType { get; set; } = string.Empty;
+        public string DataSource { get; set; } = string.Empty;
+        public List<string> SelectedColumns { get; set; } = new();
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsPublic { get; set; }
+        public bool IncludeCompleted { get; set; }
+        public bool IncludePending { get; set; }
+        public bool IncludeFailed { get; set; }
+        public bool IncludeCancelled { get; set; }
+        public string GroupBy { get; set; } = string.Empty;
+        public string SortBy { get; set; } = string.Empty;
+    }
+
+    private class DataSourceInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    private class ColumnInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+}

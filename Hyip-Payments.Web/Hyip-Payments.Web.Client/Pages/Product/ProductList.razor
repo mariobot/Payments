@@ -62,11 +62,35 @@
     }
     else if (products != null && products.Any())
     {
+        <!-- Pagination Header -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="mb-0">
+                            <i class="bi bi-info-circle"></i> 
+                            Showing <strong>@Math.Min(pageSize, totalProducts - (currentPage - 1) * pageSize)</strong> of <strong>@totalProducts</strong> product(s)
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <label class="me-2">Items per page:</label>
+                        <select class="form-select form-select-sm d-inline-block w-auto" @bind="pageSize" @bind:after="OnPageSizeChanged">
+                            <option value="6">6</option>
+                            <option value="12">12</option>
+                            <option value="24">24</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         @if (viewMode == "cards")
         {
             <!-- Card View -->
             <div class="row g-4">
-                @foreach (var product in products)
+                @foreach (var product in paginatedProducts)
                 {
                     <div class="col-md-4 col-lg-3">
                         <div class="card h-100 shadow-sm product-card @(!product.IsActive ? "opacity-75" : "")">
@@ -129,65 +153,124 @@
         else
         {
             <!-- Table View -->
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th class="text-end">Price</th>
-                            <th>Category</th>
-                            <th>Brand</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var product in products)
-                        {
-                            <tr>
-                                <td><strong>@product.Name</strong></td>
-                                <td>@(product.Description ?? "-")</td>
-                                <td class="text-end"><strong>$@product.Price.ToString("F2")</strong></td>
-                                <td>@(product.Category?.Name ?? "-")</td>
-                                <td>@(product.Brand?.Name ?? "-")</td>
-                                <td>
-                                    @if (product.IsActive)
-                                    {
-                                        <span class="badge bg-success">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">Inactive</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-success" 
-                                                @onclick="() => AddToMarket(product)"
-                                                disabled="@(!product.IsActive)">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(product.Id)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(product.Id, product.Name)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Price</th>
+                                    <th>Category</th>
+                                    <th>Brand</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in paginatedProducts)
+                                {
+                                    <tr>
+                                        <td><strong>@product.Name</strong></td>
+                                        <td>@(product.Description ?? "-")</td>
+                                        <td class="text-end"><strong>$@product.Price.ToString("F2")</strong></td>
+                                        <td>@(product.Category?.Name ?? "-")</td>
+                                        <td>@(product.Brand?.Name ?? "-")</td>
+                                        <td>
+                                            @if (product.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-success" 
+                                                        @onclick="() => AddToMarket(product)"
+                                                        disabled="@(!product.IsActive)">
+                                                    <i class="bi bi-cart-plus"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(product.Id)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(product.Id, product.Name)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         }
 
-        <div class="mt-3">
-            <p class="text-muted mb-0">
-                <i class="bi bi-info-circle"></i> Total: <strong>@products.Count</strong> product(s)
-            </p>
-        </div>
+        <!-- Pagination Controls -->
+        @if (totalPages > 1)
+        {
+            <nav aria-label="Product pagination" class="mt-4">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    <!-- Previous Button -->
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(currentPage - 1)" disabled="@(currentPage == 1)">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </button>
+                    </li>
+
+                    <!-- First Page -->
+                    @if (currentPage > 3)
+                    {
+                        <li class="page-item">
+                            <button class="page-link" @onclick="() => GoToPage(1)">1</button>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    }
+
+                    <!-- Page Numbers -->
+                    @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                    {
+                        var pageNumber = i;
+                        <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+                            <button class="page-link" @onclick="() => GoToPage(pageNumber)">
+                                @pageNumber
+                            </button>
+                        </li>
+                    }
+
+                    <!-- Last Page -->
+                    @if (currentPage < totalPages - 2)
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        <li class="page-item">
+                            <button class="page-link" @onclick="() => GoToPage(totalPages)">@totalPages</button>
+                        </li>
+                    }
+
+                    <!-- Next Button -->
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(currentPage + 1)" disabled="@(currentPage == totalPages)">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="text-center mt-2 mb-3">
+                <small class="text-muted">
+                    Page @currentPage of @totalPages
+                </small>
+            </div>
+        }
     }
     else
     {
@@ -255,6 +338,7 @@
 
 @code {
     private List<ProductModel> products = new();
+    private List<ProductModel> paginatedProducts = new();
     private bool isLoading = true;
     private string? errorMessage;
     private string viewMode = "cards";
@@ -263,6 +347,12 @@
     private string productToDeleteName = string.Empty;
     private bool showToast = false;
     private string toastMessage = string.Empty;
+
+    // Pagination properties
+    private int currentPage = 1;
+    private int pageSize = 12; // Default to 12 for cards view
+    private int totalPages => (int)Math.Ceiling((double)totalProducts / pageSize);
+    private int totalProducts => products?.Count ?? 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -275,6 +365,10 @@
         try
         {
             products = await Http.GetFromJsonAsync<List<ProductModel>>("api/Product") ?? new();
+
+            // Reset to first page when data loads
+            currentPage = 1;
+            UpdatePaginatedProducts();
         }
         catch (Exception ex)
         {
@@ -284,6 +378,40 @@
         {
             isLoading = false;
         }
+    }
+
+    private void UpdatePaginatedProducts()
+    {
+        if (products == null || !products.Any())
+        {
+            paginatedProducts = new();
+            return;
+        }
+
+        // Calculate skip and take
+        var skip = (currentPage - 1) * pageSize;
+        paginatedProducts = products
+            .Skip(skip)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page < 1 || page > totalPages)
+            return;
+
+        currentPage = page;
+        UpdatePaginatedProducts();
+        StateHasChanged();
+    }
+
+    private void OnPageSizeChanged()
+    {
+        // Reset to first page when page size changes
+        currentPage = 1;
+        UpdatePaginatedProducts();
+        StateHasChanged();
     }
 
     private void AddToMarket(ProductModel product)
@@ -335,6 +463,14 @@
             if (response.IsSuccessStatusCode)
             {
                 products.RemoveAll(p => p.Id == productToDelete);
+
+                // Adjust current page if necessary
+                if (paginatedProducts.Count == 1 && currentPage > 1)
+                {
+                    currentPage--;
+                }
+
+                UpdatePaginatedProducts();
                 ShowToast("Product deleted successfully!");
             }
             else

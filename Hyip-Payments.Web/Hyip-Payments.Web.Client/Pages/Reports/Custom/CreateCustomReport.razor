@@ -1,4 +1,8 @@
 @page "/reports/custom/create"
+@using Hyip_Payments.Models
+@using System.Text.Json
+@using System.Net.Http.Json
+@inject HttpClient Http
 @inject NavigationManager Navigation
 
 <PageTitle>Create Custom Report - HYIP Payments</PageTitle>
@@ -540,6 +544,24 @@
                 { "Status", new ColumnInfo { Name = "Status", Icon = "bi bi-check-circle", Description = "Payment status" } },
                 { "Method", new ColumnInfo { Name = "Payment Method", Icon = "bi bi-credit-card", Description = "Payment method used" } }
             },
+            "Users" => new Dictionary<string, ColumnInfo>
+            {
+                { "Username", new ColumnInfo { Name = "Username", Icon = "bi bi-person", Description = "User's username" } },
+                { "Email", new ColumnInfo { Name = "Email", Icon = "bi bi-envelope", Description = "User's email address" } },
+                { "Date", new ColumnInfo { Name = "Created Date", Icon = "bi bi-calendar", Description = "When user was created" } },
+                { "Status", new ColumnInfo { Name = "Status", Icon = "bi bi-check-circle", Description = "Active or Inactive" } },
+                { "Role", new ColumnInfo { Name = "Role", Icon = "bi bi-shield", Description = "User role" } }
+            },
+            "Products" => new Dictionary<string, ColumnInfo>
+            {
+                { "Name", new ColumnInfo { Name = "Product Name", Icon = "bi bi-box", Description = "Name of the product" } },
+                { "SKU", new ColumnInfo { Name = "SKU", Icon = "bi bi-upc", Description = "Stock keeping unit" } },
+                { "Price", new ColumnInfo { Name = "Price", Icon = "bi bi-currency-dollar", Description = "Product price" } },
+                { "Category", new ColumnInfo { Name = "Category", Icon = "bi bi-tag", Description = "Product category" } },
+                { "Brand", new ColumnInfo { Name = "Brand", Icon = "bi bi-bookmark", Description = "Product brand" } },
+                { "Stock", new ColumnInfo { Name = "Stock", Icon = "bi bi-boxes", Description = "Available quantity" } },
+                { "Status", new ColumnInfo { Name = "Status", Icon = "bi bi-check-circle", Description = "Active or Inactive" } }
+            },
             _ => new Dictionary<string, ColumnInfo>()
         };
     }
@@ -620,18 +642,57 @@
 
         try
         {
-            // Simulate saving
-            await Task.Delay(1500);
+            // Serialize the complete reportConfig to JSON
+            var configJson = JsonSerializer.Serialize(reportConfig);
 
-            successMessage = $"Custom report '{reportConfig.ReportName}' has been saved successfully!";
+            // Create CustomReportModel for API
+            var customReport = new CustomReportModel
+            {
+                ReportName = reportConfig.ReportName,
+                Description = reportConfig.Description ?? string.Empty,
+                ReportType = reportConfig.ReportType,
+                DataSource = reportConfig.DataSource,
+                ConfigurationJson = configJson,
+                IsPublic = reportConfig.IsPublic,
+                CreatedDate = DateTime.UtcNow,
+                RunCount = 0,
+                IsActive = true
+            };
 
-            // Redirect to saved reports
-            await Task.Delay(1000);
-            Navigation.NavigateTo("/reports/custom/saved");
+            // POST to API
+            var response = await Http.PostAsJsonAsync("api/CustomReport", customReport);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var savedReport = await response.Content.ReadFromJsonAsync<CustomReportModel>();
+                successMessage = $"Custom report '{reportConfig.ReportName}' has been saved successfully!";
+
+                // Redirect to view the saved report
+                await Task.Delay(1500);
+                if (savedReport != null)
+                {
+                    Navigation.NavigateTo($"/reports/custom/view/{savedReport.Id}");
+                }
+                else
+                {
+                    Navigation.NavigateTo("/reports/custom/saved");
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to save report: {response.ReasonPhrase}. {errorContent}";
+            }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
         }
         catch (Exception ex)
         {
             errorMessage = $"Error saving report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
         }
         finally
         {

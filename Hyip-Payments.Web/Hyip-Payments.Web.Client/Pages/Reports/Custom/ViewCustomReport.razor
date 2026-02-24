@@ -1,0 +1,650 @@
+@page "/reports/custom/view/{ReportId:int}"
+@using Hyip_Payments.Models
+@using System.Text.Json
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>@reportName - Custom Report View</PageTitle>
+
+<div class="container-fluid mt-4">
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading report...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+                </div>
+                <button class="btn btn-primary" @onclick="BackToSavedReports">
+                    <i class="bi bi-arrow-left"></i> Back to Saved Reports
+                </button>
+            </div>
+        </div>
+    }
+    else if (reportConfig != null)
+    {
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/reports">Reports</a></li>
+                        <li class="breadcrumb-item"><a href="/reports/custom/saved">Saved Reports</a></li>
+                        <li class="breadcrumb-item active">@reportConfig.ReportName</li>
+                    </ol>
+                </nav>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2>
+                            <i class="@GetReportTypeIcon(reportConfig.ReportType) text-primary"></i> 
+                            @reportConfig.ReportName
+                        </h2>
+                        <p class="text-muted mb-0">@reportConfig.Description</p>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary" @onclick="RefreshReport" disabled="@isRunning">
+                            @if (isRunning)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-arrow-clockwise"></i>
+                            }
+                            Refresh
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="EditReport">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="CloseReport">
+                            <i class="bi bi-x-circle"></i> Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Info & Filters -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-info-circle"></i> Report Configuration</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Report Type:</dt>
+                                    <dd class="col-sm-7">
+                                        <span class="badge @GetReportTypeBadge(reportConfig.ReportType)">
+                                            @reportConfig.ReportType
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-5">Data Source:</dt>
+                                    <dd class="col-sm-7">@reportConfig.DataSource</dd>
+
+                                    <dt class="col-sm-5">Date Range:</dt>
+                                    <dd class="col-sm-7">
+                                        @reportConfig.StartDate?.ToString("MMM dd, yyyy") - 
+                                        @reportConfig.EndDate?.ToString("MMM dd, yyyy")
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">Group By:</dt>
+                                    <dd class="col-sm-7">@(string.IsNullOrEmpty(reportConfig.GroupBy) ? "None" : reportConfig.GroupBy)</dd>
+
+                                    <dt class="col-sm-5">Sort By:</dt>
+                                    <dd class="col-sm-7">@reportConfig.SortBy</dd>
+
+                                    <dt class="col-sm-5">Visibility:</dt>
+                                    <dd class="col-sm-7">
+                                        @if (reportConfig.IsPublic)
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-globe"></i> Public</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary"><i class="bi bi-lock-fill"></i> Private</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Quick Stats</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-2">
+                                <div class="border-end">
+                                    <h4 class="mb-0 text-primary">@reportResults.Count</h4>
+                                    <small class="text-muted">Total Records</small>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <h4 class="mb-0 text-success">@GetTotalAmount()</h4>
+                                <small class="text-muted">Total Amount</small>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <small class="text-muted">
+                            <i class="bi bi-clock-history"></i> 
+                            Last run: @lastRunTime.ToString("MMM dd, yyyy HH:mm")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-danger btn-sm" disabled>
+                        <i class="bi bi-file-pdf"></i> Export to PDF
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" disabled>
+                        <i class="bi bi-file-excel"></i> Export to Excel
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" disabled>
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="PrintReport">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                </div>
+                <span class="text-muted small ms-2">
+                    <i class="bi bi-info-circle"></i> Export features coming soon
+                </span>
+            </div>
+        </div>
+
+        <!-- Report Results -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table"></i> Report Results
+                            <span class="badge bg-secondary ms-2">@totalRecords record(s)</span>
+                        </h5>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <label class="me-2 small">Rows per page:</label>
+                        <select class="form-select form-select-sm d-inline-block w-auto" @bind="pageSize" @bind:after="OnPageSizeChanged">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="500">500</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @if (reportResults.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="table-dark sticky-top">
+                                <tr>
+                                    <th>#</th>
+                                    @foreach (var column in reportConfig.SelectedColumns)
+                                    {
+                                        <th>
+                                            <i class="@GetColumnIcon(column)"></i> @GetColumnDisplayName(column)
+                                        </th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var rowNumber = (currentPage - 1) * pageSize + 1;
+                                }
+                                @foreach (var row in paginatedResults)
+                                {
+                                    <tr>
+                                        <td class="text-muted">@rowNumber</td>
+                                        @foreach (var column in reportConfig.SelectedColumns)
+                                        {
+                                            <td>@GetCellValue(row, column)</td>
+                                        }
+                                    </tr>
+                                    rowNumber++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (totalPages > 1)
+                    {
+                        <div class="p-3 border-top">
+                            <nav aria-label="Report pagination">
+                                <ul class="pagination pagination-sm justify-content-center mb-0">
+                                    <!-- Previous Button -->
+                                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => GoToPage(currentPage - 1)" disabled="@(currentPage == 1)">
+                                            <i class="bi bi-chevron-left"></i> Previous
+                                        </button>
+                                    </li>
+
+                                    <!-- First Page -->
+                                    @if (currentPage > 3)
+                                    {
+                                        <li class="page-item">
+                                            <button class="page-link" @onclick="() => GoToPage(1)">1</button>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    }
+
+                                    <!-- Page Numbers -->
+                                    @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                    {
+                                        var pageNumber = i;
+                                        <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+                                            <button class="page-link" @onclick="() => GoToPage(pageNumber)">
+                                                @pageNumber
+                                            </button>
+                                        </li>
+                                    }
+
+                                    <!-- Last Page -->
+                                    @if (currentPage < totalPages - 2)
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                        <li class="page-item">
+                                            <button class="page-link" @onclick="() => GoToPage(totalPages)">@totalPages</button>
+                                        </li>
+                                    }
+
+                                    <!-- Next Button -->
+                                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => GoToPage(currentPage + 1)" disabled="@(currentPage == totalPages)">
+                                            Next <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, totalRecords) of @totalRecords records
+                                    | Page @currentPage of @totalPages
+                                </small>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="p-5 text-center">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h4 class="mt-3">No Data Found</h4>
+                        <p class="text-muted">
+                            No results match the current report criteria. Try adjusting the filters or date range.
+                        </p>
+                        <button class="btn btn-primary" @onclick="EditReport">
+                            <i class="bi bi-pencil"></i> Edit Report Filters
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    @@media print {
+        .btn-group, .breadcrumb, nav {
+            display: none !important;
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int ReportId { get; set; }
+
+    private ReportConfiguration? reportConfig;
+    private List<Dictionary<string, object>> reportResults = new();
+    private List<Dictionary<string, object>> paginatedResults = new();
+    private bool isLoading = true;
+    private bool isRunning = false;
+    private string? errorMessage;
+    private string reportName = "Custom Report";
+    private DateTime lastRunTime = DateTime.Now;
+
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 25;
+    private int totalRecords => reportResults.Count;
+    private int totalPages => (int)Math.Ceiling((double)totalRecords / pageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReportAndExecute();
+    }
+
+    private async Task LoadReportAndExecute()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            // Load report configuration from database
+            var customReport = await Http.GetFromJsonAsync<CustomReportModel>($"api/CustomReport/{ReportId}");
+
+            if (customReport == null)
+            {
+                errorMessage = "Report not found.";
+                return;
+            }
+
+            // Deserialize the configuration JSON
+            reportConfig = JsonSerializer.Deserialize<ReportConfiguration>(customReport.ConfigurationJson);
+
+            if (reportConfig == null)
+            {
+                errorMessage = "Invalid report configuration.";
+                return;
+            }
+
+            reportName = customReport.ReportName;
+
+            // Execute the report query
+            await ExecuteReport();
+
+            // Increment run count
+            await Http.PutAsync($"api/CustomReport/{ReportId}/run", null);
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ExecuteReport()
+    {
+        isRunning = true;
+
+        try
+        {
+            // Create request for API
+            var executeRequest = new
+            {
+                DataSource = reportConfig.DataSource,
+                SelectedColumns = reportConfig.SelectedColumns,
+                StartDate = reportConfig.StartDate,
+                EndDate = reportConfig.EndDate,
+                IncludeCompleted = reportConfig.IncludeCompleted,
+                IncludePending = reportConfig.IncludePending,
+                IncludeFailed = reportConfig.IncludeFailed,
+                IncludeCancelled = reportConfig.IncludeCancelled,
+                SortBy = reportConfig.SortBy
+            };
+
+            // Execute report via API
+            var response = await Http.PostAsJsonAsync("api/CustomReport/execute", executeRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                reportResults = await response.Content.ReadFromJsonAsync<List<Dictionary<string, object>>>() ?? new();
+                lastRunTime = DateTime.Now;
+
+                // Update pagination
+                currentPage = 1;
+                UpdatePaginatedResults();
+            }
+            else
+            {
+                errorMessage = $"Failed to execute report: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error executing report: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isRunning = false;
+        }
+    }
+
+    private async Task RefreshReport()
+    {
+        await ExecuteReport();
+    }
+
+    private void UpdatePaginatedResults()
+    {
+        var skip = (currentPage - 1) * pageSize;
+        paginatedResults = reportResults
+            .Skip(skip)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page < 1 || page > totalPages)
+            return;
+
+        currentPage = page;
+        UpdatePaginatedResults();
+        StateHasChanged();
+    }
+
+    private void OnPageSizeChanged()
+    {
+        currentPage = 1;
+        UpdatePaginatedResults();
+        StateHasChanged();
+    }
+
+    private void PrintReport()
+    {
+        // Trigger browser print dialog
+        Navigation.NavigateTo("javascript:window.print()", true);
+    }
+
+    private void EditReport()
+    {
+        Navigation.NavigateTo($"/reports/custom/edit/{ReportId}");
+    }
+
+    private void CloseReport()
+    {
+        Navigation.NavigateTo("/reports/custom/saved");
+    }
+
+    private void BackToSavedReports()
+    {
+        Navigation.NavigateTo("/reports/custom/saved");
+    }
+
+    private string GetTotalAmount()
+    {
+        if (reportResults.Any() && reportConfig?.SelectedColumns.Contains("Amount") == true)
+        {
+            try
+            {
+                var total = reportResults
+                    .Where(r => r.ContainsKey("Amount"))
+                    .Sum(r => Convert.ToDecimal(r["Amount"]));
+                return $"${total:N2}";
+            }
+            catch
+            {
+                return "N/A";
+            }
+        }
+        return "N/A";
+    }
+
+    private string GetCellValue(Dictionary<string, object> row, string column)
+    {
+        if (!row.ContainsKey(column))
+            return "-";
+
+        var value = row[column];
+
+        // Handle JsonElement (from API deserialization)
+        if (value is System.Text.Json.JsonElement jsonElement)
+        {
+            value = jsonElement.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.String => jsonElement.GetString(),
+                System.Text.Json.JsonValueKind.Number => jsonElement.GetDecimal(),
+                System.Text.Json.JsonValueKind.True => true,
+                System.Text.Json.JsonValueKind.False => false,
+                _ => jsonElement.ToString()
+            };
+        }
+
+        // Format based on column type
+        if (column.Contains("Amount") || column.Contains("Price"))
+        {
+            if (value is decimal decimalValue)
+                return $"${decimalValue:N2}";
+            if (decimal.TryParse(value?.ToString(), out var parsedDecimal))
+                return $"${parsedDecimal:N2}";
+        }
+        else if (column.Contains("Date"))
+        {
+            if (value is DateTime dateValue)
+                return dateValue.ToString("MMM dd, yyyy");
+            if (DateTime.TryParse(value?.ToString(), out var parsedDate))
+                return parsedDate.ToString("MMM dd, yyyy");
+        }
+        else if (column == "Status" || column.Contains("Status"))
+        {
+            var status = value?.ToString() ?? "";
+            var badgeClass = status.ToLower() switch
+            {
+                "completed" or "paid" or "active" => "bg-success",
+                "pending" => "bg-warning text-dark",
+                "failed" => "bg-danger",
+                "cancelled" or "inactive" => "bg-secondary",
+                _ => "bg-light text-dark"
+            };
+            return $"<span class='badge {badgeClass}'>{status}</span>";
+        }
+
+        return value?.ToString() ?? "-";
+    }
+
+    private string GetColumnDisplayName(string column)
+    {
+        return column switch
+        {
+            "InvoiceNumber" => "Invoice #",
+            "Reference" => "Reference",
+            "Date" => "Date",
+            "Amount" => "Amount",
+            "Status" => "Status",
+            "Customer" => "Customer",
+            "Method" => "Payment Method",
+            _ => column
+        };
+    }
+
+    private string GetColumnIcon(string column)
+    {
+        return column switch
+        {
+            "InvoiceNumber" or "Reference" => "bi bi-hash",
+            "Date" => "bi bi-calendar",
+            "Amount" => "bi bi-currency-dollar",
+            "Status" => "bi bi-check-circle",
+            "Customer" => "bi bi-person",
+            "Method" => "bi bi-credit-card",
+            _ => "bi bi-file-text"
+        };
+    }
+
+    private string GetReportTypeIcon(string type)
+    {
+        return type switch
+        {
+            "Financial" => "bi bi-cash-stack",
+            "Invoice" => "bi bi-file-earmark-text",
+            "Payment" => "bi bi-credit-card",
+            "User" => "bi bi-people",
+            "Product" => "bi bi-box-seam",
+            _ => "bi bi-file-text"
+        };
+    }
+
+    private string GetReportTypeBadge(string type)
+    {
+        return type switch
+        {
+            "Financial" => "bg-success",
+            "Invoice" => "bg-info",
+            "Payment" => "bg-primary",
+            "User" => "bg-warning text-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    // Helper class
+    private class ReportConfiguration
+    {
+        public string ReportName { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ReportType { get; set; } = string.Empty;
+        public string DataSource { get; set; } = string.Empty;
+        public List<string> SelectedColumns { get; set; } = new();
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsPublic { get; set; }
+        public bool IncludeCompleted { get; set; }
+        public bool IncludePending { get; set; }
+        public bool IncludeFailed { get; set; }
+        public bool IncludeCancelled { get; set; }
+        public string GroupBy { get; set; } = string.Empty;
+        public string SortBy { get; set; } = string.Empty;
+    }
+}

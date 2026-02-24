@@ -27,6 +27,7 @@ namespace Hyip_Payments.Context
         public DbSet<PaymentTransactionModel> PaymentTransactions { get; set; }
         public DbSet<UserApplicationModel> UserApplications { get; set; }
         public DbSet<UserTenantModel> UserTenants { get; set; }
+        public DbSet<CustomReportModel> CustomReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,7 +38,12 @@ namespace Hyip_Payments.Context
             modelBuilder.Entity<WalletModel>()
                 .Property(w => w.Balance)
                 .HasPrecision(18, 2);
-            
+
+            // Configure JSON column for CustomReportModel
+            modelBuilder.Entity<CustomReportModel>()
+                .Property(r => r.ConfigurationJson)
+                .HasColumnType("nvarchar(max)");
+
             //this.Database.Migrate(); // Ensure migrations are applied at startup - use with caution in production
         }
 

@@ -1,0 +1,85 @@
+@* 
+   StatusBadge Component
+   Displays a status badge with appropriate color and icon
+   
+   Usage:
+   <StatusBadge Status="Paid" />
+   <StatusBadge Status="Pending" ShowIcon="true" />
+   <StatusBadge Status="@invoice.StatusInvoice" Size="sm" />
+*@
+
+<span class="badge @GetStatusClass() @GetSizeClass()">
+    @if (ShowIcon)
+    {
+        <i class="@GetStatusIcon() me-1"></i>
+    }
+    @Status
+</span>
+
+@code {
+    /// <summary>
+    /// The status text to display
+    /// </summary>
+    [Parameter]
+    public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether to show an icon
+    /// </summary>
+    [Parameter]
+    public bool ShowIcon { get; set; } = false;
+
+    /// <summary>
+    /// Badge size: sm, md (default), lg
+    /// </summary>
+    [Parameter]
+    public string Size { get; set; } = "md";
+
+    private string GetStatusClass()
+    {
+        return Status?.ToLower() switch
+        {
+            "draft" => "status-draft",
+            "pending" => "status-pending",
+            "paid" or "completed" or "active" => "status-paid",
+            "failed" or "error" => "status-failed",
+            "cancelled" or "inactive" => "status-cancelled",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusIcon()
+    {
+        return Status?.ToLower() switch
+        {
+            "draft" => "bi-file-earmark",
+            "pending" => "bi-clock",
+            "paid" or "completed" or "active" => "bi-check-circle-fill",
+            "failed" or "error" => "bi-x-circle-fill",
+            "cancelled" or "inactive" => "bi-x-circle",
+            _ => "bi-question-circle"
+        };
+    }
+
+    private string GetSizeClass()
+    {
+        return Size switch
+        {
+            "sm" => "badge-sm",
+            "lg" => "badge-lg",
+            _ => ""
+        };
+    }
+}
+
+<style>
+    .badge-sm {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+
+    .badge-lg {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+</style>

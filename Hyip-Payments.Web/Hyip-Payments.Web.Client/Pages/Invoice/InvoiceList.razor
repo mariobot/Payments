@@ -8,10 +8,10 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="bi bi-file-earmark-text"></i> Invoice List</h3>
-        <button class="btn btn-primary" @onclick="GoToCreate">
-            <i class="bi bi-plus-circle"></i> Create New Invoice
-        </button>
+        <h3><i class="bi bi-file-earmark-text text-primary"></i> Invoice List</h3>
+        <ActionButton Action="Add" OnClick="GoToCreate">
+            New Invoice
+        </ActionButton>
     </div>
 
     @if (isLoading)
@@ -26,12 +26,12 @@
     else if (errorMessage != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
             <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
         </div>
-        <button class="btn btn-primary" @onclick="LoadInvoices">
-            <i class="bi bi-arrow-clockwise"></i> Retry
-        </button>
+        <ActionButton Action="Refresh" OnClick="LoadInvoices">
+            Retry
+        </ActionButton>
     }
     else if (invoices != null && invoices.Count > 0)
     {
@@ -61,12 +61,12 @@
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Invoice #</th>
-                                <th>Date</th>
+                                <th>Invoice Number</th>
+                                <th>Invoice Date</th>
                                 <th>Description</th>
                                 <th class="text-end">Total Amount</th>
-                                <th>Status</th>
-                                <th>Status Invoice</th>
+                                <th>Invoice Status</th>
+                                <th>Active Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -78,66 +78,49 @@
                                     <td>@invoice.InvoiceDate.ToString("MMM dd, yyyy")</td>
                                     <td>@(string.IsNullOrEmpty(invoice.Description) ? "-" : invoice.Description)</td>
                                     <td class="text-end"><strong>$@invoice.TotalAmount.ToString("F2")</strong></td>
-                                    <td>
-                                        @switch (invoice.StatusInvoice)
-                                        {
-                                            case "Draft":
-                                                <span class="badge bg-secondary"><i class="bi bi-pencil"></i> Draft</span>
-                                                break;
-                                            case "Pending":
-                                                <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pending</span>
-                                                break;
-                                            case "Paid":
-                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
-                                                break;
-                                            case "Cancelled":
-                                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Cancelled</span>
-                                                break;
-                                            default:
-                                                <span class="badge bg-light text-dark">@invoice.StatusInvoice</span>
-                                                break;
-                                        }
+                                     <td>
+                                        <StatusBadge Status="@invoice.StatusInvoice" ShowIcon="true" Size="sm" />
                                     </td>
-                                    <td>
-                                        @if (invoice.IsActive)
-                                        {
-                                            <span class="badge bg-success">Active</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary">Inactive</span>
-                                        }
+                                     <td>
+                                        <StatusBadge Status="@(invoice.IsActive ? "Active" : "Inactive")" ShowIcon="true" Size="sm" />
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
                                             @if (invoice.StatusInvoice == "Draft")
                                             {
-                                                <!-- Only show payment button for Draft invoices -->
-                                                <button class="btn btn-sm btn-success" @onclick="() => GoToPayment(invoice.Id)" title="Send to Payment">
-                                                    <i class="bi bi-cash-coin"></i> Pay
-                                                </button>
+                                                <ActionButton Action="Add" 
+                                                            Icon="bi-cash-coin" 
+                                                            Color="Success" 
+                                                            Size="sm" 
+                                                            OnClick="@(() => GoToPayment(invoice.Id))">
+                                                    Pay
+                                                </ActionButton>
                                             }
                                             else if (invoice.StatusInvoice == "Paid")
                                             {
-                                                <!-- Show view payments for Paid invoices -->
-                                                <button class="btn btn-sm btn-info" @onclick="() => ViewPayments(invoice.Id)" title="View Payment Details">
-                                                    <i class="bi bi-receipt"></i> Payment
-                                                </button>
+                                                <ActionButton Action="View" 
+                                                            Icon="bi-receipt" 
+                                                            Size="sm" 
+                                                            OnClick="@(() => ViewPayments(invoice.Id))">
+                                                    Payment
+                                                </ActionButton>
                                             }
 
-                                            <button class="btn btn-sm btn-info" @onclick="() => GoToView(invoice.Id)" title="View">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
+                                            <ActionButton Action="View" 
+                                                        Size="sm" 
+                                                        OnClick="@(() => GoToView(invoice.Id))">
+                                            </ActionButton>
 
                                             @if (invoice.StatusInvoice == "Draft")
                                             {
-                                                <!-- Only allow editing Draft invoices -->
-                                                <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(invoice.Id)" title="Edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(invoice.Id)" title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <ActionButton Action="Edit" 
+                                                            Size="sm" 
+                                                            OnClick="@(() => GoToEdit(invoice.Id))">
+                                                </ActionButton>
+                                                <ActionButton Action="Delete" 
+                                                            Size="sm" 
+                                                            OnClick="@(() => ConfirmDelete(invoice.Id))">
+                                                </ActionButton>
                                             }
                                         </div>
                                     </td>
@@ -213,8 +196,11 @@
     else
     {
         <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No invoices found. Click "Create New Invoice" to add your first invoice.
+            <i class="bi bi-info-circle-fill"></i> No invoices found. Click "New Invoice" to add your first invoice.
         </div>
+        <ActionButton Action="Add" OnClick="GoToCreate">
+            New Invoice
+        </ActionButton>
     }
 
     <!-- Delete Confirmation Modal -->
@@ -232,10 +218,12 @@
                         <p class="text-danger"><strong>This action cannot be undone.</strong></p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
-                        <button type="button" class="btn btn-danger" @onclick="DeleteInvoice">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
+                        <ActionButton Action="Cancel" OnClick="CancelDelete">
+                            Cancel
+                        </ActionButton>
+                        <ActionButton Action="Delete" OnClick="DeleteInvoice">
+                            Delete
+                        </ActionButton>
                     </div>
                 </div>
             </div>
@@ -267,14 +255,12 @@
                             @foreach (var payment in paymentTransactions)
                             {
                                 <div class="card mb-3">
-                                    <div class="card-header @GetStatusColor(payment.Status)">
+                                    <div class="card-header">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <h6 class="mb-0">
-                                                <i class="bi bi-credit-card"></i> Transaction #@payment.Id
+                                                <i class="bi bi-credit-card text-primary"></i> Transaction #@payment.Id
                                             </h6>
-                                            <span class="badge @GetStatusBadgeColor(payment.Status)">
-                                                @payment.Status
-                                            </span>
+                                            <StatusBadge Status="@payment.Status" ShowIcon="true" />
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -331,12 +317,12 @@
                         }
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="ClosePaymentModal">
-                            <i class="bi bi-x-circle"></i> Close
-                        </button>
-                        <button type="button" class="btn btn-primary" @onclick="() => NavigateToPaymentList(selectedInvoiceId)">
-                            <i class="bi bi-list"></i> View All Payments
-                        </button>
+                        <ActionButton Action="Cancel" OnClick="ClosePaymentModal">
+                            Close
+                        </ActionButton>
+                        <ActionButton Action="View" Icon="bi-list" OnClick="@(() => NavigateToPaymentList(selectedInvoiceId))">
+                            View All Payments
+                        </ActionButton>
                     </div>
                 </div>
             </div>
@@ -507,30 +493,6 @@
     private void NavigateToPaymentList(int invoiceId)
     {
         NavigationManager.NavigateTo($"/payment/list?invoiceId={invoiceId}");
-    }
-
-    private string GetStatusColor(string status)
-    {
-        return status switch
-        {
-            "Completed" => "bg-success text-white",
-            "Pending" => "bg-warning text-dark",
-            "Failed" => "bg-danger text-white",
-            "Cancelled" => "bg-secondary text-white",
-            _ => "bg-light"
-        };
-    }
-
-    private string GetStatusBadgeColor(string status)
-    {
-        return status switch
-        {
-            "Completed" => "bg-success",
-            "Pending" => "bg-warning text-dark",
-            "Failed" => "bg-danger",
-            "Cancelled" => "bg-secondary",
-            _ => "bg-light text-dark"
-        };
     }
 
     private void ConfirmDelete(int id)

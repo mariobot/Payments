@@ -227,7 +227,18 @@
                                         <td class="text-muted">@rowNumber</td>
                                         @foreach (var column in reportConfig.SelectedColumns)
                                         {
-                                            <td>@GetCellValue(row, column)</td>
+                                            @if (column == "Status" || column.Contains("Status"))
+                                            {
+                                                <td>
+                                                    <span class="badge @GetStatusBadgeClass(GetCellValue(row, column))">
+                                                        @GetCellValue(row, column)
+                                                    </span>
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td>@GetCellValue(row, column)</td>
+                                            }
                                         }
                                     </tr>
                                     rowNumber++;
@@ -558,21 +569,20 @@
             if (DateTime.TryParse(value?.ToString(), out var parsedDate))
                 return parsedDate.ToString("MMM dd, yyyy");
         }
-        else if (column == "Status" || column.Contains("Status"))
-        {
-            var status = value?.ToString() ?? "";
-            var badgeClass = status.ToLower() switch
-            {
-                "completed" or "paid" or "active" => "bg-success",
-                "pending" => "bg-warning text-dark",
-                "failed" => "bg-danger",
-                "cancelled" or "inactive" => "bg-secondary",
-                _ => "bg-light text-dark"
-            };
-            return $"<span class='badge {badgeClass}'>{status}</span>";
-        }
 
         return value?.ToString() ?? "-";
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "completed" or "paid" or "active" => "bg-success",
+            "pending" or "draft" => "bg-warning text-dark",
+            "failed" => "bg-danger",
+            "cancelled" or "inactive" => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
     }
 
     private string GetColumnDisplayName(string column)

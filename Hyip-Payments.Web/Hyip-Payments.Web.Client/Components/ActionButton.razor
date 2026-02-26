@@ -1,0 +1,149 @@
+@*
+   ActionButton Component
+   Standardized button with icon and consistent styling
+   
+   Usage:
+   <ActionButton Action="Add" OnClick="AddInvoice">New Invoice</ActionButton>
+   <ActionButton Action="Edit" Color="Warning" Size="sm">Edit</ActionButton>
+   <ActionButton Action="Delete" OnClick="DeleteItem" Disabled="@isDeleting">Delete</ActionButton>
+   <ActionButton Icon="bi-download" Color="Success">Export</ActionButton>
+*@
+
+<button class="btn btn-@GetColorClass() @GetSizeClass()" 
+        @onclick="OnClick" 
+        disabled="@Disabled"
+        type="@ButtonType">
+    @if (!string.IsNullOrEmpty(GetIcon()))
+    {
+        <i class="@GetIcon() me-2"></i>
+    }
+    @ChildContent
+</button>
+
+@code {
+    /// <summary>
+    /// Standard action type (Add, Edit, Delete, View, etc.)
+    /// </summary>
+    [Parameter]
+    public string Action { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Custom icon (overrides Action icon)
+    /// </summary>
+    [Parameter]
+    public string Icon { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Button color: Primary, Success, Warning, Danger, Info, Secondary, Light, Dark
+    /// </summary>
+    [Parameter]
+    public string Color { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Button size: sm, md (default), lg
+    /// </summary>
+    [Parameter]
+    public string Size { get; set; } = "md";
+
+    /// <summary>
+    /// Whether the button is disabled
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    /// <summary>
+    /// Button type: button (default), submit, reset
+    /// </summary>
+    [Parameter]
+    public string ButtonType { get; set; } = "button";
+
+    /// <summary>
+    /// Click event handler
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    /// <summary>
+    /// Button content
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string GetIcon()
+    {
+        // If custom icon provided, use it
+        if (!string.IsNullOrEmpty(Icon))
+            return Icon;
+
+        // Otherwise, get icon based on action
+        return Action?.ToLower() switch
+        {
+            "add" or "create" or "new" => "bi-plus-circle",
+            "edit" or "update" or "modify" => "bi-pencil-square",
+            "delete" or "remove" => "bi-trash",
+            "view" or "details" or "show" => "bi-eye",
+            "save" => "bi-save",
+            "cancel" => "bi-x-circle",
+            "search" or "find" => "bi-search",
+            "filter" => "bi-funnel",
+            "refresh" or "reload" => "bi-arrow-clockwise",
+            "export" => "bi-download",
+            "import" => "bi-upload",
+            "print" => "bi-printer",
+            "approve" or "accept" => "bi-check-circle",
+            "reject" or "decline" => "bi-x-circle",
+            "back" or "return" => "bi-arrow-left",
+            "next" or "forward" => "bi-arrow-right",
+            "up" => "bi-arrow-up",
+            "down" => "bi-arrow-down",
+            "settings" or "config" => "bi-gear",
+            "info" or "information" => "bi-info-circle",
+            "help" => "bi-question-circle",
+            "lock" => "bi-lock",
+            "unlock" => "bi-unlock",
+            "activate" => "bi-check-circle",
+            "deactivate" => "bi-x-circle",
+            "copy" or "duplicate" => "bi-files",
+            "share" => "bi-share",
+            "download" => "bi-download",
+            "upload" => "bi-upload",
+            "send" => "bi-send",
+            "email" => "bi-envelope",
+            "pdf" => "bi-file-pdf",
+            "excel" => "bi-file-excel",
+            "csv" => "bi-file-earmark-spreadsheet",
+            _ => ""
+        };
+    }
+
+    private string GetColorClass()
+    {
+        // If custom color provided, use it
+        if (!string.IsNullOrEmpty(Color))
+            return Color.ToLower();
+
+        // Otherwise, get color based on action
+        return Action?.ToLower() switch
+        {
+            "add" or "create" or "new" or "save" => "primary",
+            "edit" or "update" or "modify" => "warning",
+            "delete" or "remove" => "danger",
+            "view" or "details" or "show" or "info" => "info",
+            "approve" or "accept" or "activate" => "success",
+            "cancel" or "reject" or "decline" or "deactivate" => "secondary",
+            "export" or "download" => "success",
+            "print" => "outline-secondary",
+            _ => "primary"
+        };
+    }
+
+    private string GetSizeClass()
+    {
+        return Size switch
+        {
+            "sm" => "btn-sm",
+            "lg" => "btn-lg",
+            _ => ""
+        };
+    }
+}

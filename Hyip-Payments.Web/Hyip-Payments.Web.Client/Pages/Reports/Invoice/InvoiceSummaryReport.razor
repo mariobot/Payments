@@ -1,6 +1,8 @@
 @page "/reports/invoice-summary"
 @using Hyip_Payments.Models.Reports
+@using System.Text
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>Invoice Summary Report - HYIP Payments</PageTitle>
 
@@ -255,16 +257,18 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="mb-3"><i class="bi bi-download"></i> Export Report</h5>
-                <button class="btn btn-danger me-2" disabled>
+                <button class="btn btn-danger me-2" @onclick="ExportToPDF">
                     <i class="bi bi-file-pdf"></i> Export to PDF
                 </button>
-                <button class="btn btn-success me-2" disabled>
+                <button class="btn btn-success me-2" @onclick="ExportToExcel">
                     <i class="bi bi-file-excel"></i> Export to Excel
                 </button>
-                <button class="btn btn-info" disabled>
+                <button class="btn btn-info" @onclick="ExportToCSV">
                     <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
                 </button>
-                <p class="text-muted mt-2 mb-0"><small><i class="bi bi-info-circle"></i> Export functionality coming soon</small></p>
+                <p class="text-muted mt-2 mb-0">
+                    <small><i class="bi bi-info-circle"></i> Reports generated from @startDate.ToString("MMM dd, yyyy") to @endDate.ToString("MMM dd, yyyy")</small>
+                </p>
             </div>
         </div>
     }
@@ -354,4 +358,118 @@
             _ => "bg-info"
         };
     }
+
+    private async Task ExportToCSV()
+    {
+        if (reportData == null) return;
+
+        var csv = new StringBuilder();
+    
+        csv.AppendLine("Invoice Summary Report");
+        csv.AppendLine($"Period: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+        csv.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        csv.AppendLine();
+    
+        csv.AppendLine("Summary");
+        csv.AppendLine("Metric,Value");
+        csv.AppendLine($"Total Invoices,{reportData.TotalInvoices}");
+        csv.AppendLine($"Total Value,${reportData.TotalInvoiceValue:N2}");
+        csv.AppendLine($"Average Invoice,${reportData.AverageInvoiceAmount:N2}");
+        csv.AppendLine();
+    
+        csv.AppendLine("Status Summary");
+        csv.AppendLine("Status,Count,Amount");
+        csv.AppendLine($"Draft,{reportData.StatusSummary.DraftCount},${reportData.StatusSummary.DraftAmount:N2}");
+        csv.AppendLine($"Pending,{reportData.StatusSummary.PendingCount},${reportData.StatusSummary.PendingAmount:N2}");
+        csv.AppendLine($"Paid,{reportData.StatusSummary.PaidCount},${reportData.StatusSummary.PaidAmount:N2}");
+        csv.AppendLine($"Cancelled,{reportData.StatusSummary.CancelledCount},${reportData.StatusSummary.CancelledAmount:N2}");
+        csv.AppendLine();
+    
+        csv.AppendLine("Invoices by Status");
+        csv.AppendLine("Status,Count,Total Amount,Percentage");
+        foreach (var status in reportData.InvoicesByStatus.OrderByDescending(s => s.Count))
+        {
+            csv.AppendLine($"{status.Status},{status.Count},${status.TotalAmount:N2},{status.Percentage:N1}%");
+        }
+        csv.AppendLine();
+    
+        csv.AppendLine("Monthly Invoice Trend");
+        csv.AppendLine("Month,Year,Invoice Count,Total Amount,Average Amount");
+        foreach (var month in reportData.InvoicesByMonth)
+        {
+            var avgAmount = month.InvoiceCount > 0 ? month.TotalAmount / month.InvoiceCount : 0;
+            csv.AppendLine($"{month.MonthName},{month.Year},{month.InvoiceCount},${month.TotalAmount:N2},${avgAmount:N2}");
+        }
+
+        var fileName = $"Invoice_Summary_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}.csv";
+        var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+    
+        await JS.InvokeVoidAsync("downloadFile", fileName, "text/csv", base64);
+    }
+
+    private async Task ExportToExcel()
+    {
+        if (reportData == null) return;
+
+        var html = new StringBuilder();
+        html.AppendLine("<html xmlns:x=\"urn:schemas-microsoft-com:office:excel\">");
+        html.AppendLine("<head><meta charset=\"UTF-8\"></head>");
+        html.AppendLine("<body>");
+    
+        html.AppendLine("<h1>Invoice Summary Report</h1>");
+        html.AppendLine($"<p>Period: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}</p>");
+        html.AppendLine($"<p>Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}</p>");
+        html.AppendLine("<br>");
+    
+        html.AppendLine("<h2>Summary</h2>");
+        html.AppendLine("<table border=\"1\">");
+        html.AppendLine("<tr><th>Metric</th><th>Value</th></tr>");
+        html.AppendLine($"<tr><td>Total Invoices</td><td>{reportData.TotalInvoices}</td></tr>");
+        html.AppendLine($"<tr><td>Total Value</td><td>${reportData.TotalInvoiceValue:N2}</td></tr>");
+        html.AppendLine($"<tr><td>Average Invoice</td><td>${reportData.AverageInvoiceAmount:N2}</td></tr>");
+        html.AppendLine("</table><br>");
+    
+        html.AppendLine("<h2>Status Summary</h2>");
+        html.AppendLine("<table border=\"1\">");
+        html.AppendLine("<tr><th>Status</th><th>Count</th><th>Amount</th></tr>");
+        html.AppendLine($"<tr><td>Draft</td><td>{reportData.StatusSummary.DraftCount}</td><td>${reportData.StatusSummary.DraftAmount:N2}</td></tr>");
+        html.AppendLine($"<tr><td>Pending</td><td>{reportData.StatusSummary.PendingCount}</td><td>${reportData.StatusSummary.PendingAmount:N2}</td></tr>");
+        html.AppendLine($"<tr><td>Paid</td><td>{reportData.StatusSummary.PaidCount}</td><td>${reportData.StatusSummary.PaidAmount:N2}</td></tr>");
+        html.AppendLine($"<tr><td>Cancelled</td><td>{reportData.StatusSummary.CancelledCount}</td><td>${reportData.StatusSummary.CancelledAmount:N2}</td></tr>");
+        html.AppendLine("</table><br>");
+    
+        html.AppendLine("<h2>Invoices by Status</h2>");
+        html.AppendLine("<table border=\"1\">");
+        html.AppendLine("<tr><th>Status</th><th>Count</th><th>Total Amount</th><th>Percentage</th></tr>");
+        foreach (var status in reportData.InvoicesByStatus.OrderByDescending(s => s.Count))
+        {
+            html.AppendLine($"<tr><td>{status.Status}</td><td>{status.Count}</td><td>${status.TotalAmount:N2}</td><td>{status.Percentage:N1}%</td></tr>");
+        }
+        html.AppendLine("</table><br>");
+    
+        html.AppendLine("<h2>Monthly Invoice Trend</h2>");
+        html.AppendLine("<table border=\"1\">");
+        html.AppendLine("<tr><th>Month</th><th>Year</th><th>Invoice Count</th><th>Total Amount</th><th>Average Amount</th></tr>");
+        foreach (var month in reportData.InvoicesByMonth)
+        {
+            var avgAmount = month.InvoiceCount > 0 ? month.TotalAmount / month.InvoiceCount : 0;
+            html.AppendLine($"<tr><td>{month.MonthName}</td><td>{month.Year}</td><td>{month.InvoiceCount}</td><td>${month.TotalAmount:N2}</td><td>${avgAmount:N2}</td></tr>");
+        }
+        html.AppendLine("</table>");
+    
+        html.AppendLine("</body></html>");
+
+        var fileName = $"Invoice_Summary_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}.xls";
+        var bytes = Encoding.UTF8.GetBytes(html.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+    
+        await JS.InvokeVoidAsync("downloadFile", fileName, "application/vnd.ms-excel", base64);
+    }
+
+    private async Task ExportToPDF()
+    {
+        await JS.InvokeVoidAsync("window.print");
+    }
+}
 }

@@ -192,11 +192,11 @@ namespace Hyip_Payments.Query.CustomReportQuery
         {
             return sortBy switch
             {
-                "Date-Desc" => query.OrderByDescending(x => EF.Property<DateTime>(x, "CreatedDate")),
-                "Date-Asc" => query.OrderBy(x => EF.Property<DateTime>(x, "CreatedDate")),
+                "Date-Desc" => query.OrderByDescending(x => EF.Property<DateTime>(x, "InvoiceDate")),
+                "Date-Asc" => query.OrderBy(x => EF.Property<DateTime>(x, "InvoiceDate")),
                 "Amount-Desc" => query.OrderByDescending(x => EF.Property<decimal>(x, "TotalAmount")),
                 "Amount-Asc" => query.OrderBy(x => EF.Property<decimal>(x, "TotalAmount")),
-                _ => query.OrderByDescending(x => EF.Property<DateTime>(x, "CreatedDate"))
+                _ => query.OrderByDescending(x => EF.Property<DateTime>(x, "InvoiceDate"))
             };
         }
 

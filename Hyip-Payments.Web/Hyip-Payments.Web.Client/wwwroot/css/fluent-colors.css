@@ -1,0 +1,602 @@
+/* ============================================================================
+   Microsoft Fluent Design System - Color Variables
+   ============================================================================ */
+
+:root {
+    /* Primary Colors - Microsoft Blue */
+    --ms-blue-primary: #0078D4;
+    --ms-blue-dark: #005A9E;
+    --ms-blue-darker: #004578;
+    --ms-blue-light: #50E6FF;
+    --ms-blue-lighter: #DEECF9;
+    
+    /* Success - Microsoft Green */
+    --ms-green-success: #107C10;
+    --ms-green-dark: #0B6A0B;
+    --ms-green-light: #9FD89F;
+    --ms-green-lighter: #DFF6DD;
+    
+    /* Warning - Microsoft Amber/Orange */
+    --ms-orange-warning: #FFA500;
+    --ms-orange-dark: #CC8400;
+    --ms-orange-light: #FFD280;
+    --ms-orange-lighter: #FFF4CE;
+    
+    /* Error - Microsoft Red */
+    --ms-red-error: #D13438;
+    --ms-red-dark: #A4262C;
+    --ms-red-light: #F1BBBB;
+    --ms-red-lighter: #FDE7E9;
+    
+    /* Info - Microsoft Cyan */
+    --ms-cyan-info: #00BCF2;
+    --ms-cyan-dark: #0099BC;
+    --ms-cyan-light: #9CD9F0;
+    --ms-cyan-lighter: #E5F6FC;
+    
+    /* Neutrals - Microsoft Gray Scale */
+    --ms-gray-10: #FAF9F8;
+    --ms-gray-20: #F3F2F1;
+    --ms-gray-30: #EDEBE9;
+    --ms-gray-40: #E1DFDD;
+    --ms-gray-50: #D2D0CE;
+    --ms-gray-60: #C8C6C4;
+    --ms-gray-70: #A19F9D;
+    --ms-gray-80: #605E5C;
+    --ms-gray-90: #3B3A39;
+    --ms-gray-100: #323130;
+    --ms-gray-110: #201F1E;
+    --ms-gray-120: #11100F;
+    
+    /* Semantic Colors */
+    --color-primary: var(--ms-blue-primary);
+    --color-primary-dark: var(--ms-blue-dark);
+    --color-primary-light: var(--ms-blue-lighter);
+    
+    --color-success: var(--ms-green-success);
+    --color-success-dark: var(--ms-green-dark);
+    --color-success-light: var(--ms-green-lighter);
+    
+    --color-warning: var(--ms-orange-warning);
+    --color-warning-dark: var(--ms-orange-dark);
+    --color-warning-light: var(--ms-orange-lighter);
+    
+    --color-danger: var(--ms-red-error);
+    --color-danger-dark: var(--ms-red-dark);
+    --color-danger-light: var(--ms-red-lighter);
+    
+    --color-info: var(--ms-cyan-info);
+    --color-info-dark: var(--ms-cyan-dark);
+    --color-info-light: var(--ms-cyan-lighter);
+    
+    /* Background Colors */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: var(--ms-gray-10);
+    --bg-tertiary: var(--ms-gray-20);
+    --bg-hover: var(--ms-gray-30);
+    --bg-active: var(--ms-gray-40);
+    
+    /* Text Colors */
+    --text-primary: var(--ms-gray-120);
+    --text-secondary: var(--ms-gray-90);
+    --text-tertiary: var(--ms-gray-80);
+    --text-disabled: var(--ms-gray-60);
+    --text-link: var(--ms-blue-primary);
+    --text-link-hover: var(--ms-blue-dark);
+    
+    /* Border Colors */
+    --border-default: var(--ms-gray-50);
+    --border-light: var(--ms-gray-40);
+    --border-dark: var(--ms-gray-60);
+    
+    /* Shadow */
+    --shadow-sm: 0 1.6px 3.6px 0 rgba(0,0,0,.132), 0 0.3px 0.9px 0 rgba(0,0,0,.108);
+    --shadow-md: 0 3.2px 7.2px 0 rgba(0,0,0,.132), 0 0.6px 1.8px 0 rgba(0,0,0,.108);
+    --shadow-lg: 0 6.4px 14.4px 0 rgba(0,0,0,.132), 0 1.2px 3.6px 0 rgba(0,0,0,.108);
+    --shadow-xl: 0 25.6px 57.6px 0 rgba(0,0,0,.22), 0 4.8px 14.4px 0 rgba(0,0,0,.18);
+    
+    /* Typography */
+    --font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    --font-size-xs: 10px;
+    --font-size-sm: 12px;
+    --font-size-base: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    --font-size-3xl: 32px;
+    --font-size-4xl: 42px;
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    
+    /* Border Radius */
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    
+    /* Transitions */
+    --transition-fast: 100ms cubic-bezier(0.1, 0.9, 0.2, 1);
+    --transition-base: 200ms cubic-bezier(0.1, 0.9, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-primary: var(--ms-gray-120);
+    --bg-secondary: var(--ms-gray-110);
+    --bg-tertiary: var(--ms-gray-100);
+    --bg-hover: var(--ms-gray-90);
+    --bg-active: var(--ms-gray-80);
+    
+    --text-primary: var(--ms-gray-10);
+    --text-secondary: var(--ms-gray-30);
+    --text-tertiary: var(--ms-gray-40);
+    --text-disabled: var(--ms-gray-60);
+    
+    --border-default: var(--ms-gray-80);
+    --border-light: var(--ms-gray-90);
+    --border-dark: var(--ms-gray-70);
+}
+
+/* ============================================================================
+   Bootstrap Override with Microsoft Colors
+   ============================================================================ */
+
+/* Primary */
+.btn-primary,
+.bg-primary,
+.badge.bg-primary {
+    background-color: var(--ms-blue-primary) !important;
+    border-color: var(--ms-blue-primary) !important;
+    color: white !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--ms-blue-dark) !important;
+    border-color: var(--ms-blue-dark) !important;
+}
+
+.text-primary {
+    color: var(--ms-blue-primary) !important;
+}
+
+.border-primary {
+    border-color: var(--ms-blue-primary) !important;
+}
+
+/* Success */
+.btn-success,
+.bg-success,
+.badge.bg-success {
+    background-color: var(--ms-green-success) !important;
+    border-color: var(--ms-green-success) !important;
+    color: white !important;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+    background-color: var(--ms-green-dark) !important;
+    border-color: var(--ms-green-dark) !important;
+}
+
+.text-success {
+    color: var(--ms-green-success) !important;
+}
+
+.border-success {
+    border-color: var(--ms-green-success) !important;
+}
+
+.alert-success {
+    background-color: var(--ms-green-lighter) !important;
+    border-color: var(--ms-green-light) !important;
+    color: var(--ms-green-dark) !important;
+}
+
+/* Warning */
+.btn-warning,
+.bg-warning,
+.badge.bg-warning {
+    background-color: var(--ms-orange-warning) !important;
+    border-color: var(--ms-orange-warning) !important;
+    color: var(--ms-gray-120) !important;
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+    background-color: var(--ms-orange-dark) !important;
+    border-color: var(--ms-orange-dark) !important;
+}
+
+.text-warning {
+    color: var(--ms-orange-warning) !important;
+}
+
+.border-warning {
+    border-color: var(--ms-orange-warning) !important;
+}
+
+.alert-warning {
+    background-color: var(--ms-orange-lighter) !important;
+    border-color: var(--ms-orange-light) !important;
+    color: var(--ms-orange-dark) !important;
+}
+
+/* Danger */
+.btn-danger,
+.bg-danger,
+.badge.bg-danger {
+    background-color: var(--ms-red-error) !important;
+    border-color: var(--ms-red-error) !important;
+    color: white !important;
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+    background-color: var(--ms-red-dark) !important;
+    border-color: var(--ms-red-dark) !important;
+}
+
+.text-danger {
+    color: var(--ms-red-error) !important;
+}
+
+.border-danger {
+    border-color: var(--ms-red-error) !important;
+}
+
+.alert-danger {
+    background-color: var(--ms-red-lighter) !important;
+    border-color: var(--ms-red-light) !important;
+    color: var(--ms-red-dark) !important;
+}
+
+/* Info */
+.btn-info,
+.bg-info,
+.badge.bg-info {
+    background-color: var(--ms-cyan-info) !important;
+    border-color: var(--ms-cyan-info) !important;
+    color: var(--ms-gray-120) !important;
+}
+
+.btn-info:hover,
+.btn-info:focus {
+    background-color: var(--ms-cyan-dark) !important;
+    border-color: var(--ms-cyan-dark) !important;
+}
+
+.text-info {
+    color: var(--ms-cyan-info) !important;
+}
+
+.border-info {
+    border-color: var(--ms-cyan-info) !important;
+}
+
+.alert-info {
+    background-color: var(--ms-cyan-lighter) !important;
+    border-color: var(--ms-cyan-light) !important;
+    color: var(--ms-cyan-dark) !important;
+}
+
+/* ============================================================================
+   Cards and Containers
+   ============================================================================ */
+
+.card {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    background-color: var(--bg-primary);
+    transition: box-shadow var(--transition-base);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-light);
+    padding: var(--spacing-md);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-body {
+    padding: var(--spacing-md);
+}
+
+/* ============================================================================
+   Buttons
+   ============================================================================ */
+
+.btn {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    transition: all var(--transition-base);
+    border: 1px solid transparent;
+}
+
+.btn:focus {
+    outline: 2px solid var(--ms-blue-primary);
+    outline-offset: 2px;
+}
+
+.btn-sm {
+    padding: 4px var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.btn-lg {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-md);
+}
+
+/* ============================================================================
+   Tables
+   ============================================================================ */
+
+.table {
+    color: var(--text-primary);
+}
+
+.table thead th {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-default);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.table tbody tr {
+    transition: background-color var(--transition-fast);
+}
+
+.table tbody tr:hover {
+    background-color: var(--bg-hover);
+}
+
+.table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    vertical-align: middle;
+}
+
+/* ============================================================================
+   Forms
+   ============================================================================ */
+
+.form-control,
+.form-select {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    transition: all var(--transition-base);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--ms-blue-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ms-blue-lighter);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-base);
+}
+
+.form-check-input:checked {
+    background-color: var(--ms-blue-primary);
+    border-color: var(--ms-blue-primary);
+}
+
+/* ============================================================================
+   Badges
+   ============================================================================ */
+
+.badge {
+    font-weight: 600;
+    padding: 4px var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   Breadcrumbs
+   ============================================================================ */
+
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: var(--text-tertiary);
+    font-size: var(--font-size-md);
+}
+
+.breadcrumb-item a {
+    color: var(--text-link);
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--text-link-hover);
+    text-decoration: underline;
+}
+
+/* ============================================================================
+   Navigation
+   ============================================================================ */
+
+.nav-link {
+    color: var(--text-secondary);
+    transition: color var(--transition-base);
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: var(--ms-blue-primary);
+}
+
+.nav-link.active {
+    color: var(--ms-blue-primary);
+    font-weight: 600;
+}
+
+/* ============================================================================
+   Utilities
+   ============================================================================ */
+
+.shadow-sm {
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.shadow {
+    box-shadow: var(--shadow-md) !important;
+}
+
+.shadow-lg {
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.rounded-ms {
+    border-radius: var(--radius-md) !important;
+}
+
+.rounded-ms-lg {
+    border-radius: var(--radius-lg) !important;
+}
+
+/* ============================================================================
+   Status Colors (Custom)
+   ============================================================================ */
+
+.status-draft {
+    background-color: var(--ms-gray-50) !important;
+    color: var(--ms-gray-100) !important;
+}
+
+.status-pending {
+    background-color: var(--ms-orange-lighter) !important;
+    color: var(--ms-orange-dark) !important;
+}
+
+.status-paid,
+.status-completed,
+.status-active {
+    background-color: var(--ms-green-lighter) !important;
+    color: var(--ms-green-dark) !important;
+}
+
+.status-failed,
+.status-error {
+    background-color: var(--ms-red-lighter) !important;
+    color: var(--ms-red-dark) !important;
+}
+
+.status-cancelled,
+.status-inactive {
+    background-color: var(--ms-gray-30) !important;
+    color: var(--ms-gray-80) !important;
+}
+
+/* ============================================================================
+   Typography
+   ============================================================================ */
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+h1 { font-size: var(--font-size-4xl); }
+h2 { font-size: var(--font-size-3xl); }
+h3 { font-size: var(--font-size-2xl); }
+h4 { font-size: var(--font-size-xl); }
+h5 { font-size: var(--font-size-lg); }
+h6 { font-size: var(--font-size-md); }
+
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-md { font-size: var(--font-size-md); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
+
+/* ============================================================================
+   Loading Spinner (Microsoft Style)
+   ============================================================================ */
+
+.spinner-border-ms {
+    border: 3px solid var(--ms-blue-lighter);
+    border-top-color: var(--ms-blue-primary);
+}
+
+/* ============================================================================
+   Tooltips
+   ============================================================================ */
+
+.tooltip-inner {
+    background-color: var(--ms-gray-100);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+/* ============================================================================
+   Modals
+   ============================================================================ */
+
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-light);
+    padding: var(--spacing-md);
+}
+
+.modal-body {
+    padding: var(--spacing-md);
+}
+
+.modal-footer {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-light);
+    padding: var(--spacing-md);
+}

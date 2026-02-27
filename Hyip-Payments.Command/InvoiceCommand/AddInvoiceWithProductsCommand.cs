@@ -54,10 +54,12 @@ namespace Hyip_Payments.Command.InvoiceCommand
     public class AddInvoiceWithProductsCommandHandler : IRequestHandler<AddInvoiceWithProductsCommand, InvoiceWithItemsDto>
     {
         private readonly PaymentsDbContext _context;
+        private readonly IMediator _mediator;
 
-        public AddInvoiceWithProductsCommandHandler(PaymentsDbContext context)
+        public AddInvoiceWithProductsCommandHandler(PaymentsDbContext context, IMediator mediator)
         {
             _context = context;
+            _mediator = mediator;
         }
 
         public async Task<InvoiceWithItemsDto> Handle(AddInvoiceWithProductsCommand request, CancellationToken cancellationToken)
@@ -122,6 +124,12 @@ namespace Hyip_Payments.Command.InvoiceCommand
 
                     // 4. Commit transaction
                     await transaction.CommitAsync(cancellationToken);
+
+                    // 5. Publish event to trigger customer balance update
+                    if (invoice.CustomerId.HasValue)
+                    {
+                        await _mediator.Publish(new InvoiceCreatedEvent(invoice.Id, invoice.CustomerId), cancellationToken);
+                    }
 
                     return new InvoiceWithItemsDto
                     {

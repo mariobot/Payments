@@ -43,10 +43,12 @@ namespace Hyip_Payments.Command.InvoiceCommand
     public class UpdateInvoiceWithItemsCommandHandler : IRequestHandler<UpdateInvoiceWithItemsCommand, InvoiceWithItemsDto>
     {
         private readonly PaymentsDbContext _context;
+        private readonly IMediator _mediator;
 
-        public UpdateInvoiceWithItemsCommandHandler(PaymentsDbContext context)
+        public UpdateInvoiceWithItemsCommandHandler(PaymentsDbContext context, IMediator mediator)
         {
             _context = context;
+            _mediator = mediator;
         }
 
         public async Task<InvoiceWithItemsDto> Handle(UpdateInvoiceWithItemsCommand request, CancellationToken cancellationToken)

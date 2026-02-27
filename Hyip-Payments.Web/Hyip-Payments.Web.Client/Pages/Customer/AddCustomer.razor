@@ -1,0 +1,420 @@
+@page "/customer/add"
+@using Hyip_Payments.Models
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Add Customer - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="bi bi-person-plus text-success"></i> Add New Customer</h3>
+        <ActionButton Action="Back" OnClick="GoBack">
+            Back to List
+        </ActionButton>
+    </div>
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+        </div>
+    }
+
+    @if (successMessage != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @successMessage
+            <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <EditForm Model="customer" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3"><i class="bi bi-building"></i> Company Information</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-building"></i> Company Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            <InputText class="@GetInputClass("CompanyName")"
+                                     @bind-Value="customer.CompanyName"
+                                     placeholder="Enter company name" />
+                            @if (validationErrors.ContainsKey("CompanyName"))
+                            {
+                                <div class="invalid-feedback d-block">@validationErrors["CompanyName"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-person"></i> Contact Person
+                                <span class="text-danger">*</span>
+                            </label>
+                            <InputText class="@GetInputClass("ContactName")"
+                                     @bind-Value="customer.ContactName"
+                                     placeholder="Enter contact person name" />
+                            @if (validationErrors.ContainsKey("ContactName"))
+                            {
+                                <div class="invalid-feedback d-block">@validationErrors["ContactName"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-envelope"></i> Email
+                                <span class="text-danger">*</span>
+                            </label>
+                            <InputText type="email" 
+                                     class="@GetInputClass("Email")"
+                                     @bind-Value="customer.Email"
+                                     placeholder="customer@example.com" />
+                            @if (validationErrors.ContainsKey("Email"))
+                            {
+                                <div class="invalid-feedback d-block">@validationErrors["Email"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-telephone"></i> Phone
+                                <span class="text-danger">*</span>
+                            </label>
+                            <InputText class="@GetInputClass("Phone")"
+                                     @bind-Value="customer.Phone"
+                                     placeholder="555-0100" />
+                            @if (validationErrors.ContainsKey("Phone"))
+                            {
+                                <div class="invalid-feedback d-block">@validationErrors["Phone"]</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-hash"></i> Tax ID / VAT Number
+                            </label>
+                            <InputText class="form-control"
+                                     @bind-Value="customer.TaxId"
+                                     placeholder="Optional" />
+                            <div class="form-text">Enter tax identification number or VAT number</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="mb-3"><i class="bi bi-geo-alt"></i> Address Information</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-geo-alt"></i> Address
+                                <span class="text-danger">*</span>
+                            </label>
+                            <InputText class="@GetInputClass("Address")"
+                                     @bind-Value="customer.Address"
+                                     placeholder="Street address" />
+                            @if (validationErrors.ContainsKey("Address"))
+                            {
+                                <div class="invalid-feedback d-block">@validationErrors["Address"]</div>
+                            }
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-building"></i> City
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <InputText class="@GetInputClass("City")"
+                                         @bind-Value="customer.City"
+                                         placeholder="City" />
+                                @if (validationErrors.ContainsKey("City"))
+                                {
+                                    <div class="invalid-feedback d-block">@validationErrors["City"]</div>
+                                }
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-map"></i> State / Province
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <InputText class="@GetInputClass("State")"
+                                         @bind-Value="customer.State"
+                                         placeholder="State" />
+                                @if (validationErrors.ContainsKey("State"))
+                                {
+                                    <div class="invalid-feedback d-block">@validationErrors["State"]</div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-mailbox"></i> Postal Code
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <InputText class="@GetInputClass("PostalCode")"
+                                         @bind-Value="customer.PostalCode"
+                                         placeholder="10001" />
+                                @if (validationErrors.ContainsKey("PostalCode"))
+                                {
+                                    <div class="invalid-feedback d-block">@validationErrors["PostalCode"]</div>
+                                }
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-globe"></i> Country
+                                </label>
+                                <select class="form-select" @bind="customer.CountryId">
+                                    <option value="">-- Select Country --</option>
+                                    @foreach (var country in countries)
+                                    {
+                                        <option value="@country.Id">@country.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-4"><i class="bi bi-credit-card"></i> Payment Terms</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-calendar-check"></i> Payment Terms (Days)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <InputNumber class="form-control"
+                                           @bind-Value="customer.PaymentTermsDays" />
+                                <div class="form-text">Net 30, Net 60, etc.</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-cash-stack"></i> Credit Limit
+                                </label>
+                                <InputNumber class="form-control"
+                                           @bind-Value="customer.CreditLimit"
+                                           placeholder="0.00" />
+                                <div class="form-text">Optional credit limit</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-percent"></i> Discount Percentage
+                            </label>
+                            <InputNumber class="form-control"
+                                       @bind-Value="customer.DiscountPercentage"
+                                       placeholder="0.00" />
+                            <div class="form-text">Enter as decimal (0.05 = 5%)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-file-text"></i> Notes
+                            </label>
+                            <InputTextArea class="form-control"
+                                         @bind-Value="customer.Notes"
+                                         rows="3"
+                                         placeholder="Additional notes about this customer..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light mt-3">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <ActionButton Action="Cancel" OnClick="GoBack">
+                            Cancel
+                        </ActionButton>
+                        <ActionButton Action="Save" OnClick="HandleSubmit" Disabled="@isSaving">
+                            @(isSaving ? "Saving..." : "Save Customer")
+                        </ActionButton>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CustomerModel customer = new();
+    private List<CountryModel> countries = new();
+    private bool isSaving = false;
+    private string? errorMessage;
+    private string? successMessage;
+    private Dictionary<string, string> validationErrors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCountries();
+    }
+
+    private async Task LoadCountries()
+    {
+        try
+        {
+            countries = await Http.GetFromJsonAsync<List<CountryModel>>("api/Country") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading countries: {ex.Message}");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (isSaving) return;
+
+        validationErrors.Clear();
+        errorMessage = null;
+        successMessage = null;
+
+        if (!ValidateCustomer())
+            return;
+
+        isSaving = true;
+
+        try
+        {
+            var command = new
+            {
+                companyName = customer.CompanyName,
+                contactName = customer.ContactName,
+                email = customer.Email,
+                phone = customer.Phone,
+                address = customer.Address,
+                city = customer.City,
+                state = customer.State,
+                postalCode = customer.PostalCode,
+                countryId = customer.CountryId,
+                taxId = customer.TaxId,
+                paymentTermsDays = customer.PaymentTermsDays,
+                creditLimit = customer.CreditLimit,
+                discountPercentage = customer.DiscountPercentage,
+                notes = customer.Notes
+            };
+
+            var response = await Http.PostAsJsonAsync("api/Customer", command);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "Customer created successfully!";
+                await Task.Delay(1500);
+                NavigationManager.NavigateTo("/customer/list");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to create customer: {response.ReasonPhrase}. {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating customer: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private bool ValidateCustomer()
+    {
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(customer.CompanyName))
+        {
+            validationErrors["CompanyName"] = "Company name is required";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.ContactName))
+        {
+            validationErrors["ContactName"] = "Contact person is required";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.Email))
+        {
+            validationErrors["Email"] = "Email is required";
+            isValid = false;
+        }
+        else if (!customer.Email.Contains("@"))
+        {
+            validationErrors["Email"] = "Invalid email format";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.Phone))
+        {
+            validationErrors["Phone"] = "Phone is required";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.Address))
+        {
+            validationErrors["Address"] = "Address is required";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.City))
+        {
+            validationErrors["City"] = "City is required";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.State))
+        {
+            validationErrors["State"] = "State is required";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.PostalCode))
+        {
+            validationErrors["PostalCode"] = "Postal code is required";
+            isValid = false;
+        }
+
+        if (customer.PaymentTermsDays <= 0)
+        {
+            validationErrors["PaymentTermsDays"] = "Payment terms must be greater than 0";
+            isValid = false;
+        }
+
+        if (customer.CreditLimit.HasValue && customer.CreditLimit.Value < 0)
+        {
+            validationErrors["CreditLimit"] = "Credit limit cannot be negative";
+            isValid = false;
+        }
+
+        if (customer.DiscountPercentage < 0 || customer.DiscountPercentage > 1)
+        {
+            validationErrors["DiscountPercentage"] = "Discount must be between 0 and 1 (0% to 100%)";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/customer/list");
+    }
+
+    private string GetInputClass(string fieldName)
+    {
+        return validationErrors.ContainsKey(fieldName) ? "form-control is-invalid" : "form-control";
+    }
+}

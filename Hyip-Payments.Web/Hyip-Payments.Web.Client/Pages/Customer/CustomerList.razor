@@ -1,0 +1,370 @@
+@page "/customer/list"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Customers - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="bi bi-people text-primary"></i> Customer List</h3>
+        <ActionButton Action="Add" OnClick="GoToCreate">
+            New Customer
+        </ActionButton>
+    </div>
+
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               placeholder="Search by customer number, company name, or email..." 
+                               @bind="searchTerm" 
+                               @bind:event="oninput"
+                               @bind:after="SearchCustomers" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="activeOnly" 
+                                   @bind="showActiveOnly"
+                                   @bind:after="FilterCustomers" />
+                            <label class="form-check-label" for="activeOnly">
+                                Active Only
+                            </label>
+                        </div>
+                        <ActionButton Action="Refresh" OnClick="LoadCustomers">
+                            Refresh
+                        </ActionButton>
+                        <ActionButton Action="Excel" Color="Success" OnClick="ExportToExcel">
+                            Export
+                        </ActionButton>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading customers...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+        </div>
+        <ActionButton Action="Refresh" OnClick="LoadCustomers">
+            Retry
+        </ActionButton>
+    }
+    else if (filteredCustomers != null && filteredCustomers.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Showing <strong>@filteredCustomers.Count</strong> of <strong>@customers.Count</strong> customer(s)
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small class="text-muted">
+                            Total Outstanding: <strong class="text-danger">${totalOutstanding:N2}</strong>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Customer Number</th>
+                                <th>Company Name</th>
+                                <th>Contact Person</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th class="text-end">Balance</th>
+                                <th>Payment Terms</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var customer in filteredCustomers)
+                            {
+                                <tr>
+                                    <td><strong>@customer.CustomerNumber</strong></td>
+                                    <td>
+                                        <div>
+                                            <strong>@customer.CompanyName</strong>
+                                            @if (customer.Country != null)
+                                            {
+                                                <br />
+                                                <small class="text-muted">
+                                                    <i class="bi bi-geo-alt"></i> @customer.Country.Name
+                                                </small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>@customer.ContactName</td>
+                                    <td>
+                                        <a href="mailto:@customer.Email" class="text-decoration-none">
+                                            <i class="bi bi-envelope"></i> @customer.Email
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="tel:@customer.Phone" class="text-decoration-none">
+                                            <i class="bi bi-telephone"></i> @customer.Phone
+                                        </a>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="@(customer.CurrentBalance > 0 ? "text-danger" : "text-success")">
+                                            $@customer.CurrentBalance.ToString("N2")
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            Net @customer.PaymentTermsDays
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <StatusBadge Status="@(customer.IsActive ? "Active" : "Inactive")" 
+                                                   ShowIcon="true" 
+                                                   Size="sm" />
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <ActionButton Action="View" 
+                                                        Size="sm" 
+                                                        OnClick="@(() => GoToView(customer.Id))">
+                                            </ActionButton>
+                                            <ActionButton Action="Edit" 
+                                                        Size="sm" 
+                                                        OnClick="@(() => GoToEdit(customer.Id))">
+                                            </ActionButton>
+                                            @if (customer.IsActive)
+                                            {
+                                                <ActionButton Action="Deactivate" 
+                                                            Size="sm" 
+                                                            OnClick="@(() => ToggleActive(customer.Id))">
+                                                </ActionButton>
+                                            }
+                                            else
+                                            {
+                                                <ActionButton Action="Activate" 
+                                                            Size="sm" 
+                                                            OnClick="@(() => ToggleActive(customer.Id))">
+                                                </ActionButton>
+                                            }
+                                            @if (!customer.Invoices.Any())
+                                            {
+                                                <ActionButton Action="Delete" 
+                                                            Size="sm" 
+                                                            OnClick="@(() => ConfirmDelete(customer.Id))">
+                                                </ActionButton>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill"></i> No customers found. Click "New Customer" to add your first customer.
+        </div>
+        <ActionButton Action="Add" OnClick="GoToCreate">
+            New Customer
+        </ActionButton>
+    }
+
+    @if (showDeleteConfirm)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CancelDelete"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this customer?</p>
+                        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <ActionButton Action="Cancel" OnClick="CancelDelete">
+                            Cancel
+                        </ActionButton>
+                        <ActionButton Action="Delete" OnClick="DeleteCustomer">
+                            Delete
+                        </ActionButton>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CustomerModel> customers = new();
+    private List<CustomerModel> filteredCustomers = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string searchTerm = "";
+    private bool showActiveOnly = false;
+    private bool showDeleteConfirm = false;
+    private int customerToDelete = 0;
+
+    private decimal totalOutstanding => filteredCustomers.Sum(c => c.CurrentBalance);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            customers = await Http.GetFromJsonAsync<List<CustomerModel>>("api/Customer") ?? new();
+            FilterCustomers();
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}. Please check if the API is running.";
+            Console.WriteLine($"HTTP Error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading customers: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void FilterCustomers()
+    {
+        filteredCustomers = customers;
+
+        if (showActiveOnly)
+        {
+            filteredCustomers = filteredCustomers.Where(c => c.IsActive).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var searchLower = searchTerm.ToLower();
+            filteredCustomers = filteredCustomers.Where(c =>
+                c.CustomerNumber.ToLower().Contains(searchLower) ||
+                c.CompanyName.ToLower().Contains(searchLower) ||
+                c.ContactName.ToLower().Contains(searchLower) ||
+                c.Email.ToLower().Contains(searchLower)).ToList();
+        }
+    }
+
+    private void SearchCustomers()
+    {
+        FilterCustomers();
+        StateHasChanged();
+    }
+
+    private void GoToCreate() => NavigationManager.NavigateTo("/customer/add");
+    private void GoToView(int id) => NavigationManager.NavigateTo($"/customer/view/{id}");
+    private void GoToEdit(int id) => NavigationManager.NavigateTo($"/customer/edit/{id}");
+
+    private async Task ToggleActive(int id)
+    {
+        try
+        {
+            var response = await Http.PostAsync($"api/Customer/{id}/toggle-active", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadCustomers();
+            }
+            else
+            {
+                errorMessage = $"Failed to toggle customer status: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error toggling customer: {ex.Message}";
+        }
+    }
+
+    private void ConfirmDelete(int id)
+    {
+        customerToDelete = id;
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        customerToDelete = 0;
+        showDeleteConfirm = false;
+    }
+
+    private async Task DeleteCustomer()
+    {
+        showDeleteConfirm = false;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Customer/{customerToDelete}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                customers.RemoveAll(c => c.Id == customerToDelete);
+                FilterCustomers();
+                StateHasChanged();
+            }
+            else
+            {
+                errorMessage = $"Failed to delete customer: {response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting customer: {ex.Message}";
+        }
+        finally
+        {
+            customerToDelete = 0;
+        }
+    }
+
+    private void ExportToExcel()
+    {
+        // TODO: Implement Excel export
+        Console.WriteLine("Export to Excel - To be implemented");
+    }
+}

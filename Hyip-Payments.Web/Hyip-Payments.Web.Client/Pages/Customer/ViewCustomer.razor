@@ -1,0 +1,540 @@
+@page "/customer/view/{Id:int}"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>View Customer - HYIP Payments</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="bi bi-person-badge text-info"></i> Customer Details</h3>
+        <div class="d-flex gap-2">
+            @if (customer != null)
+            {
+                <ActionButton Action="Edit" OnClick="GoToEdit">
+                    Edit Customer
+                </ActionButton>
+            }
+            <ActionButton Action="Back" OnClick="GoBack">
+                Back to List
+            </ActionButton>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading customer details...</p>
+        </div>
+    }
+    else if (customer == null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i> Customer not found.
+        </div>
+        <ActionButton Action="Back" OnClick="GoBack">
+            Back to List
+        </ActionButton>
+    }
+    else
+    {
+        @if (errorMessage != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
+                <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-badge"></i> @customer.CustomerNumber
+                            </h5>
+                            <StatusBadge Status="@(customer.IsActive ? "Active" : "Inactive")" ShowIcon="true" />
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-building"></i> Company Information
+                                </h6>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">Company Name:</label>
+                                    <p class="fw-bold mb-0">@customer.CompanyName</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">Contact Person:</label>
+                                    <p class="mb-0">@customer.ContactName</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">Email:</label>
+                                    <p class="mb-0">
+                                        <a href="mailto:@customer.Email">
+                                            <i class="bi bi-envelope"></i> @customer.Email
+                                        </a>
+                                    </p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">Phone:</label>
+                                    <p class="mb-0">
+                                        <a href="tel:@customer.Phone">
+                                            <i class="bi bi-telephone"></i> @customer.Phone
+                                        </a>
+                                    </p>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(customer.TaxId))
+                                {
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Tax ID:</label>
+                                        <p class="mb-0"><i class="bi bi-hash"></i> @customer.TaxId</p>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-geo-alt"></i> Address Information
+                                </h6>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">Address:</label>
+                                    <p class="mb-0">@customer.Address</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">City:</label>
+                                    <p class="mb-0">@customer.City</p>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="text-muted small">State:</label>
+                                            <p class="mb-0">@customer.State</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="text-muted small">Postal Code:</label>
+                                            <p class="mb-0">@customer.PostalCode</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if (customer.Country != null)
+                                {
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Country:</label>
+                                        <p class="mb-0">
+                                            <i class="bi bi-globe"></i> @customer.Country.Name
+                                        </p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-credit-card"></i> Payment Terms
+                                </h6>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">Payment Terms:</label>
+                                    <p class="mb-0">
+                                        <span class="badge bg-info">Net @customer.PaymentTermsDays Days</span>
+                                    </p>
+                                </div>
+
+                                @if (customer.CreditLimit.HasValue)
+                                {
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Credit Limit:</label>
+                                        <p class="mb-0 fw-bold text-primary">
+                                            $@customer.CreditLimit.Value.ToString("N2")
+                                        </p>
+                                    </div>
+                                }
+
+                                @if (customer.DiscountPercentage > 0)
+                                {
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Discount:</label>
+                                        <p class="mb-0 fw-bold text-success">
+                                            @((customer.DiscountPercentage * 100).ToString("N2"))%
+                                        </p>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-clock-history"></i> Audit Information
+                                </h6>
+
+                                <div class="mb-3">
+                                    <label class="text-muted small">Created:</label>
+                                    <p class="mb-0">@customer.CreatedAt.ToString("MMMM dd, yyyy HH:mm")</p>
+                                </div>
+
+                                @if (customer.UpdatedAt.HasValue)
+                                {
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Last Updated:</label>
+                                        <p class="mb-0">@customer.UpdatedAt.Value.ToString("MMMM dd, yyyy HH:mm")</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(customer.Notes))
+                        {
+                            <hr />
+                            <div class="mb-3">
+                                <h6 class="text-primary mb-2">
+                                    <i class="bi bi-file-text"></i> Notes
+                                </h6>
+                                <div class="alert alert-secondary">
+                                    @customer.Notes
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i> Statistics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (loadingStats)
+                        {
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                                <p class="mt-2 small">Loading stats...</p>
+                            </div>
+                        }
+                        else if (stats != null)
+                        {
+                            <div class="mb-3">
+                                <label class="text-muted small">Current Balance:</label>
+                                <h4 class="mb-0 @(stats.OutstandingBalance > 0 ? "text-danger" : "text-success")">
+                                    $@stats.OutstandingBalance.ToString("N2")
+                                </h4>
+                            </div>
+
+                            <hr />
+
+                            <div class="mb-2">
+                                <label class="text-muted small">Total Invoices:</label>
+                                <p class="mb-0 fw-bold">@stats.TotalInvoices</p>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="text-muted small">Paid Invoices:</label>
+                                <p class="mb-0 text-success">
+                                    <i class="bi bi-check-circle-fill"></i> @stats.PaidInvoices
+                                </p>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="text-muted small">Pending Invoices:</label>
+                                <p class="mb-0 text-warning">
+                                    <i class="bi bi-clock"></i> @stats.PendingInvoices
+                                </p>
+                            </div>
+
+                            @if (stats.OverdueInvoices > 0)
+                            {
+                                <div class="mb-2">
+                                    <label class="text-muted small">Overdue Invoices:</label>
+                                    <p class="mb-0 text-danger">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> @stats.OverdueInvoices
+                                    </p>
+                                </div>
+                            }
+
+                            <hr />
+
+                            <div class="mb-2">
+                                <label class="text-muted small">Total Revenue:</label>
+                                <p class="mb-0 fw-bold text-success">
+                                    $@stats.TotalRevenue.ToString("N2")
+                                </p>
+                            </div>
+
+                            @if (stats.AverageInvoiceAmount > 0)
+                            {
+                                <div class="mb-2">
+                                    <label class="text-muted small">Average Invoice:</label>
+                                    <p class="mb-0">$@stats.AverageInvoiceAmount.ToString("N2")</p>
+                                </div>
+                            }
+
+                            @if (stats.LastInvoiceDate.HasValue)
+                            {
+                                <hr />
+                                <div class="mb-2">
+                                    <label class="text-muted small">Last Invoice:</label>
+                                    <p class="mb-0">@stats.LastInvoiceDate.Value.ToString("MMM dd, yyyy")</p>
+                                </div>
+                            }
+
+                            @if (stats.LastPaymentDate.HasValue)
+                            {
+                                <div class="mb-2">
+                                    <label class="text-muted small">Last Payment:</label>
+                                    <p class="mb-0">@stats.LastPaymentDate.Value.ToString("MMM dd, yyyy")</p>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="bi bi-lightning"></i> Quick Actions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <ActionButton Action="Add" Icon="bi-receipt" OnClick="CreateInvoice">
+                                Create Invoice
+                            </ActionButton>
+                            <ActionButton Action="View" Icon="bi-list" Color="Info" OnClick="ViewInvoices">
+                                View Invoices (@(customer?.Invoices.Count ?? 0))
+                            </ActionButton>
+                            @if (customer?.CurrentBalance > 0)
+                            {
+                                <ActionButton Action="Add" Icon="bi-cash-coin" Color="Success" OnClick="RecordPayment">
+                                    Record Payment
+                                </ActionButton>
+                            }
+                            <ActionButton Action="Refresh" Icon="bi-arrow-repeat" OnClick="RefreshBalance">
+                                Refresh Balance
+                            </ActionButton>
+                            @if (customer?.IsActive == true)
+                            {
+                                <ActionButton Action="Deactivate" OnClick="ToggleActive">
+                                    Deactivate Customer
+                                </ActionButton>
+                            }
+                            else
+                            {
+                                <ActionButton Action="Activate" OnClick="ToggleActive">
+                                    Activate Customer
+                                </ActionButton>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (customerInvoices.Any())
+        {
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-receipt"></i> Customer Invoices
+                        </h5>
+                        <ActionButton Action="Add" Icon="bi-plus-circle" Size="sm" OnClick="CreateInvoice">
+                            New Invoice
+                        </ActionButton>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice Number</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var invoice in customerInvoices.OrderByDescending(i => i.InvoiceDate).Take(10))
+                                {
+                                    <tr>
+                                        <td><strong>@invoice.InvoiceNumber</strong></td>
+                                        <td>@invoice.InvoiceDate.ToString("MMM dd, yyyy")</td>
+                                        <td>@(string.IsNullOrEmpty(invoice.Description) ? "-" : invoice.Description)</td>
+                                        <td class="text-end">
+                                            <strong>$@invoice.TotalAmount.ToString("N2")</strong>
+                                        </td>
+                                        <td>
+                                            <StatusBadge Status="@invoice.StatusInvoice" ShowIcon="true" Size="sm" />
+                                        </td>
+                                        <td class="text-center">
+                                            <ActionButton Action="View" 
+                                                        Size="sm" 
+                                                        OnClick="@(() => GoToInvoice(invoice.Id))">
+                                            </ActionButton>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (customerInvoices.Count > 10)
+                    {
+                        <div class="card-footer bg-light text-center">
+                            <ActionButton Action="View" Icon="bi-list" Size="sm" OnClick="ViewInvoices">
+                                View All @customerInvoices.Count Invoices
+                            </ActionButton>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mt-4">
+                <i class="bi bi-info-circle-fill"></i> No invoices found for this customer.
+                <ActionButton Action="Add" Icon="bi-plus-circle" Size="sm" OnClick="CreateInvoice">
+                    Create First Invoice
+                </ActionButton>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private CustomerModel? customer;
+    private List<InvoiceModel> customerInvoices = new();
+    private CustomerStatsDto? stats;
+    private bool isLoading = true;
+    private bool loadingStats = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomer();
+        await LoadCustomerStats();
+    }
+
+    private async Task LoadCustomer()
+    {
+        isLoading = true;
+
+        try
+        {
+            customer = await Http.GetFromJsonAsync<CustomerModel>($"api/Customer/{Id}?includeInvoices=true");
+            
+            if (customer != null)
+            {
+                customerInvoices = customer.Invoices.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading customer: {ex.Message}";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadCustomerStats()
+    {
+        loadingStats = true;
+
+        try
+        {
+            stats = await Http.GetFromJsonAsync<CustomerStatsDto>($"api/Customer/{Id}/stats");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading stats: {ex.Message}");
+        }
+        finally
+        {
+            loadingStats = false;
+        }
+    }
+
+    private async Task RefreshBalance()
+    {
+        try
+        {
+            var response = await Http.PostAsync($"api/Customer/{Id}/update-balance", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadCustomer();
+                await LoadCustomerStats();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error refreshing balance: {ex.Message}";
+        }
+    }
+
+    private async Task ToggleActive()
+    {
+        try
+        {
+            var response = await Http.PostAsync($"api/Customer/{Id}/toggle-active", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadCustomer();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error toggling customer status: {ex.Message}";
+        }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo("/customer/list");
+    private void GoToEdit() => NavigationManager.NavigateTo($"/customer/edit/{Id}");
+    private void GoToInvoice(int invoiceId) => NavigationManager.NavigateTo($"/invoice/view/{invoiceId}");
+    private void CreateInvoice() => NavigationManager.NavigateTo($"/invoice/add?customerId={Id}");
+    private void ViewInvoices() => NavigationManager.NavigateTo($"/invoice/list?customerId={Id}");
+    private void RecordPayment() => NavigationManager.NavigateTo($"/payment/add?customerId={Id}");
+
+    public class CustomerStatsDto
+    {
+        public int TotalInvoices { get; set; }
+        public int PaidInvoices { get; set; }
+        public int PendingInvoices { get; set; }
+        public int OverdueInvoices { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public decimal OutstandingBalance { get; set; }
+        public decimal AverageInvoiceAmount { get; set; }
+        public DateTime? LastInvoiceDate { get; set; }
+        public DateTime? LastPaymentDate { get; set; }
+    }
+}

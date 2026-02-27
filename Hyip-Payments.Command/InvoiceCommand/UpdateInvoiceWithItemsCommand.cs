@@ -14,6 +14,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
+        public int? CustomerId { get; set; } // Link to customer
         public bool IsActive { get; set; }
     }
 
@@ -74,6 +75,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
                     invoice.InvoiceNumber = request.Invoice.InvoiceNumber;
                     invoice.InvoiceDate = request.Invoice.InvoiceDate;
                     invoice.Description = request.Invoice.Description;
+                    invoice.CustomerId = request.Invoice.CustomerId; // Update CustomerId
                     invoice.IsActive = request.Invoice.IsActive;
 
                     // 3. Remove all existing items (simpler than trying to match and update)

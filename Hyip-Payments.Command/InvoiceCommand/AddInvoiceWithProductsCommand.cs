@@ -14,6 +14,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
+        public int? CustomerId { get; set; } // Link to customer
         public bool IsActive { get; set; } = true;
         public string? CreatedByUserId { get; set; } // User who created this invoice
     }
@@ -78,6 +79,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
                         InvoiceDate = request.Invoice.InvoiceDate,
                         Description = request.Invoice.Description,
                         TotalAmount = request.Invoice.TotalAmount,
+                        CustomerId = request.Invoice.CustomerId, // Save CustomerId
                         IsActive = request.Invoice.IsActive,
                         CreatedByUserId = request.CreatedByUserId // Set the user who created this invoice
                     };

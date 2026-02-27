@@ -1,0 +1,428 @@
+@page "/reports/customer/statement"
+@using Hyip_Payments.Models
+@using Hyip_Payments.Models.Reports
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Customer Statement Report</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-earmark-text-fill text-primary"></i> Customer Statement Report</h2>
+        <button class="btn btn-outline-secondary" @onclick="@(() => Navigation.NavigateTo("/reports"))">
+            <i class="bi bi-arrow-left"></i> Back to Reports
+        </button>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Statement Parameters</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Customer Selection -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-person-badge text-primary"></i> Customer
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select @GetCustomerSelectClass()" @bind="selectedCustomerId">
+                        <option value="">-- Select Customer --</option>
+                        @foreach (var customer in customers)
+                        {
+                            <option value="@customer.Id">
+                                @customer.CustomerNumber - @customer.CompanyName
+                            </option>
+                        }
+                    </select>
+                    @if (!selectedCustomerId.HasValue || selectedCustomerId == 0)
+                    {
+                        <div class="form-text text-danger">Please select a customer</div>
+                    }
+                </div>
+
+                <!-- Period Type -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-calendar-range text-info"></i> Period
+                    </label>
+                    <select class="form-select" @bind="periodType" @bind:after="OnPeriodTypeChanged">
+                        <option value="custom">Custom Range</option>
+                        <option value="thisMonth">This Month</option>
+                        <option value="lastMonth">Last Month</option>
+                        <option value="thisQuarter">This Quarter</option>
+                        <option value="lastQuarter">Last Quarter</option>
+                        <option value="thisYear">This Year (YTD)</option>
+                        <option value="lastYear">Last Year</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+
+                <!-- Start Date -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Start Date</label>
+                    <input type="date" class="form-control" @bind="startDate" max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <!-- End Date -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">End Date</label>
+                    <input type="date" class="form-control" @bind="endDate" max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <!-- Include Draft -->
+                <div class="col-md-3">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="includeDraft" @bind="includeDraft" />
+                        <label class="form-check-label" for="includeDraft">
+                            Include Draft Invoices
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Include Cancelled -->
+                <div class="col-md-3">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="includeCancelled" @bind="includeCancelled" />
+                        <label class="form-check-label" for="includeCancelled">
+                            Include Cancelled Invoices
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-primary btn-lg" @onclick="GenerateStatement" disabled="@(isLoading || !IsValidSelection())">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    <i class="bi bi-file-earmark-text"></i> Generate Statement
+                </button>
+            </div>
+
+            @if (errorMessage != null)
+            {
+                <div class="alert alert-danger mt-3">
+                    <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Statement Display -->
+    @if (statement != null)
+    {
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-check"></i> Customer Statement</h5>
+                    <div>
+                        <button class="btn btn-light btn-sm me-2" @onclick="PrintStatement">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                        <button class="btn btn-light btn-sm" @onclick="ExportToPDF">
+                            <i class="bi bi-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" id="statementContent">
+                <!-- Statement Header -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h4 class="text-primary">CUSTOMER STATEMENT</h4>
+                        <p class="mb-1"><strong>Statement Date:</strong> @statement.StatementDate.ToString("MMMM dd, yyyy")</p>
+                        <p class="mb-0"><strong>Period:</strong> @statement.PeriodStart.ToString("MMM dd, yyyy") - @statement.PeriodEnd.ToString("MMM dd, yyyy")</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <h5 class="text-primary">@statement.CompanyName</h5>
+                        <p class="mb-1"><strong>Customer #:</strong> @statement.CustomerNumber</p>
+                        <p class="mb-1"><strong>Contact:</strong> @statement.ContactName</p>
+                        <p class="mb-1"><strong>Email:</strong> @statement.Email</p>
+                        <p class="mb-1"><strong>Phone:</strong> @statement.Phone</p>
+                        @if (!string.IsNullOrEmpty(statement.Address))
+                        {
+                            <p class="mb-0"><strong>Address:</strong> @statement.Address</p>
+                        }
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Account Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Opening Balance</h6>
+                                <h4 class="mb-0">$@statement.OpeningBalance.ToString("N2")</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Total Invoiced</h6>
+                                <h4 class="mb-0 text-danger">+$@statement.TotalInvoiced.ToString("N2")</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Total Paid</h6>
+                                <h4 class="mb-0 text-success">-$@statement.TotalPaid.ToString("N2")</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card @(statement.ClosingBalance > 0 ? "bg-danger" : "bg-success") bg-opacity-10">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Closing Balance</h6>
+                                <h4 class="mb-0 @(statement.ClosingBalance > 0 ? "text-danger" : "text-success")">
+                                    $@statement.ClosingBalance.ToString("N2")
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transactions Table -->
+                <h5 class="mb-3"><i class="bi bi-card-list"></i> Transaction History</h5>
+                
+                @if (!statement.Transactions.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No transactions found for this period.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Reference #</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Charges</th>
+                                    <th class="text-end">Payments</th>
+                                    <th class="text-end">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var transaction in statement.Transactions)
+                                {
+                                    <tr>
+                                        <td class="text-nowrap">@transaction.Date.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @if (transaction.Type == "Invoice")
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-file-earmark-text"></i> Invoice
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-cash-coin"></i> Payment
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="font-monospace">@transaction.ReferenceNumber</td>
+                                        <td>@transaction.Description</td>
+                                        <td class="text-end text-danger">
+                                            @if (transaction.InvoiceAmount.HasValue)
+                                            {
+                                                <text>$@transaction.InvoiceAmount.Value.ToString("N2")</text>
+                                            }
+                                            else
+                                            {
+                                                <text>-</text>
+                                            }
+                                        </td>
+                                        <td class="text-end text-success">
+                                            @if (transaction.PaymentAmount.HasValue)
+                                            {
+                                                <text>$@transaction.PaymentAmount.Value.ToString("N2")</text>
+                                            }
+                                            else
+                                            {
+                                                <text>-</text>
+                                            }
+                                        </td>
+                                        <td class="text-end fw-bold @(transaction.RunningBalance > 0 ? "text-danger" : "text-success")">
+                                            $@transaction.RunningBalance.ToString("N2")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr class="fw-bold">
+                                    <td colspan="4" class="text-end">BALANCE DUE:</td>
+                                    <td class="text-end text-danger">$@statement.TotalInvoiced.ToString("N2")</td>
+                                    <td class="text-end text-success">$@statement.TotalPaid.ToString("N2")</td>
+                                    <td class="text-end @(statement.ClosingBalance > 0 ? "text-danger" : "text-success")">
+                                        $@statement.ClosingBalance.ToString("N2")
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+
+                <!-- Statement Footer -->
+                <div class="mt-4 p-3 bg-light rounded">
+                    <p class="mb-1 fw-bold">Payment Terms:</p>
+                    <p class="mb-0 text-muted">Please remit payment within 30 days of invoice date. Thank you for your business!</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CustomerModel> customers = new();
+    private int? selectedCustomerId;
+    private DateTime startDate = DateTime.Now.AddMonths(-1).Date;
+    private DateTime endDate = DateTime.Now.Date;
+    private string periodType = "lastMonth";
+    private bool includeDraft = false;
+    private bool includeCancelled = false;
+    private bool isLoading = false;
+    private string? errorMessage;
+    private CustomerStatementReportModel? statement;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+        SetPeriodDates();
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            customers = await Http.GetFromJsonAsync<List<CustomerModel>>("api/Customer") ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading customers: {ex.Message}";
+        }
+    }
+
+    private void OnPeriodTypeChanged()
+    {
+        SetPeriodDates();
+    }
+
+    private void SetPeriodDates()
+    {
+        var now = DateTime.Now;
+        switch (periodType)
+        {
+            case "thisMonth":
+                startDate = new DateTime(now.Year, now.Month, 1);
+                endDate = now.Date;
+                break;
+            case "lastMonth":
+                var lastMonth = now.AddMonths(-1);
+                startDate = new DateTime(lastMonth.Year, lastMonth.Month, 1);
+                endDate = new DateTime(lastMonth.Year, lastMonth.Month, DateTime.DaysInMonth(lastMonth.Year, lastMonth.Month));
+                break;
+            case "thisQuarter":
+                var quarter = (now.Month - 1) / 3;
+                startDate = new DateTime(now.Year, quarter * 3 + 1, 1);
+                endDate = now.Date;
+                break;
+            case "lastQuarter":
+                var lastQuarter = ((now.Month - 1) / 3) - 1;
+                if (lastQuarter < 0)
+                {
+                    lastQuarter = 3;
+                    startDate = new DateTime(now.Year - 1, lastQuarter * 3 + 1, 1);
+                    endDate = new DateTime(now.Year - 1, 12, 31);
+                }
+                else
+                {
+                    startDate = new DateTime(now.Year, lastQuarter * 3 + 1, 1);
+                    var endMonth = lastQuarter * 3 + 3;
+                    endDate = new DateTime(now.Year, endMonth, DateTime.DaysInMonth(now.Year, endMonth));
+                }
+                break;
+            case "thisYear":
+                startDate = new DateTime(now.Year, 1, 1);
+                endDate = now.Date;
+                break;
+            case "lastYear":
+                startDate = new DateTime(now.Year - 1, 1, 1);
+                endDate = new DateTime(now.Year - 1, 12, 31);
+                break;
+            case "all":
+                startDate = new DateTime(2020, 1, 1);
+                endDate = now.Date;
+                break;
+        }
+    }
+
+    private string GetCustomerSelectClass()
+    {
+        return (!selectedCustomerId.HasValue || selectedCustomerId == 0) ? "form-select is-invalid" : "form-select";
+    }
+
+    private bool IsValidSelection()
+    {
+        return selectedCustomerId.HasValue && selectedCustomerId > 0 && startDate <= endDate;
+    }
+
+    private async Task GenerateStatement()
+    {
+        if (!IsValidSelection())
+        {
+            errorMessage = "Please select a customer and valid date range";
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+        statement = null;
+
+        try
+        {
+            var url = $"api/CustomerReport/customer-statement?" +
+                      $"customerId={selectedCustomerId}&" +
+                      $"startDate={startDate:yyyy-MM-dd}&" +
+                      $"endDate={endDate:yyyy-MM-dd}&" +
+                      $"includeDraft={includeDraft}&" +
+                      $"includeCancelled={includeCancelled}";
+
+            var response = await Http.GetFromJsonAsync<CustomerStatementReportModel>(url);
+            statement = response;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error generating statement: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void PrintStatement()
+    {
+        // Trigger browser print dialog
+        // In real implementation, you would use JSInterop
+        errorMessage = "Print functionality requires JSInterop implementation";
+    }
+
+    private void ExportToPDF()
+    {
+        // Export to PDF
+        // In real implementation, you would call a backend service to generate PDF
+        errorMessage = "PDF export functionality coming soon";
+    }
+}

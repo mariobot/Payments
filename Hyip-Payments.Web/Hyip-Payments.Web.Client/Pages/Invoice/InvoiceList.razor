@@ -62,6 +62,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Invoice Number</th>
+                                <th>Customer</th>
                                 <th>Invoice Date</th>
                                 <th>Description</th>
                                 <th class="text-end">Total Amount</th>
@@ -75,6 +76,19 @@
                             {
                                 <tr>
                                     <td><strong>@invoice.InvoiceNumber</strong></td>
+                                    <td>
+                                        @if (invoice.Customer != null)
+                                        {
+                                            <div>
+                                                <strong>@invoice.Customer.CompanyName</strong>
+                                                <div class="small text-muted">@invoice.Customer.CustomerNumber</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
                                     <td>@invoice.InvoiceDate.ToString("MMM dd, yyyy")</td>
                                     <td>@(string.IsNullOrEmpty(invoice.Description) ? "-" : invoice.Description)</td>
                                     <td class="text-end"><strong>$@invoice.TotalAmount.ToString("F2")</strong></td>

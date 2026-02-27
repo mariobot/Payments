@@ -49,6 +49,37 @@
                             <div class="col-md-6">
                                 <p><strong>Invoice Number:</strong> @invoice.InvoiceNumber</p>
                                 <p><strong>Invoice Date:</strong> @invoice.InvoiceDate.ToString("MMMM dd, yyyy")</p>
+
+                                <!-- Customer Information -->
+                                @if (invoice.Customer != null)
+                                {
+                                    <hr />
+                                    <div class="mb-3">
+                                        <strong><i class="bi bi-person-badge text-primary"></i> Customer:</strong>
+                                        <div class="mt-2 p-3 bg-light rounded">
+                                            <div class="mb-2">
+                                                <strong>@invoice.Customer.CustomerNumber - @invoice.Customer.CompanyName</strong>
+                                            </div>
+                                            <div class="small">
+                                                <div><i class="bi bi-person"></i> @invoice.Customer.ContactName</div>
+                                                <div><i class="bi bi-envelope"></i> <a href="mailto:@invoice.Customer.Email">@invoice.Customer.Email</a></div>
+                                                <div><i class="bi bi-telephone"></i> <a href="tel:@invoice.Customer.Phone">@invoice.Customer.Phone</a></div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <a href="/customer/view/@invoice.Customer.Id" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View Customer Details
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <hr />
+                                    <div class="alert alert-warning small">
+                                        <i class="bi bi-exclamation-triangle"></i> No customer assigned to this invoice.
+                                    </div>
+                                }
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Total Amount:</strong> <span class="fs-4 text-primary fw-bold">$@invoice.TotalAmount.ToString("F2")</span></p>
@@ -229,7 +260,18 @@
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
         public bool IsActive { get; set; }
+        public CustomerInfo? Customer { get; set; }
         public List<InvoiceItemResponse> Items { get; set; } = new();
+    }
+
+    public class CustomerInfo
+    {
+        public int Id { get; set; }
+        public string CustomerNumber { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public string ContactName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
     }
 
     public class InvoiceItemResponse

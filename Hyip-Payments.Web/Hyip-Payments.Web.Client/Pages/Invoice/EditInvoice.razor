@@ -47,6 +47,36 @@
                                     <h5 class="mb-0"><i class="bi bi-file-text"></i> Invoice Details</h5>
                                 </div>
                                 <div class="card-body">
+                                    <!-- Customer Selector -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-person-badge text-primary"></i> Customer
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select @GetCustomerSelectClass()" 
+                                                @bind="invoice.CustomerId">
+                                            <option value="">-- Select Customer --</option>
+                                            @foreach (var customer in customers)
+                                            {
+                                                <option value="@customer.Id">
+                                                    @customer.CustomerNumber - @customer.CompanyName (@customer.ContactName)
+                                                </option>
+                                            }
+                                        </select>
+                                        @if (!invoice.CustomerId.HasValue || invoice.CustomerId == 0)
+                                        {
+                                            <div class="form-text text-danger">
+                                                <i class="bi bi-exclamation-circle"></i> Please select a customer for this invoice
+                                            </div>
+                                        }
+                                        <div class="form-text">
+                                            Don't see the customer? 
+                                            <a href="/customer/add" target="_blank" class="text-decoration-none">
+                                                <i class="bi bi-plus-circle"></i> Create new customer
+                                            </a>
+                                        </div>
+                                    </div>
+
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold">Invoice Number <span class="text-danger">*</span></label>
@@ -174,6 +204,7 @@
         TotalAmount = 0
     };
 
+    private List<CustomerModel> customers = new();
     private List<InvoiceItemDto> invoiceItems = new();
     private bool isLoading = true;
     private bool isSubmitting = false;
@@ -184,7 +215,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadInvoice();
+        await Task.WhenAll(LoadInvoice(), LoadCustomers());
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            customers = await Http.GetFromJsonAsync<List<CustomerModel>>("api/Customer?isActive=true") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading customers: {ex.Message}");
+        }
+    }
+
+    private string GetCustomerSelectClass()
+    {
+        return (!invoice.CustomerId.HasValue || invoice.CustomerId == 0) ? "form-select is-invalid" : "form-select";
     }
 
     private async Task LoadInvoice()
@@ -211,6 +259,7 @@
                 InvoiceDate = invoiceData.InvoiceDate,
                 Description = invoiceData.Description,
                 TotalAmount = invoiceData.TotalAmount,
+                CustomerId = invoiceData.CustomerId,
                 IsActive = invoiceData.IsActive
             };
 
@@ -269,6 +318,12 @@
 
     private async Task HandleValidSubmit()
     {
+        if (!invoice.CustomerId.HasValue || invoice.CustomerId == 0)
+        {
+            errorMessage = "Please select a customer for this invoice.";
+            return;
+        }
+
         if (!invoiceItems.Any())
         {
             errorMessage = "Please add at least one item to the invoice.";
@@ -291,6 +346,7 @@
                     InvoiceDate = invoice.InvoiceDate,
                     Description = invoice.Description,
                     TotalAmount = CalculateTotal(),
+                    CustomerId = invoice.CustomerId,
                     IsActive = invoice.IsActive
                 },
                 Items = invoiceItems.Select(p => new
@@ -343,6 +399,7 @@
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
+        public int? CustomerId { get; set; }
         public bool IsActive { get; set; }
         public List<InvoiceItemResponse> Items { get; set; } = new();
     }

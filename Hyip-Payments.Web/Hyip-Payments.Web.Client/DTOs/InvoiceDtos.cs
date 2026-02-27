@@ -23,6 +23,7 @@ namespace Hyip_Payments.Web.Client.DTOs
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
+        public int? CustomerId { get; set; }
         public bool IsActive { get; set; } = true;
     }
 

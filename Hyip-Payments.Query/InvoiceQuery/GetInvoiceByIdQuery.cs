@@ -31,6 +31,8 @@ namespace Hyip_Payments.Query.InvoiceQuery
             // Don't include Items to avoid circular reference issues
             // Use the /with-items endpoint to get invoice with items
             return await _context.Invoices
+                .Include(i => i.Customer) // Include customer data
+                .Include(i => i.Items) // Include items for viewing
                 .AsNoTracking()
                 .FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
         }

@@ -28,8 +28,23 @@ namespace Hyip_Payments.Query.InvoiceQuery
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
+        public int? CustomerId { get; set; }
         public bool IsActive { get; set; }
+        public CustomerInfo? Customer { get; set; }
         public List<InvoiceItemResponse> Items { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Customer information DTO
+    /// </summary>
+    public class CustomerInfo
+    {
+        public int Id { get; set; }
+        public string CustomerNumber { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public string ContactName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -58,6 +73,7 @@ namespace Hyip_Payments.Query.InvoiceQuery
         {
             var invoice = await _context.Invoices
                 .Include(i => i.Items) // Use 'Items' instead of 'InvoiceItems'
+                .Include(i => i.Customer) // Include customer data
                 .FirstOrDefaultAsync(i => i.Id == request.InvoiceId, cancellationToken);
 
             if (invoice == null)
@@ -70,7 +86,17 @@ namespace Hyip_Payments.Query.InvoiceQuery
                 InvoiceDate = invoice.InvoiceDate,
                 Description = invoice.Description,
                 TotalAmount = invoice.TotalAmount,
+                CustomerId = invoice.CustomerId,
                 IsActive = invoice.IsActive,
+                Customer = invoice.Customer != null ? new CustomerInfo
+                {
+                    Id = invoice.Customer.Id,
+                    CustomerNumber = invoice.Customer.CustomerNumber,
+                    CompanyName = invoice.Customer.CompanyName,
+                    ContactName = invoice.Customer.ContactName,
+                    Email = invoice.Customer.Email,
+                    Phone = invoice.Customer.Phone
+                } : null,
                 Items = invoice.Items.Select(item => new InvoiceItemResponse
                 {
                     Id = item.Id,

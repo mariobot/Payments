@@ -20,6 +20,7 @@ namespace Hyip_Payments.Context
         public DbSet<CategoryModel> Categories { get; set; }
         public DbSet<BrandModel> Brands { get; set; }
         public DbSet<ProductModel> Products { get; set; }
+        public DbSet<CustomerModel> Customers { get; set; }
         public DbSet<InvoiceModel> Invoices { get; set; }
         public DbSet<InvoiceItemModel> InvoiceItems { get; set; }
         public DbSet<WalletModel> Wallets { get; set; }
@@ -43,6 +44,74 @@ namespace Hyip_Payments.Context
             modelBuilder.Entity<CustomReportModel>()
                 .Property(r => r.ConfigurationJson)
                 .HasColumnType("nvarchar(max)");
+
+            // Configure Customer entity
+            modelBuilder.Entity<CustomerModel>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // CustomerNumber must be unique
+                entity.HasIndex(e => e.CustomerNumber)
+                    .IsUnique();
+
+                entity.Property(e => e.CustomerNumber)
+                    .IsRequired()
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.CompanyName)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(e => e.ContactName)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Email)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Phone)
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.Address)
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.City)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.State)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.PostalCode)
+                    .HasMaxLength(20);
+
+                entity.Property(e => e.TaxId)
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.CurrentBalance)
+                    .HasPrecision(18, 2);
+
+                entity.Property(e => e.CreditLimit)
+                    .HasPrecision(18, 2);
+
+                entity.Property(e => e.DiscountPercentage)
+                    .HasPrecision(5, 4); // Allows up to 99.9999%
+
+                entity.Property(e => e.Notes)
+                    .HasMaxLength(1000);
+
+                // Relationship with Country
+                entity.HasOne(e => e.Country)
+                    .WithMany()
+                    .HasForeignKey(e => e.CountryId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // Relationship with Invoices
+                entity.HasMany(e => e.Invoices)
+                    .WithOne(e => e.Customer)
+                    .HasForeignKey(e => e.CustomerId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
 
             //this.Database.Migrate(); // Ensure migrations are applied at startup - use with caution in production
         }

@@ -38,14 +38,18 @@ public class GetCustomerStatementQueryHandler : IRequestHandler<GetCustomerState
             throw new InvalidOperationException($"Customer with ID {request.CustomerId} not found");
         }
 
+        Console.WriteLine($"[Statement] Customer found: {customer.CompanyName} (ID: {customer.Id})");
+
         // 2. Calculate opening balance (all unpaid invoices before period start)
         var openingBalance = await _context.Invoices
             .AsNoTracking()
             .Where(i => i.CustomerId == request.CustomerId)
             .Where(i => i.InvoiceDate < request.StartDate)
-            .Where(i => i.StatusInvoice != "Paid" && i.StatusInvoice != "Cancelled")
+            .Where(i => i.StatusInvoice != "Cancelled")
             .Where(i => i.IsActive)
             .SumAsync(i => i.TotalAmount, cancellationToken);
+
+        Console.WriteLine($"[Statement] Opening balance: {openingBalance}");
 
         // 3. Get all invoices in period
         var invoicesQuery = _context.Invoices
@@ -68,14 +72,19 @@ public class GetCustomerStatementQueryHandler : IRequestHandler<GetCustomerState
             .OrderBy(i => i.InvoiceDate)
             .ToListAsync(cancellationToken);
 
-        // 4. Get all payments in period
+        Console.WriteLine($"[Statement] Found {invoices.Count} invoices in period");
+
+        // 4. Get all payments in period (payments linked to invoices for this customer)
         var payments = await _context.PaymentTransactions
             .AsNoTracking()
-            .Where(p => p.Invoice != null && p.Invoice.CustomerId == request.CustomerId)
+            .Where(p => p.InvoiceId != null) // Payment must be linked to an invoice
+            .Where(p => p.Invoice!.CustomerId == request.CustomerId) // Invoice belongs to this customer
             .Where(p => p.TransactionDate >= request.StartDate && p.TransactionDate <= request.EndDate)
             .Include(p => p.Invoice)
             .OrderBy(p => p.TransactionDate)
             .ToListAsync(cancellationToken);
+
+        Console.WriteLine($"[Statement] Found {payments.Count} payments in period");
 
         // 5. Combine and sort all transactions
         var transactions = new List<CustomerStatementTransactionModel>();

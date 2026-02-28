@@ -37,6 +37,9 @@ public class CustomerReportController : ControllerBase
     {
         try
         {
+            // Log the request parameters for debugging
+            Console.WriteLine($"Customer Statement Request: CustomerId={customerId}, StartDate={startDate:yyyy-MM-dd}, EndDate={endDate:yyyy-MM-dd}");
+
             var query = new GetCustomerStatementQuery
             {
                 CustomerId = customerId,
@@ -47,6 +50,10 @@ public class CustomerReportController : ControllerBase
             };
 
             var result = await _mediator.Send(query);
+
+            // Log the result summary
+            Console.WriteLine($"Statement Generated: Transactions={result.Transactions.Count}, OpeningBalance={result.OpeningBalance}, ClosingBalance={result.ClosingBalance}");
+
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -55,6 +62,7 @@ public class CustomerReportController : ControllerBase
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error generating statement: {ex.Message}");
             return StatusCode(500, new { message = "Error generating customer statement", error = ex.Message });
         }
     }

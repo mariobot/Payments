@@ -1,6 +1,5 @@
 using Hyip_Payments.Context;
 using Hyip_Payments.Models;
-using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +14,6 @@ namespace Hyip_Payments.Command.InvoiceCommand
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
-        public int? CustomerId { get; set; } // Link to customer
         public bool IsActive { get; set; } = true;
         public string? CreatedByUserId { get; set; } // User who created this invoice
     }
@@ -55,17 +53,10 @@ namespace Hyip_Payments.Command.InvoiceCommand
     public class AddInvoiceWithProductsCommandHandler : IRequestHandler<AddInvoiceWithProductsCommand, InvoiceWithItemsDto>
     {
         private readonly PaymentsDbContext _context;
-        private readonly IMediator _mediator;
-        private readonly InvoiceNumberService _invoiceNumberService;
 
-        public AddInvoiceWithProductsCommandHandler(
-            PaymentsDbContext context, 
-            IMediator mediator,
-            InvoiceNumberService invoiceNumberService)
+        public AddInvoiceWithProductsCommandHandler(PaymentsDbContext context)
         {
             _context = context;
-            _mediator = mediator;
-            _invoiceNumberService = invoiceNumberService;
         }
 
         public async Task<InvoiceWithItemsDto> Handle(AddInvoiceWithProductsCommand request, CancellationToken cancellationToken)
@@ -80,21 +71,13 @@ namespace Hyip_Payments.Command.InvoiceCommand
 
                 try
                 {
-                    // 1. Generate invoice number if not provided or empty
-                    string invoiceNumber = request.Invoice.InvoiceNumber;
-                    if (string.IsNullOrWhiteSpace(invoiceNumber))
-                    {
-                        invoiceNumber = await _invoiceNumberService.GenerateNextInvoiceNumberAsync();
-                    }
-
-                    // 2. Create the invoice from DTO
+                    // 1. Create the invoice from DTO
                     var invoice = new InvoiceModel
                     {
-                        InvoiceNumber = invoiceNumber,
+                        InvoiceNumber = request.Invoice.InvoiceNumber,
                         InvoiceDate = request.Invoice.InvoiceDate,
                         Description = request.Invoice.Description,
                         TotalAmount = request.Invoice.TotalAmount,
-                        CustomerId = request.Invoice.CustomerId, // Save CustomerId
                         IsActive = request.Invoice.IsActive,
                         CreatedByUserId = request.CreatedByUserId // Set the user who created this invoice
                     };
@@ -102,7 +85,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
                     _context.Invoices.Add(invoice);
                     await _context.SaveChangesAsync(cancellationToken);
 
-                    // 3. Add invoice items
+                    // 2. Add invoice items
                     var invoiceItems = new List<InvoiceItemModel>();
                     decimal totalAmount = 0;
 
@@ -131,18 +114,12 @@ namespace Hyip_Payments.Command.InvoiceCommand
                         totalAmount += invoiceItem.Total;
                     }
 
-                    // 4. Update invoice total
+                    // 3. Update invoice total
                     invoice.TotalAmount = totalAmount;
                     await _context.SaveChangesAsync(cancellationToken);
 
-                    // 5. Commit transaction
+                    // 4. Commit transaction
                     await transaction.CommitAsync(cancellationToken);
-
-                    // 6. Publish event to trigger customer balance update
-                    if (invoice.CustomerId.HasValue)
-                    {
-                        await _mediator.Publish(new InvoiceCreatedEvent(invoice.Id, invoice.CustomerId), cancellationToken);
-                    }
 
                     return new InvoiceWithItemsDto
                     {

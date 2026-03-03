@@ -14,7 +14,6 @@ namespace Hyip_Payments.Command.InvoiceCommand
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
-        public int? CustomerId { get; set; } // Link to customer
         public bool IsActive { get; set; }
     }
 
@@ -43,12 +42,10 @@ namespace Hyip_Payments.Command.InvoiceCommand
     public class UpdateInvoiceWithItemsCommandHandler : IRequestHandler<UpdateInvoiceWithItemsCommand, InvoiceWithItemsDto>
     {
         private readonly PaymentsDbContext _context;
-        private readonly IMediator _mediator;
 
-        public UpdateInvoiceWithItemsCommandHandler(PaymentsDbContext context, IMediator mediator)
+        public UpdateInvoiceWithItemsCommandHandler(PaymentsDbContext context)
         {
             _context = context;
-            _mediator = mediator;
         }
 
         public async Task<InvoiceWithItemsDto> Handle(UpdateInvoiceWithItemsCommand request, CancellationToken cancellationToken)
@@ -77,7 +74,6 @@ namespace Hyip_Payments.Command.InvoiceCommand
                     invoice.InvoiceNumber = request.Invoice.InvoiceNumber;
                     invoice.InvoiceDate = request.Invoice.InvoiceDate;
                     invoice.Description = request.Invoice.Description;
-                    invoice.CustomerId = request.Invoice.CustomerId; // Update CustomerId
                     invoice.IsActive = request.Invoice.IsActive;
 
                     // 3. Remove all existing items (simpler than trying to match and update)

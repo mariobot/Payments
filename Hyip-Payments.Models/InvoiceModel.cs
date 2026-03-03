@@ -12,7 +12,8 @@ namespace Hyip_Payments.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
+        // InvoiceNumber is auto-generated if not provided
+        // No [Required] attribute to allow empty submissions
         [MaxLength(32)]
         public string InvoiceNumber { get; set; } = string.Empty;
 

@@ -1,5 +1,5 @@
 // Download file helper for Blazor WebAssembly
-window.downloadFile = function (filename, contentType, base64Data) {
+window.downloadFile = function (base64Data, filename, contentType) {
     // Convert base64 to byte array
     const byteCharacters = atob(base64Data);
     const byteNumbers = new Array(byteCharacters.length);
@@ -7,7 +7,7 @@ window.downloadFile = function (filename, contentType, base64Data) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
-    
+
     // Create blob and download
     const blob = new Blob([byteArray], { type: contentType });
     const url = window.URL.createObjectURL(blob);

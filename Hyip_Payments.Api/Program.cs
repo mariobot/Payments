@@ -1,5 +1,6 @@
 using System.Text;
 using Hyip_Payments.Api.Extensions;
+using Hyip_Payments.Api.Services;
 using Hyip_Payments.Command.ProductCommand;
 using Hyip_Payments.Command.UserCommand;
 using Hyip_Payments.Context;
@@ -63,6 +64,9 @@ namespace Hyip_Payments.Api
 
             // Add TokenService
             builder.Services.AddScoped<TokenService>();
+
+            // Add Recurring Invoice Generation Background Service
+            builder.Services.AddHostedService<RecurringInvoiceGenerationService>();
 
             // Add DUAL Authentication: JWT Bearer (for API) + Cookie (for Blazor components)
             builder.Services.AddAuthentication(options =>

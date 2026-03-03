@@ -14,7 +14,6 @@ using Hyip_Payments.Query.InvoiceQuery;
 using Hyip_Payments.Query.MoneyQuery;
 using Hyip_Payments.Query.PaymentQuery;
 using Hyip_Payments.Query.WalletQuery;
-using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,12 +23,6 @@ namespace Hyip_Payments.Web.Extensions
     {
         public static IServiceCollection AddWebApplicationServices(this IServiceCollection services, string apiBaseAddress)
         {
-            // Register Customer Balance Service (required by event handlers)
-            services.AddScoped<ICustomerBalanceService, CustomerBalanceService>();
-
-            // Register Invoice Number Service (required by invoice creation)
-            services.AddScoped<InvoiceNumberService>();
-
             // Add MediatR
 
             // User Commands

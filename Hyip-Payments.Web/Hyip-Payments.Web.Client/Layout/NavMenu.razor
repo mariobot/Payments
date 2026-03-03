@@ -20,50 +20,26 @@
         </div>
 
         <!-- Invoice Section -->
-        <div class="mt-2 mb-1 fw-bold text-uppercase px-2" style="font-size: 0.7rem; color: var(--ms-blue-primary);">
-            <i class="bi bi-receipt"></i> Invoices
+        <div class="mt-2 mb-1 fw-bold text-uppercase text-secondary px-2" style="font-size: 0.7rem;">📄 Invoices</div>
+        
+        <div class="nav-item px-2">
+            <NavLink class="nav-link py-1 small" href="/invoice">
+                <span class="bi bi-list-nested-nav-menu"></span> View All Invoices
+            </NavLink>
         </div>
-
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/invoice/list">
-                <span class="bi bi-list-ul"></span> All Invoices
+                <span class="bi bi-list-nested-nav-menu"></span> View All
             </NavLink>
         </div>
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/invoice/add">
-                <span class="bi bi-plus-circle"></span> New Invoice
+                <span class="bi bi-plus-square-fill-nav-menu"></span> Create Invoice
             </NavLink>
         </div>
-
-        <!-- Customer Section -->
-        <div class="mt-2 mb-1 fw-bold text-uppercase px-2" style="font-size: 0.7rem; color: var(--ms-purple);">
-            <i class="bi bi-people"></i> Customers
-        </div>
-
-        <div class="nav-item px-2">
-            <NavLink class="nav-link py-1 small" href="/customer/list">
-                <span class="bi bi-list-ul"></span> All Customers
-            </NavLink>
-        </div>
-        <div class="nav-item px-2">
-            <NavLink class="nav-link py-1 small" href="/customer/add">
-                <span class="bi bi-plus-circle"></span> New Customer
-            </NavLink>
-        </div>
-
-        <!-- Payment Section -->
-        <div class="mt-2 mb-1 fw-bold text-uppercase px-2" style="font-size: 0.7rem; color: var(--ms-green-success);">
-            <i class="bi bi-cash-stack"></i> Payments
-        </div>
-
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/payment/list">
-                <span class="bi bi-list-ul"></span> All Payments
-            </NavLink>
-        </div>
-        <div class="nav-item px-2">
-            <NavLink class="nav-link py-1 small" href="/payment/add">
-                <span class="bi bi-plus-circle"></span> New Payment
+                <span class="bi bi-plus-circle"></span> Payments
             </NavLink>
         </div>
 
@@ -120,47 +96,28 @@
         </div>
 
         <!-- Product Section -->
-        <div class="mt-2 mb-1 fw-bold text-uppercase px-2" style="font-size: 0.7rem; color: var(--ms-orange-warning);">
-            <i class="bi bi-box-seam"></i> Products
-        </div>
+        <div class="mt-2 mb-1 fw-bold text-uppercase text-secondary px-2" style="font-size: 0.7rem;">📦 Products</div>
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/product/list">
-                <span class="bi bi-list-ul"></span> All Products
+                <span class="bi bi-list-nested-nav-menu"></span> View All
             </NavLink>
         </div>
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/product/add">
-                <span class="bi bi-plus-circle"></span> New Product
+                <span class="bi bi-plus-square-fill-nav-menu"></span> Add New
             </NavLink>
         </div>
 
         <!-- Market/Shopping Section -->
-        <div class="mt-2 mb-1 fw-bold text-uppercase px-2" style="font-size: 0.7rem; color: var(--ms-cyan-info);">
-            <i class="bi bi-shop"></i> Market
-        </div>
+        <div class="mt-2 mb-1 fw-bold text-uppercase text-secondary px-2" style="font-size: 0.7rem;">🛒 Market</div>
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/products">
-                <span class="bi bi-shop"></span> Browse Products
+                <span class="bi bi-shop-nav-menu"></span> Browse Products
             </NavLink>
         </div>
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/market">
                 <span class="bi bi-cart3"></span> Shopping Cart
-            </NavLink>
-        </div>
-
-        <!-- Recurring Invoices Section -->
-        <div class="mt-2 mb-1 fw-bold text-uppercase px-2" style="font-size: 0.7rem; color: var(--ms-purple);">
-            <i class="bi bi-arrow-repeat"></i> Recurring Invoices
-        </div>
-        <div class="nav-item px-2">
-            <NavLink class="nav-link py-1 small" href="/recurring-invoice/list">
-                <span class="bi bi-list-nested"></span> View All Templates
-            </NavLink>
-        </div>
-        <div class="nav-item px-2">
-            <NavLink class="nav-link py-1 small" href="/recurring-invoice/add">
-                <span class="bi bi-plus-circle"></span> Create Template
             </NavLink>
         </div>
 
@@ -264,11 +221,6 @@
                 <span class="bi bi-shield-check"></span> Audit Trail
             </NavLink>
         </div>
-        <div class="nav-item px-2">
-            <NavLink class="nav-link py-1 small" href="/reports/customer/statement">
-                <span class="bi bi-file-earmark-text-fill"></span> Customer Statement
-            </NavLink>
-        </div>
 
         <!-- Users Section -->
         <div class="mt-2 mb-1 fw-bold text-uppercase text-secondary px-2" style="font-size: 0.7rem;">👥 Users</div>
@@ -295,14 +247,6 @@
         <div class="nav-item px-2">
             <NavLink class="nav-link py-1 small" href="/user/add">
                 <span class="bi bi-plus-square-fill-nav-menu"></span> Add User
-            </NavLink>
-        </div>
-
-        <!-- Admin Tools Section -->
-        <div class="mt-2 mb-1 fw-bold text-uppercase text-secondary px-2" style="font-size: 0.7rem;">⚙️ Admin Tools</div>
-        <div class="nav-item px-2">
-            <NavLink class="nav-link py-1 small" href="/admin/customer-balance">
-                <span class="bi bi-calculator"></span> Balance Management
             </NavLink>
         </div>
 

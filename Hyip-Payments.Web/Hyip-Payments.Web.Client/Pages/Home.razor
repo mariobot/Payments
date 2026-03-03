@@ -93,8 +93,8 @@
                             </button>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <button class="btn btn-outline-warning w-100" @onclick="GoToPayments">
-                                📊 Payment Reports
+                            <button class="btn btn-outline-info w-100" @onclick="GoToRecurringInvoices">
+                                🔄 Recurring Invoices
                             </button>
                         </div>
                     </div>
@@ -155,6 +155,38 @@
 
         <div class="col-md-6 mb-4">
             <div class="card">
+                <div class="card-header bg-primary text-white">
+                    @("🔄") Recurring Invoices
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="/recurring-invoice/list" class="text-decoration-none">
+                                <i class="bi bi-list"></i> All Templates
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/recurring-invoice/add" class="text-decoration-none">
+                                <i class="bi bi-plus-circle"></i> Create Template
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/invoice" class="text-decoration-none">
+                                <i class="bi bi-file-text"></i> View All Invoices
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Automate subscription billing
+                            </small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
                 <div class="card-header">
                     @("📦") Bitcoin section
                 </div>
@@ -181,6 +213,7 @@
     private void GoToInvoices() => NavigationManager.NavigateTo("/invoice");
     private void GoToProducts() => NavigationManager.NavigateTo("/product/list");
     private void GoToPayments() => NavigationManager.NavigateTo("/payment/list");
+    private void GoToRecurringInvoices() => NavigationManager.NavigateTo("/recurring-invoice/list");
 
     // Add navigation methods
     private void GoToCreateInvoice() => NavigationManager.NavigateTo("/invoice/add");

@@ -29,6 +29,8 @@ namespace Hyip_Payments.Context
         public DbSet<UserApplicationModel> UserApplications { get; set; }
         public DbSet<UserTenantModel> UserTenants { get; set; }
         public DbSet<CustomReportModel> CustomReports { get; set; }
+        public DbSet<RecurringInvoiceModel> RecurringInvoices { get; set; }
+        public DbSet<RecurringInvoiceItemModel> RecurringInvoiceItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

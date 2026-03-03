@@ -1,0 +1,439 @@
+@page "/recurring-invoice/view/{id:int}"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Recurring Invoice Template</PageTitle>
+
+<div class="container-fluid mt-4">
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Loading template...</p>
+        </div>
+    }
+    else if (recurringInvoice == null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> Recurring invoice template not found
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-arrow-repeat text-primary"></i> @recurringInvoice.TemplateName</h2>
+            <div class="btn-group">
+                <button class="btn btn-success" @onclick="GenerateInvoice" disabled="@(!recurringInvoice.IsActive || isGenerating)">
+                    @if (isGenerating)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    <i class="bi bi-play-circle"></i> Generate Invoice Now
+                </button>
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo($"/recurring-invoice/edit/{Id}"))">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                <button class="btn btn-outline-secondary" @onclick="@(() => Navigation.NavigateTo("/recurring-invoice/list"))">
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+            </div>
+        </div>
+
+        @if (successMessage != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <i class="bi bi-check-circle"></i> @successMessage
+                <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+            </div>
+        }
+
+        @if (errorMessage != null)
+        {
+            <div class="alert alert-danger alert-dismissible">
+                <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+            </div>
+        }
+
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- Template Info -->
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Template Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="text-muted small">Template Name</label>
+                                <p class="fw-bold mb-0">@recurringInvoice.TemplateName</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Customer</label>
+                                <p class="mb-0">
+                                    <a href="/customer/view/@recurringInvoice.CustomerId" class="text-decoration-none fw-bold">
+                                        @recurringInvoice.Customer?.CompanyName
+                                    </a>
+                                </p>
+                            </div>
+                            @if (!string.IsNullOrEmpty(recurringInvoice.Description))
+                            {
+                                <div class="col-12">
+                                    <label class="text-muted small">Description</label>
+                                    <p class="mb-0">@recurringInvoice.Description</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Info -->
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="text-muted small">Frequency</label>
+                                <p class="mb-0">
+                                    <span class="badge bg-@GetFrequencyColor(recurringInvoice.Frequency)">
+                                        <i class="bi bi-@GetFrequencyIcon(recurringInvoice.Frequency)"></i> @recurringInvoice.Frequency
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="text-muted small">Day of Month</label>
+                                <p class="fw-bold mb-0">@GetDayOfMonthDisplay(recurringInvoice.DayOfMonth)</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="text-muted small">Status</label>
+                                <p class="mb-0">
+                                    @if (recurringInvoice.IsActive)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-pause-circle"></i> Inactive</span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Start Date</label>
+                                <p class="fw-bold mb-0">@recurringInvoice.StartDate.ToString("MMMM dd, yyyy")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">End Date</label>
+                                <p class="fw-bold mb-0">@(recurringInvoice.EndDate?.ToString("MMMM dd, yyyy") ?? "Indefinite")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Items -->
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-list-check"></i> Template Items</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in recurringInvoice.TemplateItems)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.ItemName</strong>
+                                            @if (item.ProductId.HasValue)
+                                            {
+                                                <br /><small class="text-muted"><i class="bi bi-box-seam"></i> Product #@item.ProductId</small>
+                                            }
+                                        </td>
+                                        <td>@item.Description</td>
+                                        <td class="text-end">@item.Quantity</td>
+                                        <td class="text-end">$@item.UnitPrice.ToString("F2")</td>
+                                        <td class="text-end fw-bold">$@item.Total.ToString("F2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end fw-bold">TOTAL:</td>
+                                    <td class="text-end fw-bold text-primary">$@GetTotalAmount().ToString("F2")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Generation Stats -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Generation Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted small">Last Generated</label>
+                            <p class="fw-bold mb-0">
+                                @(recurringInvoice.LastGeneratedDate?.ToString("MMM dd, yyyy") ?? "Never")
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Next Generation</label>
+                            <p class="fw-bold mb-0 @GetNextDateClass()">
+                                @(recurringInvoice.NextGenerationDate?.ToString("MMM dd, yyyy") ?? "Not scheduled")
+                            </p>
+                            @if (IsDueSoon())
+                            {
+                                <span class="badge bg-warning text-dark">Due Soon</span>
+                            }
+                        </div>
+                        <div>
+                            <label class="text-muted small">Total Generated</label>
+                            <p class="fw-bold mb-0">
+                                <span class="badge bg-info fs-5">@recurringInvoice.GeneratedInvoiceCount</span> invoices
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body d-grid gap-2">
+                        <button class="btn btn-success" @onclick="GenerateInvoice" disabled="@(!recurringInvoice.IsActive || isGenerating)">
+                            @if (isGenerating)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            <i class="bi bi-play-circle"></i> Generate Invoice Now
+                        </button>
+                        <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo($"/recurring-invoice/edit/{Id}"))">
+                            <i class="bi bi-pencil"></i> Edit Template
+                        </button>
+                        <button class="btn @(recurringInvoice.IsActive ? "btn-warning" : "btn-success")" @onclick="ToggleActive">
+                            @if (recurringInvoice.IsActive)
+                            {
+                                <i class="bi bi-pause-circle"></i><text> Deactivate</text>
+                            }
+                            else
+                            {
+                                <i class="bi bi-play-circle"></i><text> Activate</text>
+                            }
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="DeleteTemplate">
+                            <i class="bi bi-trash"></i> Delete Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private RecurringInvoiceModel? recurringInvoice;
+    private bool isLoading = true;
+    private bool isGenerating = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecurringInvoice();
+    }
+
+    private async Task LoadRecurringInvoice()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            recurringInvoice = await Http.GetFromJsonAsync<RecurringInvoiceModel>($"api/RecurringInvoice/{Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading template: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task GenerateInvoice()
+    {
+        if (!confirm($"Generate an invoice from this template now?"))
+            return;
+
+        isGenerating = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var response = await Http.PostAsync($"api/RecurringInvoice/{Id}/generate", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<dynamic>();
+                successMessage = $"Invoice {result.invoiceNumber} generated successfully!";
+                await LoadRecurringInvoice(); // Refresh to show updated stats
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to generate invoice: {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+        }
+    }
+
+    private async Task ToggleActive()
+    {
+        if (recurringInvoice == null) return;
+
+        var action = recurringInvoice.IsActive ? "deactivate" : "activate";
+        if (!confirm($"Are you sure you want to {action} this template?"))
+            return;
+
+        try
+        {
+            var response = await Http.PatchAsJsonAsync($"api/RecurringInvoice/{Id}/toggle-active", !recurringInvoice.IsActive);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadRecurringInvoice();
+                successMessage = $"Template {action}d successfully";
+            }
+            else
+            {
+                errorMessage = $"Failed to {action} template";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteTemplate()
+    {
+        if (!confirm("Are you sure you want to delete this template? This cannot be undone."))
+            return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/RecurringInvoice/{Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/recurring-invoice/list");
+            }
+            else
+            {
+                errorMessage = "Failed to delete template";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private decimal GetTotalAmount()
+    {
+        return recurringInvoice?.TemplateItems.Sum(i => i.Total) ?? 0;
+    }
+
+    private string GetFrequencyColor(string frequency)
+    {
+        return frequency.ToLower() switch
+        {
+            "monthly" => "primary",
+            "quarterly" => "info",
+            "annually" => "success",
+            _ => "secondary"
+        };
+    }
+
+    private string GetFrequencyIcon(string frequency)
+    {
+        return frequency.ToLower() switch
+        {
+            "monthly" => "calendar-month",
+            "quarterly" => "calendar3",
+            "annually" => "calendar-year",
+            _ => "calendar"
+        };
+    }
+
+    private string GetDayOfMonthDisplay(int day)
+    {
+        return day switch
+        {
+            1 => "1st",
+            2 => "2nd",
+            3 => "3rd",
+            21 => "21st",
+            22 => "22nd",
+            23 => "23rd",
+            31 => "31st",
+            _ => $"{day}th"
+        };
+    }
+
+    private bool IsDueSoon()
+    {
+        if (!recurringInvoice?.NextGenerationDate.HasValue ?? true)
+            return false;
+
+        var daysUntil = (recurringInvoice.NextGenerationDate.Value - DateTime.UtcNow.Date).Days;
+        return daysUntil <= 7 && daysUntil >= 0;
+    }
+
+    private string GetNextDateClass()
+    {
+        if (!recurringInvoice?.NextGenerationDate.HasValue ?? true)
+            return "";
+
+        if (recurringInvoice.NextGenerationDate.Value.Date <= DateTime.UtcNow.Date)
+            return "text-danger";
+        else if (IsDueSoon())
+            return "text-warning";
+        else
+            return "";
+    }
+
+    private bool confirm(string message)
+    {
+        // In real implementation, use JSInterop
+        return true;
+    }
+}

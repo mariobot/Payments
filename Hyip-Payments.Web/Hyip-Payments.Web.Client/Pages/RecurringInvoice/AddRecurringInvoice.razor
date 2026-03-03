@@ -1,0 +1,420 @@
+@page "/recurring-invoice/add"
+@using Hyip_Payments.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Create Recurring Invoice Template</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-arrow-repeat text-primary"></i> Create Recurring Invoice Template</h2>
+        <button class="btn btn-outline-secondary" @onclick="@(() => Navigation.NavigateTo("/recurring-invoice/list"))">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Template Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Template Name -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Template Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" @bind="templateName" placeholder="e.g., Monthly Web Hosting" />
+                        </div>
+
+                        <!-- Customer -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-person-badge text-primary"></i> Customer <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" @bind="customerId">
+                                <option value="">-- Select Customer --</option>
+                                @foreach (var customer in customers)
+                                {
+                                    <option value="@customer.Id">@customer.CustomerNumber - @customer.CompanyName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Description</label>
+                            <textarea class="form-control" @bind="description" rows="2" placeholder="Template description"></textarea>
+                        </div>
+
+                        <!-- Frequency -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                Frequency <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" @bind="frequency">
+                                <option value="Monthly">Monthly</option>
+                                <option value="Quarterly">Quarterly (every 3 months)</option>
+                                <option value="Annually">Annually (once per year)</option>
+                            </select>
+                        </div>
+
+                        <!-- Day of Month -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                Day of Month <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" @bind="dayOfMonth" min="1" max="31" />
+                            <div class="form-text">1-31 (adjusts for shorter months)</div>
+                        </div>
+
+                        <!-- Start Date -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                Start Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" @bind="startDate" />
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">End Date (Optional)</label>
+                            <input type="date" class="form-control" @bind="endDate" />
+                            <div class="form-text">Leave empty for indefinite</div>
+                        </div>
+
+                        <!-- Auto Send Email -->
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="autoSendEmail" @bind="autoSendEmail" />
+                                <label class="form-check-label" for="autoSendEmail">
+                                    <i class="bi bi-envelope"></i> Auto-send invoice email when generated
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Description -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Invoice Description (appears on generated invoices)</label>
+                            <textarea class="form-control" @bind="invoiceDescription" rows="2" placeholder="Description for generated invoices"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template Items -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-list-check"></i> Template Items</h5>
+                </div>
+                <div class="card-body">
+                    @if (!items.Any())
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Add at least one item to the template
+                        </div>
+                    }
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in items)
+                            {
+                                <tr>
+                                    <td>@item.ItemName</td>
+                                    <td>@item.Description</td>
+                                    <td>@item.Quantity</td>
+                                    <td>$@item.UnitPrice.ToString("F2")</td>
+                                    <td>$@((item.Quantity * item.UnitPrice).ToString("F2"))</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="@(() => items.Remove(item))">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                            <!-- New Item Row -->
+                            <tr class="table-light">
+                                <td>
+                                    <input type="text" class="form-control form-control-sm" @bind="newItemName" placeholder="Item name" />
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm" @bind="newItemDescription" placeholder="Description" />
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm" @bind="newItemQuantity" min="1" style="width: 80px;" />
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm" @bind="newItemPrice" min="0" step="0.01" style="width: 100px;" />
+                                </td>
+                                <td>
+                                    $@((newItemQuantity * newItemPrice).ToString("F2"))
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" @onclick="AddItem">
+                                        <i class="bi bi-plus-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (errorMessage != null)
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                </div>
+            }
+
+            <!-- Actions -->
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-lg" @onclick="CreateTemplate" disabled="@(isSaving || !IsValidTemplate())">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    <i class="bi bi-check-circle"></i> Create Template
+                </button>
+                <button class="btn btn-outline-secondary btn-lg" @onclick="@(() => Navigation.NavigateTo("/recurring-invoice/list"))">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Panel -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-calculator"></i> Template Summary</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted">Template Details:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Name:</strong> @(string.IsNullOrEmpty(templateName) ? "Not set" : templateName)</li>
+                        <li><strong>Customer:</strong> @GetCustomerName()</li>
+                        <li><strong>Frequency:</strong> @frequency</li>
+                        <li><strong>Day of Month:</strong> @GetDayOfMonthDisplay(dayOfMonth)</li>
+                        <li><strong>Start Date:</strong> @startDate.ToString("MMM dd, yyyy")</li>
+                        <li><strong>End Date:</strong> @(endDate.HasValue ? endDate.Value.ToString("MMM dd, yyyy") : "Indefinite")</li>
+                    </ul>
+
+                    <hr />
+
+                    <h6 class="text-muted">Items:</h6>
+                    <p class="mb-1">Total Items: <strong>@items.Count</strong></p>
+                    <p class="mb-0">Total Amount: <strong class="text-primary">$@GetTotalAmount().ToString("F2")</strong></p>
+
+                    <hr />
+
+                    <h6 class="text-muted">Next Generation:</h6>
+                    <p class="mb-0">@CalculateNextGeneration()</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // DTOs for API
+    private class CreateRecurringInvoiceDto
+    {
+        public string TemplateName { get; set; } = "";
+        public string? Description { get; set; }
+        public int CustomerId { get; set; }
+        public string Frequency { get; set; } = "Monthly";
+        public int DayOfMonth { get; set; } = 1;
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string? InvoiceDescription { get; set; }
+        public bool AutoSendEmail { get; set; }
+        public List<RecurringInvoiceItemDto> Items { get; set; } = new();
+    }
+
+    private class RecurringInvoiceItemDto
+    {
+        public int? ProductId { get; set; }
+        public string ItemName { get; set; } = "";
+        public string? Description { get; set; }
+        public int Quantity { get; set; } = 1;
+        public decimal UnitPrice { get; set; }
+    }
+
+    private List<CustomerModel> customers = new();
+    private List<RecurringInvoiceItemDto> items = new();
+    
+    // Template fields
+    private string templateName = "";
+    private string description = "";
+    private string customerId = "";
+    private string frequency = "Monthly";
+    private int dayOfMonth = 1;
+    private DateTime startDate = DateTime.Now.Date;
+    private DateTime? endDate;
+    private string invoiceDescription = "";
+    private bool autoSendEmail = false;
+    
+    // New item fields
+    private string newItemName = "";
+    private string newItemDescription = "";
+    private int newItemQuantity = 1;
+    private decimal newItemPrice = 0;
+    
+    private bool isSaving = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            customers = await Http.GetFromJsonAsync<List<CustomerModel>>("api/Customer?isActive=true") ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading customers: {ex.Message}";
+        }
+    }
+
+    private void AddItem()
+    {
+        if (string.IsNullOrWhiteSpace(newItemName) || newItemPrice <= 0)
+        {
+            errorMessage = "Please enter valid item name and price";
+            return;
+        }
+
+        items.Add(new RecurringInvoiceItemDto
+        {
+            ItemName = newItemName,
+            Description = newItemDescription,
+            Quantity = newItemQuantity,
+            UnitPrice = newItemPrice
+        });
+
+        // Clear form
+        newItemName = "";
+        newItemDescription = "";
+        newItemQuantity = 1;
+        newItemPrice = 0;
+        errorMessage = null;
+    }
+
+    private bool IsValidTemplate()
+    {
+        return !string.IsNullOrWhiteSpace(templateName) &&
+               !string.IsNullOrEmpty(customerId) &&
+               items.Any();
+    }
+
+    private async Task CreateTemplate()
+    {
+        if (!IsValidTemplate())
+        {
+            errorMessage = "Please fill all required fields and add at least one item";
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            var dto = new CreateRecurringInvoiceDto
+            {
+                TemplateName = templateName,
+                Description = description,
+                CustomerId = int.Parse(customerId),
+                Frequency = frequency,
+                DayOfMonth = dayOfMonth,
+                StartDate = startDate,
+                EndDate = endDate,
+                InvoiceDescription = invoiceDescription,
+                AutoSendEmail = autoSendEmail,
+                Items = items
+            };
+
+            var response = await Http.PostAsJsonAsync("api/RecurringInvoice", dto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<RecurringInvoiceModel>();
+                Navigation.NavigateTo($"/recurring-invoice/view/{result?.Id}");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Failed to create template: {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private string GetCustomerName()
+    {
+        if (string.IsNullOrEmpty(customerId))
+            return "Not selected";
+        
+        var customer = customers.FirstOrDefault(c => c.Id.ToString() == customerId);
+        return customer?.CompanyName ?? "Unknown";
+    }
+
+    private decimal GetTotalAmount()
+    {
+        return items.Sum(i => i.Quantity * i.UnitPrice);
+    }
+
+    private string GetDayOfMonthDisplay(int day)
+    {
+        return day switch
+        {
+            1 => "1st",
+            2 => "2nd",
+            3 => "3rd",
+            21 => "21st",
+            22 => "22nd",
+            23 => "23rd",
+            31 => "31st",
+            _ => $"{day}th"
+        };
+    }
+
+    private string CalculateNextGeneration()
+    {
+        if (startDate > DateTime.Now.Date)
+            return $"Will start on {startDate:MMM dd, yyyy}";
+
+        var nextDate = frequency.ToLower() switch
+        {
+            "monthly" => DateTime.Now.AddMonths(1),
+            "quarterly" => DateTime.Now.AddMonths(3),
+            "annually" => DateTime.Now.AddYears(1),
+            _ => DateTime.Now
+        };
+
+        return $"Next: {nextDate:MMM dd, yyyy}";
+    }
+}

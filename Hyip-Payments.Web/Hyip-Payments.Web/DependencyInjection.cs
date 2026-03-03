@@ -27,6 +27,9 @@ namespace Hyip_Payments.Web.Extensions
             // Register Customer Balance Service (required by event handlers)
             services.AddScoped<ICustomerBalanceService, CustomerBalanceService>();
 
+            // Register Invoice Number Service (required by invoice creation)
+            services.AddScoped<InvoiceNumberService>();
+
             // Add MediatR
 
             // User Commands

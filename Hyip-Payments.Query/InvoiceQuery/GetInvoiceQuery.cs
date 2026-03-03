@@ -25,7 +25,6 @@ namespace Hyip_Payments.Query.InvoiceQuery
             try
             {
                 return await _context.Invoices
-                .Include(i => i.Customer) // Include customer data
                 .AsNoTracking()
                 .OrderByDescending(i => i.InvoiceDate)
                 .ToListAsync(cancellationToken);
@@ -37,7 +36,7 @@ namespace Hyip_Payments.Query.InvoiceQuery
             }
             // Don't include Items to avoid circular reference issues
             // Use the /with-items endpoint to get invoice with items
-
+            
         }
     }
 }

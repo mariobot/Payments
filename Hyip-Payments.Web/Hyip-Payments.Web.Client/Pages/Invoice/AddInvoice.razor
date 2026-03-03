@@ -67,9 +67,14 @@
 
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-bold">Invoice Number <span class="text-danger">*</span></label>
-                                            <InputText class="form-control" @bind-Value="invoice.InvoiceNumber" placeholder="e.g., INV-2025-001" />
-                                            <ValidationMessage For="@(() => invoice.InvoiceNumber)" />
+                                            <label class="form-label fw-bold">
+                                                Invoice Number 
+                                                <span class="badge bg-info ms-2">Auto-Generated</span>
+                                            </label>
+                                            <InputText class="form-control" @bind-Value="invoice.InvoiceNumber" placeholder="Leave empty for auto: INV-001, INV-002..." />
+                                            <div class="form-text">
+                                                <i class="bi bi-info-circle"></i> Leave empty to auto-generate (INV-001, INV-002, etc.)
+                                            </div>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold">Invoice Date <span class="text-danger">*</span></label>

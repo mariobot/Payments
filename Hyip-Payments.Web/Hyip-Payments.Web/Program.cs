@@ -164,6 +164,9 @@ namespace Hyip_Payments.Web
             // Register Auth Token Service (Server-side - for JWT token management)
             builder.Services.AddScoped<IAuthTokenService, AuthTokenService>();
 
+            // Register InvoiceNumber service (Server-side - generates unique invoice numbers)
+            builder.Services.AddScoped<InvoiceNumberService>();
+
             // Register Authorization Message Handler (Server-side - adds Bearer token to HTTP requests)
             builder.Services.AddScoped<AuthorizationMessageHandler>();
 

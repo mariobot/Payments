@@ -1,4 +1,5 @@
 ﻿
+@page "/user/jwt"
 @rendermode InteractiveAuto
 @using Hyip_Payments.Web.Client.Services
 @using System.IdentityModel.Tokens.Jwt
@@ -52,7 +53,7 @@
                                 @if (expirationTime.HasValue)
                                 {
                                     <br />
-                                    <strong>Expires:</strong> @expirationTime.Value.ToString("yyyy-MM-dd HH:mm:ss") UTC
+                                    <strong>Expires:</strong> @expirationTime.Value.ToString("yyyy-MM-dd HH:mm:ss")
                                     @if (!isTokenExpired)
                                     {
                                         <br />

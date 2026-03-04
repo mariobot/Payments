@@ -20,6 +20,7 @@ namespace Hyip_Payments.Web.Client.DTOs
     public class InvoiceDto
     {
         public string InvoiceNumber { get; set; } = string.Empty;
+        public string? CustomerId { get; set; }
         public DateTime InvoiceDate { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }

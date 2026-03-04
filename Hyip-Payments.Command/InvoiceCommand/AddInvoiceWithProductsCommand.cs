@@ -12,6 +12,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
     {
         public string InvoiceNumber { get; set; } = string.Empty;
         public DateTime InvoiceDate { get; set; }
+        public int? CustomerId { get; set; }
         public string? Description { get; set; }
         public decimal TotalAmount { get; set; }
         public bool IsActive { get; set; } = true;

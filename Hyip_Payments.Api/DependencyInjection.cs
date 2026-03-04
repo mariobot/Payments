@@ -1,5 +1,6 @@
 using Hyip_Payments.Command.CoinCommand;
 using Hyip_Payments.Query.CoinQuery;
+using Hyip_Payments.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Hyip_Payments.Api.Extensions
@@ -9,6 +10,14 @@ namespace Hyip_Payments.Api.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, string connectionString)
         {
             // DbContext is already registered in Program.cs
+            // DbContext is already registered in Program.cs
+
+            // Register Customer Balance Service BEFORE MediatR
+            // This is critical because MediatR handlers depend on this service
+            services.AddScoped<ICustomerBalanceService, CustomerBalanceService>();
+
+            // Register Invoice Number Service for auto-numbering
+            services.AddTransient<InvoiceNumberService>();
 
             // Add MediatR - register ALL handlers from Command and Query assemblies
             services.AddMediatR(cfg =>

@@ -280,7 +280,7 @@
 
         try
         {
-            var command = new AddInvoiceWithProductsCommand
+                            var command = new AddInvoiceWithProductsCommand
             {
                 Invoice = new InvoiceDto
                 {
@@ -288,7 +288,7 @@
                     InvoiceDate = invoice.InvoiceDate,
                     Description = invoice.Description,
                     TotalAmount = CalculateTotal(),
-                    CustomerId = invoice.CustomerId,
+                    CustomerId = invoice.CustomerId?.ToString(),
                     IsActive = true
                 },
                 Items = selectedProducts.Select(p => new InvoiceItemDto

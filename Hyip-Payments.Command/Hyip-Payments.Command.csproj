@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Hyip-Payments.Context\Hyip-Payments.Context.csproj" />
     <ProjectReference Include="..\Hyip-Payments.Models\Hyip-Payments.Models.csproj" />
+    <ProjectReference Include="..\Hyip-Payments.Services\Hyip-Payments.Services.csproj" />
   </ItemGroup>
 
 </Project>

@@ -12,7 +12,8 @@ namespace Hyip_Payments.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
+        // InvoiceNumber is auto-generated if not provided
+        // No [Required] attribute to allow empty submissions
         [MaxLength(32)]
         public string InvoiceNumber { get; set; } = string.Empty;
 
@@ -34,9 +35,19 @@ namespace Hyip_Payments.Models
         [MaxLength(32)]
         public string StatusInvoice { get; set; } = "Draft";
 
+        // Customer who this invoice belongs to
+        public int? CustomerId { get; set; }
+
         // User who created/owns this invoice
         [MaxLength(450)] // Standard ASP.NET Identity user ID length
         public string? CreatedByUserId { get; set; }
+
+        // Navigation Properties
+
+        /// <summary>
+        /// Navigation to Customer
+        /// </summary>
+        public CustomerModel? Customer { get; set; }
 
         // Navigation property for invoice items
         public List<InvoiceItemModel> Items { get; set; } = new();

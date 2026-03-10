@@ -1,4 +1,5 @@
 ﻿@page "/payment/list"
+@rendermode InteractiveAuto
 @using Hyip_Payments.Models
 @using System.Net.Http.Json
 @inject HttpClient Http
@@ -73,6 +74,22 @@
 
         <div class="card">
             <div class="card-body">
+                <!-- Pagination Info and Page Size Selector -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <label class="me-2">Items per page:</label>
+                        <select class="form-select form-select-sm d-inline-block w-auto" @bind="pageSize" @bind:after="OnPageSizeChanged">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="text-muted">
+                        Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, totalItems) of @totalItems payments
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-light">
@@ -86,7 +103,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var payment in payments.OrderByDescending(p => p.TransactionDate))
+                            @foreach (var payment in GetPagedPayments())
                             {
                                 <tr>
                                     <td>@payment.TransactionDate.ToString("MMM dd, yyyy")</td>
@@ -139,11 +156,51 @@
                     </table>
                 </div>
 
-                <div class="mt-3">
-                    <p class="text-muted mb-0">
-                        <i class="bi bi-info-circle"></i> Total: <strong>@payments.Count</strong> transaction(s)
-                    </p>
-                </div>
+                <!-- Pagination Controls -->
+                @if (totalPages > 1)
+                {
+                    <nav aria-label="Payment pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            <!-- First Page -->
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <button class="page-link" @onclick="() => GoToPage(1)" disabled="@(currentPage == 1)">
+                                    <i class="bi bi-chevron-double-left"></i>
+                                </button>
+                            </li>
+
+                            <!-- Previous Page -->
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <button class="page-link" @onclick="PreviousPage" disabled="@(currentPage == 1)">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            @foreach (var page in GetVisiblePages())
+                            {
+                                <li class="page-item @(page == currentPage ? "active" : "")">
+                                    <button class="page-link" @onclick="() => GoToPage(page)">
+                                        @((MarkupString)page.ToString())
+                                    </button>
+                                </li>
+                            }
+
+                            <!-- Next Page -->
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <button class="page-link" @onclick="NextPage" disabled="@(currentPage == totalPages)">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </li>
+
+                            <!-- Last Page -->
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <button class="page-link" @onclick="() => GoToPage(totalPages)" disabled="@(currentPage == totalPages)">
+                                    <i class="bi bi-chevron-double-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                }
             </div>
         </div>
     }
@@ -238,6 +295,7 @@
 
 @code {
     private List<PaymentTransactionModel> payments = new();
+    private List<PaymentTransactionModel> sortedPayments = new();
     private bool isLoading = true;
     private string? errorMessage;
     private bool showDeleteConfirm = false;
@@ -245,6 +303,12 @@
     private int paymentToDelete = 0;
     private string paymentToDeleteRef = string.Empty;
     private PaymentTransactionModel? selectedPayment;
+
+    // Pagination properties
+    private int currentPage = 1;
+    private int pageSize = 25;
+    private int totalItems => sortedPayments?.Count ?? 0;
+    private int totalPages => (int)Math.Ceiling((double)totalItems / pageSize);
 
     protected override async Task OnInitializedAsync()
     {
@@ -259,6 +323,9 @@
         try
         {
             payments = await Http.GetFromJsonAsync<List<PaymentTransactionModel>>("api/Payment/transactions") ?? new();
+
+            // Sort payments by date (newest first)
+            sortedPayments = payments.OrderByDescending(p => p.TransactionDate).ToList();
         }
         catch (Exception ex)
         {
@@ -269,6 +336,59 @@
         {
             isLoading = false;
         }
+    }
+
+    // Pagination methods
+    private IEnumerable<PaymentTransactionModel> GetPagedPayments()
+    {
+        return sortedPayments
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize);
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+        }
+    }
+
+    private void OnPageSizeChanged()
+    {
+        // Reset to first page when page size changes
+        currentPage = 1;
+    }
+
+    private IEnumerable<int> GetVisiblePages()
+    {
+        const int maxVisiblePages = 5;
+        var startPage = Math.Max(1, currentPage - maxVisiblePages / 2);
+        var endPage = Math.Min(totalPages, startPage + maxVisiblePages - 1);
+
+        // Adjust start if we're near the end
+        if (endPage - startPage < maxVisiblePages - 1)
+        {
+            startPage = Math.Max(1, endPage - maxVisiblePages + 1);
+        }
+
+        return Enumerable.Range(startPage, endPage - startPage + 1);
     }
 
     private void GoToAdd()
@@ -318,6 +438,14 @@
             if (response.IsSuccessStatusCode)
             {
                 payments.RemoveAll(p => p.Id == paymentToDelete);
+                sortedPayments.RemoveAll(p => p.Id == paymentToDelete);
+
+                // Adjust current page if needed
+                if (GetPagedPayments().Count() == 0 && currentPage > 1)
+                {
+                    currentPage--;
+                }
+
                 StateHasChanged();
             }
             else

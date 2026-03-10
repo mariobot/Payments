@@ -1,6 +1,7 @@
 using Hyip_Payments.Command.InvoiceCommand;
 using Hyip_Payments.Context;
 using Hyip_Payments.Models;
+using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,11 +21,13 @@ public class GenerateInvoiceFromTemplateCommandHandler : IRequestHandler<Generat
 {
     private readonly PaymentsDbContext _context;
     private readonly IMediator _mediator;
+    private readonly InvoiceNumberService _invoiceNumberService;
 
-    public GenerateInvoiceFromTemplateCommandHandler(PaymentsDbContext context, IMediator mediator)
+    public GenerateInvoiceFromTemplateCommandHandler(PaymentsDbContext context, IMediator mediator, InvoiceNumberService invoiceNumberService)
     {
         _context = context;
         _mediator = mediator;
+        _invoiceNumberService = invoiceNumberService;
     }
 
     public async Task<InvoiceWithItemsDto> Handle(GenerateInvoiceFromTemplateCommand request, CancellationToken cancellationToken)
@@ -53,20 +56,8 @@ public class GenerateInvoiceFromTemplateCommandHandler : IRequestHandler<Generat
 
         var invoiceDate = request.InvoiceDate ?? DateTime.UtcNow;
 
-        // Generate invoice number
-        var currentYear = invoiceDate.Year;
-        var prefix = $"INV-{currentYear}-{recurringInvoice.Customer.CustomerNumber}-";
-        
-        var lastInvoice = await _context.Invoices
-            .Where(i => i.InvoiceNumber.StartsWith(prefix))
-            .OrderByDescending(i => i.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-        
-        var lastNumber = lastInvoice != null 
-            ? int.Parse(lastInvoice.InvoiceNumber.Split('-').Last())
-            : 0;
-        
-        var invoiceNumber = $"{prefix}{(lastNumber + 1):D4}";
+        // Generate invoice number using the centralized service
+        var invoiceNumber = await _invoiceNumberService.GenerateNextInvoiceNumberAsync();
 
         // Create invoice DTO
         var createInvoiceDto = new InvoiceCommand.InvoiceDto

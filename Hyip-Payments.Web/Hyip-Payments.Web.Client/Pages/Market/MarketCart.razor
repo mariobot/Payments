@@ -1,5 +1,6 @@
 @page "/market"
 @page "/cart"
+@rendermode InteractiveAuto
 @using Hyip_Payments.Models
 @using Hyip_Payments.Web.Client.Services
 @using System.Net.Http.Json
@@ -78,6 +79,39 @@
                         <h5 class="mb-0">Order Summary</h5>
                     </div>
                     <div class="card-body">
+                        <!-- Customer Selection -->
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-person"></i> Select Customer *</label>
+                            @if (customers == null)
+                            {
+                                <div class="text-center py-2">
+                                    <span class="spinner-border spinner-border-sm me-2"></span> Loading customers...
+                                </div>
+                            }
+                            else if (!customers.Any())
+                            {
+                                <div class="alert alert-warning mb-2">
+                                    <small>No customers found. <a href="/customer/add">Add a customer</a></small>
+                                </div>
+                            }
+                            else
+                            {
+                                <select class="form-select" @bind="selectedCustomerId">
+                                    <option value="0">-- Select Customer --</option>
+                                    @foreach (var customer in customers)
+                                    {
+                                        <option value="@customer.Id">@customer.FirstName @customer.LastName (@customer.Email)</option>
+                                    }
+                                </select>
+                                @if (selectedCustomerId == 0 && showCustomerError)
+                                {
+                                    <small class="text-danger">Please select a customer</small>
+                                }
+                            }
+                        </div>
+
+                        <hr />
+
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal:</span>
                             <strong>$@GetSubtotal().ToString("F2")</strong>
@@ -91,15 +125,15 @@
                             <h5>Total:</h5>
                             <h5 class="text-primary">$@GetSubtotal().ToString("F2")</h5>
                         </div>
-                        
-                        <button class="btn btn-success w-100 mb-2" @onclick="CreateInvoiceFromCart" disabled="@isCreatingInvoice">
+
+                        <button class="btn btn-success w-100 mb-2" @onclick="CreateInvoiceFromCart" disabled="@(isCreatingInvoice || customers == null || selectedCustomerId == 0)">
                             @if (isCreatingInvoice)
                             {
                                 <span class="spinner-border spinner-border-sm me-2"></span>
                             }
                             <i class="bi bi-file-earmark-text"></i> Create Invoice
                         </button>
-                        
+
                         <button class="btn btn-outline-danger w-100" @onclick="ClearCart">
                             <i class="bi bi-trash"></i> Clear Cart
                         </button>
@@ -112,6 +146,13 @@
                         <i class="bi bi-exclamation-triangle"></i> @errorMessage
                     </div>
                 }
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success mt-3">
+                        <i class="bi bi-check-circle"></i> @successMessage
+                    </div>
+                }
             </div>
         </div>
     }
@@ -119,13 +160,31 @@
 
 @code {
     private List<CartItem> cartItems = new();
+    private List<CustomerDto>? customers;
+    private int selectedCustomerId = 0;
     private bool isCreatingInvoice = false;
+    private bool showCustomerError = false;
     private string? errorMessage;
+    private string? successMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         LoadCart();
         CartService.OnChange += OnCartChanged;
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            customers = await Http.GetFromJsonAsync<List<CustomerDto>>("api/Customer");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load customers: {ex.Message}";
+            customers = new List<CustomerDto>();
+        }
     }
 
     private void OnCartChanged()
@@ -169,6 +228,14 @@
 
     private async Task CreateInvoiceFromCart()
     {
+        // Validate customer selection
+        if (selectedCustomerId == 0)
+        {
+            showCustomerError = true;
+            errorMessage = "Please select a customer before creating the invoice";
+            return;
+        }
+
         if (!cartItems.Any())
         {
             errorMessage = "Cart is empty";
@@ -177,6 +244,8 @@
 
         isCreatingInvoice = true;
         errorMessage = null;
+        successMessage = null;
+        showCustomerError = false;
 
         try
         {
@@ -185,6 +254,7 @@
             {
                 Invoice = new
                 {
+                    CustomerId = selectedCustomerId,
                     InvoiceNumber = $"INV-{DateTime.Now:yyyyMMdd-HHmmss}",
                     InvoiceDate = DateTime.Now,
                     Description = $"Market Cart Invoice - {cartItems.Count} items",
@@ -206,8 +276,13 @@
             {
                 var result = await response.Content.ReadFromJsonAsync<InvoiceWithItemsDto>();
 
+                successMessage = $"Invoice #{result?.InvoiceNumber} created successfully!";
+
                 // Clear cart
                 CartService.ClearCart();
+
+                // Wait a moment to show success message
+                await Task.Delay(1500);
 
                 // Navigate to invoice view
                 NavigationManager.NavigateTo($"/invoice/view/{result?.InvoiceId}");
@@ -236,6 +311,15 @@
     public void Dispose()
     {
         CartService.OnChange -= OnCartChanged;
+    }
+
+    public class CustomerDto
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Company { get; set; }
     }
 
     public class InvoiceWithItemsDto

@@ -28,6 +28,9 @@ namespace Hyip_Payments.Web.Extensions
             // This is critical because MediatR handlers depend on this service
             services.AddScoped<ICustomerBalanceService, CustomerBalanceService>();
 
+            // Register Invoice Number Service for auto-numbering
+            services.AddTransient<InvoiceNumberService>();
+
             // Add MediatR
 
             // User Commands

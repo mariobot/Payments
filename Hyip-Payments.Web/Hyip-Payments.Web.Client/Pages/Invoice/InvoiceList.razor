@@ -165,7 +165,7 @@
                             {
                                 <li class="page-item @(page == currentPage ? "active" : "")">
                                     <button class="page-link" @onclick="() => GoToPage(page)">
-                                        @page
+                                        @((MarkupString)page.ToString())
                                     </button>
                                 </li>
                             }

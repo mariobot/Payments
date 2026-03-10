@@ -1,5 +1,6 @@
 using Hyip_Payments.Context;
 using Hyip_Payments.Models;
+using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,10 +55,12 @@ namespace Hyip_Payments.Command.InvoiceCommand
     public class AddInvoiceWithProductsCommandHandler : IRequestHandler<AddInvoiceWithProductsCommand, InvoiceWithItemsDto>
     {
         private readonly PaymentsDbContext _context;
+        private readonly InvoiceNumberService _invoiceNumberService;
 
-        public AddInvoiceWithProductsCommandHandler(PaymentsDbContext context)
+        public AddInvoiceWithProductsCommandHandler(PaymentsDbContext context, InvoiceNumberService invoiceNumberService)
         {
             _context = context;
+            _invoiceNumberService = invoiceNumberService;
         }
 
         public async Task<InvoiceWithItemsDto> Handle(AddInvoiceWithProductsCommand request, CancellationToken cancellationToken)
@@ -75,7 +78,9 @@ namespace Hyip_Payments.Command.InvoiceCommand
                     // 1. Create the invoice from DTO
                     var invoice = new InvoiceModel
                     {
-                        InvoiceNumber = request.Invoice.InvoiceNumber,
+                        InvoiceNumber = string.IsNullOrWhiteSpace(request.Invoice.InvoiceNumber) 
+                            ? await _invoiceNumberService.GenerateNextInvoiceNumberAsync()
+                            : request.Invoice.InvoiceNumber,
                         InvoiceDate = request.Invoice.InvoiceDate,
                         Description = request.Invoice.Description,
                         TotalAmount = request.Invoice.TotalAmount,

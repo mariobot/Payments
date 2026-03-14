@@ -288,7 +288,7 @@
                     InvoiceDate = invoice.InvoiceDate,
                     Description = invoice.Description,
                     TotalAmount = CalculateTotal(),
-                    CustomerId = invoice.CustomerId?.ToString(),
+                    CustomerId = invoice.CustomerId,
                     IsActive = true
                 },
                 Items = selectedProducts.Select(p => new InvoiceItemDto

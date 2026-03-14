@@ -84,6 +84,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
                         InvoiceDate = request.Invoice.InvoiceDate,
                         Description = request.Invoice.Description,
                         TotalAmount = request.Invoice.TotalAmount,
+                        CustomerId = request.Invoice.CustomerId, // Assign the customer ID
                         IsActive = request.Invoice.IsActive,
                         CreatedByUserId = request.CreatedByUserId // Set the user who created this invoice
                     };

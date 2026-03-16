@@ -133,7 +133,7 @@
                                             <option value="">-- No Invoice --</option>
                                             @foreach (var invoice in invoices)
                                             {
-                                                <option value="@invoice.Id">@invoice.InvoiceNumber - $@invoice.TotalAmount.ToString("F2")</option>
+                                                <option value="@invoice.Id">@invoice.InvoiceNumber - $@invoice.TotalAmount.ToString("F2") (@invoice.StatusInvoice)</option>
                                             }
                                         </InputSelect>
                                         @if (fromInvoice)
@@ -141,6 +141,12 @@
                                             <small class="form-text text-muted">
                                                 <i class="bi bi-lock"></i> Invoice is locked because you came from the invoice page.
                                                 <a href="/payment/add" class="ms-2">Clear selection</a>
+                                            </small>
+                                        }
+                                        else if (invoices.Count == 0)
+                                        {
+                                            <small class="form-text text-muted">
+                                                <i class="bi bi-info-circle"></i> Only invoices with Draft status are shown. Complete invoices are excluded.
                                             </small>
                                         }
                                     }
@@ -272,9 +278,10 @@
             paymentMethods = await Http.GetFromJsonAsync<List<PaymentMethodModel>>("api/PaymentMethod") ?? new();
             paymentMethodsLoading = false;
 
-            // Load invoices
+            // Load invoices - only show Draft invoices (exclude Complete and other statuses)
             invoicesLoading = true;
-            invoices = await Http.GetFromJsonAsync<List<InvoiceModel>>("api/Invoice") ?? new();
+            var allInvoices = await Http.GetFromJsonAsync<List<InvoiceModel>>("api/Invoice") ?? new();
+            invoices = allInvoices.Where(i => i.StatusInvoice?.Equals("Draft", StringComparison.OrdinalIgnoreCase) == true).ToList();
             invoicesLoading = false;
         }
         catch (Exception ex)

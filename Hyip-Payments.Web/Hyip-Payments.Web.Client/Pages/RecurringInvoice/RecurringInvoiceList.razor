@@ -293,7 +293,7 @@
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<dynamic>();
-                Navigation.NavigateTo($"/invoice/view/{result.invoiceId}");
+                Navigation.NavigateTo($"/invoice/view/{result?.invoiceId}");
             }
             else
             {

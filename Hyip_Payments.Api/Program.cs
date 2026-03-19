@@ -1,5 +1,6 @@
 using System.Text;
 using Hyip_Payments.Api.Extensions;
+using Hyip_Payments.Api.Middleware;
 using Hyip_Payments.Api.Services;
 using Hyip_Payments.Command.ProductCommand;
 using Hyip_Payments.Command.UserCommand;
@@ -134,6 +135,9 @@ namespace Hyip_Payments.Api
             app.UseHttpsRedirection();
 
             app.UseCors("AllowAllOrigins");
+
+            // Add Audit Logging Middleware (before authentication)
+            app.UseAuditLogging();
 
             app.UseAuthentication();
             app.UseAuthorization();

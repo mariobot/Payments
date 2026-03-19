@@ -233,7 +233,18 @@
         <div class="card mb-4">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-clock-history"></i> Audit Events</h5>
-                <span class="badge bg-primary">@reportData.TotalEvents event(s)</span>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center">
+                        <label class="me-2 mb-0">Per page:</label>
+                        <select class="form-select form-select-sm" style="width: auto;" @bind="pageSize" @bind:after="OnPageSizeChanged">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <span class="badge bg-primary">@reportData.TotalEvents total event(s)</span>
+                </div>
             </div>
             <div class="card-body">
                 @if (reportData.AuditEvents.Any())
@@ -253,7 +264,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var evt in reportData.AuditEvents)
+                                @foreach (var evt in GetPagedEvents())
                                 {
                                     <tr class="@GetRowClass(evt.Severity)">
                                         <td>
@@ -311,6 +322,54 @@
                                 }
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted">
+                            Showing @GetStartRecord() to @GetEndRecord() of @reportData.TotalEvents events
+                        </div>
+                        <nav aria-label="Audit trail pagination">
+                            <ul class="pagination pagination-sm mb-0">
+                                <!-- First Page -->
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => GoToPage(1)" disabled="@(currentPage == 1)">
+                                        <i class="bi bi-chevron-double-left"></i>
+                                    </button>
+                                </li>
+
+                                <!-- Previous Page -->
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <button class="page-link" @onclick="PreviousPage" disabled="@(currentPage == 1)">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </button>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                @foreach (var page in GetPageNumbers())
+                                {
+                                    <li class="page-item @(page == currentPage ? "active" : "")">
+                                        <button class="page-link" @onclick="() => GoToPage(page)">
+                                            @page
+                                        </button>
+                                    </li>
+                                }
+
+                                <!-- Next Page -->
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <button class="page-link" @onclick="NextPage" disabled="@(currentPage == totalPages)">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                </li>
+
+                                <!-- Last Page -->
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => GoToPage(totalPages)" disabled="@(currentPage == totalPages)">
+                                        <i class="bi bi-chevron-double-right"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 }
                 else
@@ -492,6 +551,13 @@
     private AuditTrailReportModel? reportData;
     private string? errorMessage;
 
+    // Pagination properties
+    private int currentPage = 1;
+    private int pageSize = 25;
+    private int totalPages => reportData?.AuditEvents.Any() == true 
+        ? (int)Math.Ceiling((double)reportData.TotalEvents / pageSize) 
+        : 1;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadReport();
@@ -506,17 +572,20 @@
         try
         {
             var url = $"api/UserReport/audit-trail?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}";
-            
+
             if (!string.IsNullOrEmpty(selectedActionType))
                 url += $"&actionType={selectedActionType}";
-            
+
             if (!string.IsNullOrEmpty(selectedEntityType))
                 url += $"&entityType={selectedEntityType}";
-            
+
             if (!string.IsNullOrEmpty(performedBy))
                 url += $"&performedBy={Uri.EscapeDataString(performedBy)}";
 
             reportData = await Http.GetFromJsonAsync<AuditTrailReportModel>(url);
+
+            // Reset to first page when loading new data
+            currentPage = 1;
         }
         catch (HttpRequestException httpEx)
         {
@@ -539,6 +608,91 @@
         selectedActionType = "";
         selectedEntityType = "";
         performedBy = "";
+        currentPage = 1;
+    }
+
+    // Pagination methods
+    private IEnumerable<AuditEventDto> GetPagedEvents()
+    {
+        if (reportData?.AuditEvents == null || !reportData.AuditEvents.Any())
+            return Enumerable.Empty<AuditEventDto>();
+
+        return reportData.AuditEvents
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize);
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+        }
+    }
+
+    private void OnPageSizeChanged()
+    {
+        currentPage = 1; // Reset to first page when page size changes
+    }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        var pages = new List<int>();
+
+        // Show max 5 page numbers
+        int startPage = Math.Max(1, currentPage - 2);
+        int endPage = Math.Min(totalPages, currentPage + 2);
+
+        // Adjust if we're near the start
+        if (currentPage <= 3)
+        {
+            endPage = Math.Min(5, totalPages);
+        }
+
+        // Adjust if we're near the end
+        if (currentPage >= totalPages - 2)
+        {
+            startPage = Math.Max(1, totalPages - 4);
+        }
+
+        for (int i = startPage; i <= endPage; i++)
+        {
+            pages.Add(i);
+        }
+
+        return pages;
+    }
+
+    private int GetStartRecord()
+    {
+        if (reportData?.TotalEvents == 0)
+            return 0;
+
+        return (currentPage - 1) * pageSize + 1;
+    }
+
+    private int GetEndRecord()
+    {
+        if (reportData == null)
+            return 0;
+
+        return Math.Min(currentPage * pageSize, reportData.TotalEvents);
     }
 
     private string GetActionBadge(string action)

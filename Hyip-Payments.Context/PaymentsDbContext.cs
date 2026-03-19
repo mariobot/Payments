@@ -31,6 +31,7 @@ namespace Hyip_Payments.Context
         public DbSet<CustomReportModel> CustomReports { get; set; }
         public DbSet<RecurringInvoiceModel> RecurringInvoices { get; set; }
         public DbSet<RecurringInvoiceItemModel> RecurringInvoiceItems { get; set; }
+        public DbSet<AuditLogModel> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

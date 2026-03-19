@@ -25,14 +25,15 @@ namespace Hyip_Payments.Query.ReportQuery.User
 
         public async Task<AuditTrailReportModel> Handle(GetAuditTrailReportQuery request, CancellationToken cancellationToken)
         {
-            // Simulate audit trail events from actual database changes
-            // In production, you'd have a dedicated AuditLog table
+            // Generate audit trail events ONLY from actual database data
+            // Note: This is a best-effort approach since you don't have a dedicated AuditLog table
             var auditEvents = new List<AuditEventDto>();
             int eventId = 1;
 
-            // Invoice creation/update events
+            // Invoice creation events - REAL DATA
             var invoices = await _context.Invoices
                 .Where(i => i.InvoiceDate >= request.StartDate && i.InvoiceDate <= request.EndDate)
+                .OrderByDescending(i => i.InvoiceDate)
                 .ToListAsync(cancellationToken);
 
             foreach (var invoice in invoices)
@@ -46,45 +47,54 @@ namespace Hyip_Payments.Query.ReportQuery.User
                     EntityId = invoice.Id.ToString(),
                     PerformedBy = invoice.CreatedByUserId ?? "System",
                     UserRole = "User",
-                    Description = $"Invoice {invoice.InvoiceNumber} created for ${invoice.TotalAmount}",
-                    NewValue = $"Amount: ${invoice.TotalAmount}, Status: {invoice.StatusInvoice}",
-                    IpAddress = "192.168.1.100",
+                    Description = $"Invoice {invoice.InvoiceNumber} created for ${invoice.TotalAmount:F2}",
+                    NewValue = $"Amount: ${invoice.TotalAmount:F2}, Status: {invoice.StatusInvoice}",
+                    IpAddress = "N/A", // Not tracked - no IP data available
                     Severity = "Info",
                     IsSuccessful = true
                 });
             }
 
-            // Payment transaction events
+            // Payment transaction events - REAL DATA
             var payments = await _context.PaymentTransactions
                 .Where(p => p.TransactionDate >= request.StartDate && p.TransactionDate <= request.EndDate)
+                .OrderByDescending(p => p.TransactionDate)
                 .ToListAsync(cancellationToken);
 
             foreach (var payment in payments)
             {
                 var severity = payment.Status == "Failed" ? "Warning" : "Info";
+                var actionType = payment.Status == "Cancelled" ? "Delete" : "Create";
+
                 auditEvents.Add(new AuditEventDto
                 {
                     EventId = eventId++,
                     Timestamp = payment.TransactionDate,
-                    ActionType = payment.Status == "Completed" ? "Create" : "Update",
+                    ActionType = actionType,
                     EntityType = "Payment",
                     EntityId = payment.Id.ToString(),
                     PerformedBy = payment.ProcessedByUserId ?? "System",
                     UserRole = "User",
-                    Description = $"Payment {payment.Reference ?? payment.Id.ToString()} - Status: {payment.Status}",
-                    NewValue = $"Amount: ${payment.Amount}, Status: {payment.Status}",
-                    IpAddress = "192.168.1.100",
+                    Description = $"Payment transaction {(payment.Reference ?? payment.Id.ToString())} - Status: {payment.Status}",
+                    NewValue = $"Amount: ${payment.Amount:F2}, Status: {payment.Status}, Method: {payment.PaymentMethodId}",
+                    IpAddress = "N/A", // Not tracked - no IP data available
                     Severity = severity,
                     IsSuccessful = payment.Status == "Completed"
                 });
             }
 
-            // Product creation events
+            // Product creation events - REAL DATA (limited to recent products to avoid overload)
+            var productStartDate = request.StartDate > DateTime.UtcNow.AddMonths(-3) 
+                ? request.StartDate 
+                : DateTime.UtcNow.AddMonths(-3); // Limit to last 3 months for performance
+
             var products = await _context.Products
-                .Where(p => p.IsActive)
+                .Where(p => p.CreatedAt >= productStartDate && p.CreatedAt <= request.EndDate)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(100) // Limit to 100 most recent products
                 .ToListAsync(cancellationToken);
 
-            foreach (var product in products.Take(50)) // Limit to recent products
+            foreach (var product in products)
             {
                 auditEvents.Add(new AuditEventDto
                 {
@@ -93,92 +103,148 @@ namespace Hyip_Payments.Query.ReportQuery.User
                     ActionType = "Create",
                     EntityType = "Product",
                     EntityId = product.Id.ToString(),
-                    PerformedBy = "System",
+                    PerformedBy = "System", // Products don't have creator tracking
                     UserRole = "User",
                     Description = $"Product '{product.Name}' created",
-                    NewValue = $"Price: ${product.Price}, Stock: Active",
-                    IpAddress = "192.168.1.100",
+                    NewValue = $"Price: ${product.Price:F2}, Active: {product.IsActive}",
+                    IpAddress = "N/A", // Not tracked - no IP data available
                     Severity = "Info",
                     IsSuccessful = true
                 });
             }
 
-            // Simulated login events
-            var users = await _context.Users.Where(u => u.IsActive).Take(10).ToListAsync(cancellationToken);
-            foreach (var user in users)
+            // Customer creation events - REAL DATA
+            var customerStartDate = request.StartDate > DateTime.UtcNow.AddMonths(-3) 
+                ? request.StartDate 
+                : DateTime.UtcNow.AddMonths(-3); // Limit to last 3 months for performance
+
+            var customers = await _context.Customers
+                .Where(c => c.CreatedAt >= customerStartDate && c.CreatedAt <= request.EndDate)
+                .OrderByDescending(c => c.CreatedAt)
+                .Take(100) // Limit to 100 most recent customers
+                .ToListAsync(cancellationToken);
+
+            foreach (var customer in customers)
             {
-                for (int i = 0; i < 3; i++)
+                auditEvents.Add(new AuditEventDto
+                {
+                    EventId = eventId++,
+                    Timestamp = customer.CreatedAt,
+                    ActionType = "Create",
+                    EntityType = "Customer",
+                    EntityId = customer.Id.ToString(),
+                    PerformedBy = "System", // Customers don't have creator tracking
+                    UserRole = "User",
+                    Description = $"Customer '{customer.CompanyName}' created",
+                    NewValue = $"Customer #: {customer.CustomerNumber}, Email: {customer.Email}",
+                    IpAddress = "N/A", // Not tracked - no IP data available
+                    Severity = "Info",
+                    IsSuccessful = true
+                });
+            }
+
+            // Recurring Invoice events - REAL DATA
+            var recurringInvoices = await _context.RecurringInvoices
+                .Where(r => r.CreatedAt >= request.StartDate && r.CreatedAt <= request.EndDate)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync(cancellationToken);
+
+            foreach (var recurring in recurringInvoices)
+            {
+                auditEvents.Add(new AuditEventDto
+                {
+                    EventId = eventId++,
+                    Timestamp = recurring.CreatedAt,
+                    ActionType = "Create",
+                    EntityType = "Recurring Invoice",
+                    EntityId = recurring.Id.ToString(),
+                    PerformedBy = "System",
+                    UserRole = "User",
+                    Description = $"Recurring invoice template '{recurring.TemplateName}' created",
+                    NewValue = $"Frequency: {recurring.Frequency}, Active: {recurring.IsActive}",
+                    IpAddress = "N/A", // Not tracked - no IP data available
+                    Severity = "Info",
+                    IsSuccessful = true
+                });
+
+                // Add event for each generated invoice
+                if (recurring.LastGeneratedDate.HasValue && 
+                    recurring.LastGeneratedDate >= request.StartDate && 
+                    recurring.LastGeneratedDate <= request.EndDate)
                 {
                     auditEvents.Add(new AuditEventDto
                     {
                         EventId = eventId++,
-                        Timestamp = request.StartDate.AddDays(new Random().Next(0, (request.EndDate - request.StartDate).Days)),
-                        ActionType = "Login",
-                        EntityType = "User",
-                        EntityId = user.Id.ToString(),
-                        PerformedBy = user.Username ?? "Unknown",
-                        UserRole = "User",
-                        Description = $"User '{user.Username}' logged in successfully",
-                        IpAddress = $"192.168.1.{new Random().Next(100, 200)}",
+                        Timestamp = recurring.LastGeneratedDate.Value,
+                        ActionType = "Create",
+                        EntityType = "Invoice",
+                        EntityId = $"Generated-{recurring.Id}",
+                        PerformedBy = "System (Auto)",
+                        UserRole = "System",
+                        Description = $"Invoice auto-generated from template '{recurring.TemplateName}'",
+                        NewValue = $"Template: {recurring.TemplateName}, Count: {recurring.GeneratedInvoiceCount}",
+                        IpAddress = "N/A",
                         Severity = "Info",
                         IsSuccessful = true
                     });
                 }
             }
 
-            // Simulated critical security events
-            auditEvents.Add(new AuditEventDto
-            {
-                EventId = eventId++,
-                Timestamp = request.StartDate.AddDays(5),
-                ActionType = "Security",
-                EntityType = "System",
-                EntityId = "SEC-001",
-                PerformedBy = "System",
-                UserRole = "System",
-                Description = "Failed login attempt detected - 5 consecutive failures",
-                IpAddress = "203.0.113.1",
-                Severity = "Critical",
-                IsSuccessful = false
-            });
+            // User creation events - REAL DATA
+            var userStartDate = request.StartDate > DateTime.UtcNow.AddMonths(-3) 
+                ? request.StartDate 
+                : DateTime.UtcNow.AddMonths(-3); // Limit to last 3 months for performance
 
-            auditEvents.Add(new AuditEventDto
+            var users = await _context.Users
+                .Where(u => u.CreatedAt >= userStartDate && u.CreatedAt <= request.EndDate)
+                .OrderByDescending(u => u.CreatedAt)
+                .ToListAsync(cancellationToken);
+
+            foreach (var user in users)
             {
-                EventId = eventId++,
-                Timestamp = request.StartDate.AddDays(10),
-                ActionType = "Delete",
-                EntityType = "User",
-                EntityId = "USR-999",
-                PerformedBy = "admin",
-                UserRole = "Admin",
-                Description = "User account deleted",
-                OldValue = "Active user account",
-                NewValue = "Deleted",
-                IpAddress = "192.168.1.1",
-                Severity = "Warning",
-                IsSuccessful = true
-            });
+                auditEvents.Add(new AuditEventDto
+                {
+                    EventId = eventId++,
+                    Timestamp = user.CreatedAt,
+                    ActionType = "Create",
+                    EntityType = "User",
+                    EntityId = user.Id.ToString(),
+                    PerformedBy = "System",
+                    UserRole = "Admin",
+                    Description = $"User '{user.Username}' created in the system",
+                    NewValue = $"Email: {user.Email}, Active: {user.IsActive}",
+                    IpAddress = "N/A", // Not tracked - no IP data available
+                    Severity = "Info",
+                    IsSuccessful = true
+                });
+            }
 
             // Apply filters
             if (!string.IsNullOrEmpty(request.ActionType))
             {
-                auditEvents = auditEvents.Where(e => e.ActionType.Equals(request.ActionType, StringComparison.OrdinalIgnoreCase)).ToList();
+                auditEvents = auditEvents
+                    .Where(e => e.ActionType.Equals(request.ActionType, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
             }
 
             if (!string.IsNullOrEmpty(request.EntityType))
             {
-                auditEvents = auditEvents.Where(e => e.EntityType.Equals(request.EntityType, StringComparison.OrdinalIgnoreCase)).ToList();
+                auditEvents = auditEvents
+                    .Where(e => e.EntityType.Equals(request.EntityType, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
             }
 
             if (!string.IsNullOrEmpty(request.PerformedBy))
             {
-                auditEvents = auditEvents.Where(e => e.PerformedBy.Contains(request.PerformedBy, StringComparison.OrdinalIgnoreCase)).ToList();
+                auditEvents = auditEvents
+                    .Where(e => e.PerformedBy.Contains(request.PerformedBy, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
             }
 
-            // Sort by timestamp descending
+            // Sort by timestamp descending (most recent first)
             auditEvents = auditEvents.OrderByDescending(e => e.Timestamp).ToList();
 
-            // Create summary
+            // Create summary from REAL data only
             var summary = new AuditTrailSummaryDto
             {
                 CreateActions = auditEvents.Count(e => e.ActionType == "Create"),
@@ -187,34 +253,34 @@ namespace Hyip_Payments.Query.ReportQuery.User
                 ViewActions = auditEvents.Count(e => e.ActionType == "View"),
                 LoginActions = auditEvents.Count(e => e.ActionType == "Login"),
                 SecurityEvents = auditEvents.Count(e => e.ActionType == "Security"),
-                
+
                 ActionsByType = auditEvents
                     .GroupBy(e => e.ActionType)
                     .ToDictionary(g => g.Key, g => g.Count()),
-                
+
                 ActionsByEntity = auditEvents
                     .GroupBy(e => e.EntityType)
                     .ToDictionary(g => g.Key, g => g.Count()),
-                
+
                 ActionsByUser = auditEvents
                     .GroupBy(e => e.PerformedBy)
                     .ToDictionary(g => g.Key, g => g.Count()),
-                
+
                 ActionsBySeverity = auditEvents
                     .GroupBy(e => e.Severity)
                     .ToDictionary(g => g.Key, g => g.Count()),
-                
+
                 CriticalEvents = auditEvents.Count(e => e.Severity == "Critical"),
                 WarningEvents = auditEvents.Count(e => e.Severity == "Warning"),
                 InfoEvents = auditEvents.Count(e => e.Severity == "Info")
             };
 
             var mostActiveUser = summary.ActionsByUser.OrderByDescending(u => u.Value).FirstOrDefault();
-            summary.MostActiveUser = mostActiveUser.Key ?? "None";
+            summary.MostActiveUser = !string.IsNullOrEmpty(mostActiveUser.Key) ? mostActiveUser.Key : "N/A";
             summary.MostActiveUserActions = mostActiveUser.Value;
 
             var mostAuditedEntity = summary.ActionsByEntity.OrderByDescending(e => e.Value).FirstOrDefault();
-            summary.MostAuditedEntity = mostAuditedEntity.Key ?? "None";
+            summary.MostAuditedEntity = !string.IsNullOrEmpty(mostAuditedEntity.Key) ? mostAuditedEntity.Key : "N/A";
             summary.MostAuditedEntityCount = mostAuditedEntity.Value;
 
             return new AuditTrailReportModel

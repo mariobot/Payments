@@ -6,175 +6,308 @@
 
 <PageTitle>Edit Country - HYIP Payments</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="bi bi-pencil-square text-warning"></i> Edit Country</h3>
-        <ActionButton Action="Back" OnClick="GoBack">
-            Back to List
-        </ActionButton>
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/country/list">Countries</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Country</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-globe text-success me-2"></i>
+                        Edit Country
+                    </h2>
+                    <p class="text-muted mb-0">Update country information and geographic details</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary" @onclick="GoBack">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (isLoading)
     {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2">Loading country...</p>
+        <!-- Loading State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-success mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0">Loading country details...</p>
+            </div>
         </div>
     }
     else if (country == null)
     {
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle-fill"></i> Country not found
+        <!-- Not Found State -->
+        <div class="card shadow-sm border-success">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-exclamation-triangle text-success" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Country Not Found</h4>
+                <p class="text-muted">The country you're looking for doesn't exist or has been deleted.</p>
+                <button class="btn btn-success mt-3" @onclick="GoBack">
+                    <i class="bi bi-arrow-left"></i> Return to Countries
+                </button>
+            </div>
         </div>
     }
     else
     {
-        @if (errorMessage != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
-                <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
-            </div>
-        }
+        <div class="row">
+            <div class="col-lg-10 col-xl-8 mx-auto">
+                <!-- Main Form Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Country Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <EditForm Model="@country" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
 
-        @if (successMessage != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill"></i> @successMessage
-                <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
-            </div>
-        }
-
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <EditForm Model="@country" OnValidSubmit="HandleValidSubmit">
-                    <DataAnnotationsValidator />
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Country Information</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-flag"></i> Country Name
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <InputText class="form-control form-control-lg"
-                                         @bind-Value="country.Name"
-                                         placeholder="e.g., United States, United Kingdom, Canada" />
-                                <ValidationMessage For="@(() => country.Name)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Enter the official country name (max 100 characters)
-                                </small>
+                            <!-- Country ID Display -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <small class="text-muted">Country ID</small>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong>#@country.Id</strong>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-code-square"></i> ISO Country Code
-                                </label>
-                                <InputText class="form-control"
-                                         @bind-Value="country.IsoCode"
-                                         placeholder="e.g., USA, GBR, CAN"
-                                         maxlength="3"
-                                         style="text-transform: uppercase;" />
-                                <ValidationMessage For="@(() => country.IsoCode)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> ISO 3166-1 alpha-3 code (3 letters, optional)
-                                </small>
+                            <div class="row">
+                                <!-- Left Column -->
+                                <div class="col-md-6">
+                                    <h6 class="text-success mb-3">
+                                        <i class="bi bi-flag-fill"></i> Country Information
+                                    </h6>
+
+                                    <!-- Country Name -->
+                                    <div class="mb-4">
+                                        <label for="name" class="form-label fw-semibold">
+                                            <i class="bi bi-flag text-success me-2"></i>
+                                            Country Name
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-globe"></i>
+                                            </span>
+                                            <InputText id="name"
+                                                     class="form-control"
+                                                     @bind-Value="country.Name"
+                                                     placeholder="e.g., United States, United Kingdom, Canada" />
+                                        </div>
+                                        <ValidationMessage For="@(() => country.Name)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Enter the official country name (max 100 characters)
+                                        </small>
+                                    </div>
+
+                                    <!-- ISO Country Code -->
+                                    <div class="mb-4">
+                                        <label for="isoCode" class="form-label fw-semibold">
+                                            <i class="bi bi-code-square text-success me-2"></i>
+                                            ISO Country Code
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-hash"></i>
+                                            </span>
+                                            <InputText id="isoCode"
+                                                     class="form-control"
+                                                     @bind-Value="country.IsoCode"
+                                                     placeholder="e.g., USA, GBR, CAN"
+                                                     maxlength="3"
+                                                     style="text-transform: uppercase;" />
+                                        </div>
+                                        <ValidationMessage For="@(() => country.IsoCode)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> ISO 3166-1 alpha-3 code (3 letters, uppercase)
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="col-md-6">
+                                    <h6 class="text-success mb-3">
+                                        <i class="bi bi-geo-alt-fill"></i> Geographic Details
+                                    </h6>
+
+                                    <!-- Capital City -->
+                                    <div class="mb-4">
+                                        <label for="capital" class="form-label fw-semibold">
+                                            <i class="bi bi-building text-success me-2"></i>
+                                            Capital City
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-star"></i>
+                                            </span>
+                                            <InputText id="capital"
+                                                     class="form-control"
+                                                     @bind-Value="country.Capital"
+                                                     placeholder="e.g., Washington D.C., London, Ottawa" />
+                                        </div>
+                                        <ValidationMessage For="@(() => country.Capital)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> The capital or primary city (optional)
+                                        </small>
+                                    </div>
+
+                                    <!-- Region / Continent -->
+                                    <div class="mb-4">
+                                        <label for="region" class="form-label fw-semibold">
+                                            <i class="bi bi-map text-success me-2"></i>
+                                            Region / Continent
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-compass"></i>
+                                            </span>
+                                            <InputSelect id="region" class="form-select" @bind-Value="country.Region">
+                                                <option value="">-- Select Region --</option>
+                                                <option value="Africa">🌍 Africa</option>
+                                                <option value="Asia">🌏 Asia</option>
+                                                <option value="Europe">🇪🇺 Europe</option>
+                                                <option value="North America">🌎 North America</option>
+                                                <option value="South America">🌎 South America</option>
+                                                <option value="Oceania">🌊 Oceania</option>
+                                                <option value="Antarctica">❄️ Antarctica</option>
+                                            </InputSelect>
+                                        </div>
+                                        <ValidationMessage For="@(() => country.Region)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Select the geographic region (optional)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" @onclick="GoBack" disabled="@isSubmitting">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-success px-4" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span>Update Country</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Success!</strong>
+                                <p class="mb-0">@successMessage</p>
                             </div>
                         </div>
+                        <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+                    </div>
+                }
 
-                        <div class="col-md-6">
-                            <h5 class="mb-3"><i class="bi bi-geo-alt"></i> Geographic Details</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-building"></i> Capital City
-                                </label>
-                                <InputText class="form-control"
-                                         @bind-Value="country.Capital"
-                                         placeholder="e.g., Washington D.C., London, Ottawa" />
-                                <ValidationMessage For="@(() => country.Capital)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> The capital or primary city (optional)
-                                </small>
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Error!</strong>
+                                <p class="mb-0">@errorMessage</p>
                             </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                    </div>
+                }
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-map"></i> Region / Continent
-                                </label>
-                                <InputSelect class="form-select" @bind-Value="country.Region">
-                                    <option value="">-- Select Region --</option>
-                                    <option value="Africa">Africa</option>
-                                    <option value="Asia">Asia</option>
-                                    <option value="Europe">Europe</option>
-                                    <option value="North America">North America</option>
-                                    <option value="South America">South America</option>
-                                    <option value="Oceania">Oceania</option>
-                                    <option value="Antarctica">Antarctica</option>
-                                </InputSelect>
-                                <ValidationMessage For="@(() => country.Region)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Select the geographic region (optional)
-                                </small>
+                <!-- Common Countries Reference Card -->
+                <div class="card border-success mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-lightbulb text-success me-2"></i>
+                            Common Country Examples
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>North America:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🇺🇸 United States (USA)</li>
+                                    <li>🇨🇦 Canada (CAN)</li>
+                                    <li>🇲🇽 Mexico (MEX)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Europe:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🇬🇧 United Kingdom (GBR)</li>
+                                    <li>🇩🇪 Germany (DEU)</li>
+                                    <li>🇫🇷 France (FRA)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Asia:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🇯🇵 Japan (JPN)</li>
+                                    <li>🇨🇳 China (CHN)</li>
+                                    <li>🇮🇳 India (IND)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Others:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🇦🇺 Australia (AUS)</li>
+                                    <li>🇧🇷 Brazil (BRA)</li>
+                                    <li>🇿🇦 South Africa (ZAF)</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <hr class="my-4" />
-
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary" @onclick="GoBack">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-warning btn-lg" disabled="@isSubmitting">
-                            @if (isSubmitting)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                            }
-                            <i class="bi bi-check-circle"></i> Update Country
-                        </button>
-                    </div>
-                </EditForm>
-            </div>
-        </div>
-
-        <!-- Common Countries Reference Card -->
-        <div class="card shadow-sm mt-4 bg-light">
-            <div class="card-body">
-                <h6 class="card-title"><i class="bi bi-lightbulb text-warning"></i> Common Country Examples</h6>
-                <div class="row">
-                    <div class="col-md-3">
-                        <strong>North America:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>🇺🇸 United States (USA)</li>
-                            <li>🇨🇦 Canada (CAN)</li>
-                            <li>🇲🇽 Mexico (MEX)</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Europe:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>🇬🇧 United Kingdom (GBR)</li>
-                            <li>🇩🇪 Germany (DEU)</li>
-                            <li>🇫🇷 France (FRA)</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Asia:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>🇯🇵 Japan (JPN)</li>
-                            <li>🇨🇳 China (CHN)</li>
-                            <li>🇮🇳 India (IND)</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Others:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>🇦🇺 Australia (AUS)</li>
-                            <li>🇧🇷 Brazil (BRA)</li>
-                            <li>🇿🇦 South Africa (ZAF)</li>
+                <!-- Tips Card -->
+                <div class="card border-info mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-info-circle text-info me-2"></i>
+                            Tips for Country Management
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Use official country names as recognized by the UN</li>
+                            <li>ISO codes should follow the ISO 3166-1 alpha-3 standard</li>
+                            <li>Ensure consistency in naming across all records</li>
+                            <li>Capital cities help with geographic organization</li>
+                            <li>Region selection aids in reporting and analytics</li>
                         </ul>
                     </div>
                 </div>
@@ -182,6 +315,59 @@
         </div>
     }
 </div>
+
+<!-- Custom Styles -->
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .input-group:focus-within .input-group-text {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
+    }
+
+    .input-group-text {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #198754;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+</style>
 
 @code {
     [Parameter]

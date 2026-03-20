@@ -6,186 +6,316 @@
 
 <PageTitle>Edit Money Transaction - HYIP Payments</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="bi bi-pencil-square text-warning"></i> Edit Money Transaction</h3>
-        <ActionButton Action="Back" OnClick="GoBack">
-            Back to List
-        </ActionButton>
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/money/list">Money Transactions</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Transaction</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-currency-exchange text-warning me-2"></i>
+                        Edit Money Transaction
+                    </h2>
+                    <p class="text-muted mb-0">Update transaction information</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary" @onclick="GoBack">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (isLoading)
     {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2">Loading transaction...</p>
+        <!-- Loading State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-warning mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0">Loading transaction details...</p>
+            </div>
         </div>
     }
     else if (money == null)
     {
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle-fill"></i> Money transaction not found
+        <!-- Not Found State -->
+        <div class="card shadow-sm border-warning">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Transaction Not Found</h4>
+                <p class="text-muted">The money transaction you're looking for doesn't exist or has been deleted.</p>
+                <button class="btn btn-warning mt-3" @onclick="GoBack">
+                    <i class="bi bi-arrow-left"></i> Return to Transactions
+                </button>
+            </div>
         </div>
     }
     else
     {
-        @if (errorMessage != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
-                <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
-            </div>
-        }
+        <div class="row">
+            <div class="col-lg-10 col-xl-8 mx-auto">
+                <!-- Main Form Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-warning text-dark py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Transaction Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <EditForm Model="@money" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
 
-        @if (successMessage != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill"></i> @successMessage
-                <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
-            </div>
-        }
-
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <EditForm Model="@money" OnValidSubmit="HandleValidSubmit">
-                    <DataAnnotationsValidator />
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Transaction Details</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-cash-coin"></i> Amount
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group input-group-lg">
-                                    <span class="input-group-text">$</span>
-                                    <InputNumber class="form-control"
-                                               @bind-Value="money.Amount"
-                                               placeholder="0.00"
-                                               step="0.01" />
+                            <!-- Transaction ID Display -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <small class="text-muted">Transaction ID</small>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong>#@money.Id</strong>
+                                    </div>
                                 </div>
-                                <ValidationMessage For="@(() => money.Amount)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Enter the transaction amount (must be greater than zero)
-                                </small>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-tag"></i> Transaction Slug
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <InputText class="form-control"
-                                         @bind-Value="money.Slug"
-                                         placeholder="e.g., USD, EUR, GBP"
-                                         maxlength="3"
-                                         style="text-transform: uppercase;" />
-                                <ValidationMessage For="@(() => money.Slug)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Short identifier (3 characters max)
-                                </small>
+                            <div class="row">
+                                <!-- Left Column -->
+                                <div class="col-md-6">
+                                    <h6 class="text-warning mb-3">
+                                        <i class="bi bi-cash-coin"></i> Transaction Details
+                                    </h6>
+
+                                    <!-- Amount -->
+                                    <div class="mb-4">
+                                        <label for="amount" class="form-label fw-semibold">
+                                            <i class="bi bi-currency-dollar text-warning me-2"></i>
+                                            Amount
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-cash"></i>
+                                            </span>
+                                            <InputNumber id="amount"
+                                                       class="form-control"
+                                                       @bind-Value="money.Amount"
+                                                       placeholder="0.00"
+                                                       step="0.01" />
+                                        </div>
+                                        <ValidationMessage For="@(() => money.Amount)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Enter transaction amount (must be greater than zero)
+                                        </small>
+                                    </div>
+
+                                    <!-- Transaction Slug -->
+                                    <div class="mb-4">
+                                        <label for="slug" class="form-label fw-semibold">
+                                            <i class="bi bi-tag text-warning me-2"></i>
+                                            Transaction Slug
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-hash"></i>
+                                            </span>
+                                            <InputText id="slug"
+                                                     class="form-control"
+                                                     @bind-Value="money.Slug"
+                                                     placeholder="e.g., USD, EUR, GBP"
+                                                     maxlength="3"
+                                                     style="text-transform: uppercase;" />
+                                        </div>
+                                        <ValidationMessage For="@(() => money.Slug)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Short identifier (3 characters max, uppercase)
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="col-md-6">
+                                    <h6 class="text-warning mb-3">
+                                        <i class="bi bi-globe"></i> Location & Currency
+                                    </h6>
+
+                                    <!-- Currency Code -->
+                                    <div class="mb-4">
+                                        <label for="currency" class="form-label fw-semibold">
+                                            <i class="bi bi-currency-exchange text-warning me-2"></i>
+                                            Currency Code
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-coin"></i>
+                                            </span>
+                                            <InputSelect id="currency" class="form-select" @bind-Value="money.Currency">
+                                                <option value="">-- Select Currency --</option>
+                                                <option value="USD">🇺🇸 USD - US Dollar</option>
+                                                <option value="EUR">🇪🇺 EUR - Euro</option>
+                                                <option value="GBP">🇬🇧 GBP - British Pound</option>
+                                                <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+                                                <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
+                                                <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+                                                <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+                                                <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
+                                                <option value="INR">🇮🇳 INR - Indian Rupee</option>
+                                                <option value="BTC">₿ BTC - Bitcoin</option>
+                                                <option value="ETH">Ξ ETH - Ethereum</option>
+                                            </InputSelect>
+                                        </div>
+                                        <ValidationMessage For="@(() => money.Currency)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Select the currency type (3 characters)
+                                        </small>
+                                    </div>
+
+                                    <!-- Country -->
+                                    <div class="mb-4">
+                                        <label for="country" class="form-label fw-semibold">
+                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+                                            Country
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-flag"></i>
+                                            </span>
+                                            <InputText id="country"
+                                                     class="form-control"
+                                                     @bind-Value="money.Country"
+                                                     placeholder="e.g., USA, Japan, United Kingdom" />
+                                        </div>
+                                        <ValidationMessage For="@(() => money.Country)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Enter the country name (max 100 characters)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" @onclick="GoBack" disabled="@isSubmitting">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-warning px-4" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span>Update Transaction</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Success!</strong>
+                                <p class="mb-0">@successMessage</p>
                             </div>
                         </div>
+                        <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+                    </div>
+                }
 
-                        <div class="col-md-6">
-                            <h5 class="mb-3"><i class="bi bi-globe"></i> Location & Currency</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-currency-exchange"></i> Currency Code
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <InputSelect class="form-select form-select-lg" @bind-Value="money.Currency">
-                                    <option value="">-- Select Currency --</option>
-                                    <option value="USD">USD - US Dollar</option>
-                                    <option value="EUR">EUR - Euro</option>
-                                    <option value="GBP">GBP - British Pound</option>
-                                    <option value="JPY">JPY - Japanese Yen</option>
-                                    <option value="CNY">CNY - Chinese Yuan</option>
-                                    <option value="AUD">AUD - Australian Dollar</option>
-                                    <option value="CAD">CAD - Canadian Dollar</option>
-                                    <option value="CHF">CHF - Swiss Franc</option>
-                                    <option value="INR">INR - Indian Rupee</option>
-                                    <option value="BTC">BTC - Bitcoin</option>
-                                    <option value="ETH">ETH - Ethereum</option>
-                                </InputSelect>
-                                <ValidationMessage For="@(() => money.Currency)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Select the currency type (3 characters)
-                                </small>
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Error!</strong>
+                                <p class="mb-0">@errorMessage</p>
                             </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                    </div>
+                }
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-geo-alt-fill"></i> Country
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <InputText class="form-control"
-                                         @bind-Value="money.Country"
-                                         placeholder="e.g., USA, Japan, United Kingdom" />
-                                <ValidationMessage For="@(() => money.Country)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Enter the country name (max 100 characters)
-                                </small>
+                <!-- Currency Reference Card -->
+                <div class="card border-warning mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-currency-exchange text-warning me-2"></i>
+                            Common Currency Codes (ISO 4217)
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Major Currencies:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>💵 USD - US Dollar</li>
+                                    <li>💶 EUR - Euro</li>
+                                    <li>💷 GBP - British Pound</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Asian Currencies:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>💴 JPY - Japanese Yen</li>
+                                    <li>🇨🇳 CNY - Chinese Yuan</li>
+                                    <li>🇮🇳 INR - Indian Rupee</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Other Currencies:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🇦🇺 AUD - Australian Dollar</li>
+                                    <li>🇨🇦 CAD - Canadian Dollar</li>
+                                    <li>🇨🇭 CHF - Swiss Franc</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Cryptocurrencies:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>₿ BTC - Bitcoin</li>
+                                    <li>Ξ ETH - Ethereum</li>
+                                    <li>₮ USDT - Tether</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <hr class="my-4" />
-
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary" @onclick="GoBack">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-warning btn-lg" disabled="@isSubmitting">
-                            @if (isSubmitting)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                            }
-                            <i class="bi bi-check-circle"></i> Update Transaction
-                        </button>
-                    </div>
-                </EditForm>
-            </div>
-        </div>
-
-        <!-- Currency Reference Card -->
-        <div class="card shadow-sm mt-4 bg-light">
-            <div class="card-body">
-                <h6 class="card-title"><i class="bi bi-lightbulb text-warning"></i> Common Currency Codes</h6>
-                <div class="row">
-                    <div class="col-md-3">
-                        <strong>Major Currencies:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>💵 USD - US Dollar</li>
-                            <li>💶 EUR - Euro</li>
-                            <li>💷 GBP - British Pound</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Asian Currencies:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>💴 JPY - Japanese Yen</li>
-                            <li>💴 CNY - Chinese Yuan</li>
-                            <li>💰 INR - Indian Rupee</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Other Currencies:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>🦘 AUD - Australian Dollar</li>
-                            <li>🍁 CAD - Canadian Dollar</li>
-                            <li>🏔️ CHF - Swiss Franc</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Cryptocurrencies:</strong>
-                        <ul class="list-unstyled mb-0 mt-1">
-                            <li>₿ BTC - Bitcoin</li>
-                            <li>Ξ ETH - Ethereum</li>
-                            <li>₮ USDT - Tether</li>
+                <!-- Tips Card -->
+                <div class="card border-info mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-lightbulb text-info me-2"></i>
+                            Tips for Money Transactions
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Ensure the amount is accurate before submitting</li>
+                            <li>Use standard currency codes (ISO 4217)</li>
+                            <li>Transaction slugs should be unique identifiers</li>
+                            <li>Double-check country names for consistency</li>
+                            <li>Currency codes must be exactly 3 characters</li>
                         </ul>
                     </div>
                 </div>
@@ -193,6 +323,59 @@
         </div>
     }
 </div>
+
+<!-- Custom Styles -->
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .input-group:focus-within .input-group-text {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.15);
+    }
+
+    .input-group-text {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #ffc107;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+</style>
 
 @code {
     [Parameter]

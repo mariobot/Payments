@@ -8,7 +8,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <h2><i class="bi bi-tools"></i> Audit Logging Diagnostics</h2>
-            <p class="text-muted">Test and troubleshoot the audit logging system</p>
+            <p class="text-muted">Monitor and troubleshoot the audit logging system</p>
         </div>
     </div>
 
@@ -81,7 +81,7 @@
                         }
 
                         <hr />
-                        <div class="alert alert-info mb-0">
+                        <div class="alert @(statusData.HasData ? "alert-success" : "alert-info") mb-0">
                             <i class="bi bi-info-circle"></i> @statusData.Message
                         </div>
                     }
@@ -98,35 +98,7 @@
 
     <!-- Actions Row -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Seed Test Data</h5>
-                </div>
-                <div class="card-body">
-                    <p>Add sample audit log records for testing</p>
-                    <div class="mb-3">
-                        <label class="form-label">Number of records:</label>
-                        <input type="number" class="form-control" @bind="seedCount" min="1" max="500" />
-                    </div>
-                    <button class="btn btn-primary w-100" @onclick="SeedData" disabled="@isSeeding">
-                        @if (isSeeding)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                        }
-                        <i class="bi bi-database-add"></i> Seed @seedCount Records
-                    </button>
-                    @if (seedMessage != null)
-                    {
-                        <div class="alert alert-success mt-3 mb-0">
-                            @seedMessage
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-info">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0"><i class="bi bi-list"></i> View Recent Logs</h5>
@@ -148,7 +120,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-danger">
                 <div class="card-header bg-danger text-white">
                     <h5 class="mb-0"><i class="bi bi-trash"></i> Clear All Data</h5>
@@ -157,6 +129,8 @@
                     <p>Delete all audit log records from database</p>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i> This action cannot be undone!
+                        <br />
+                        <small>Requires Admin role</small>
                     </div>
                     <button class="btn btn-danger w-100" @onclick="ClearData" disabled="@isClearing">
                         @if (isClearing)
@@ -165,6 +139,12 @@
                         }
                         <i class="bi bi-trash"></i> Clear All Data
                     </button>
+                    @if (clearMessage != null)
+                    {
+                        <div class="alert alert-info mt-3 mb-0">
+                            @clearMessage
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -236,15 +216,22 @@
                     <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h5>
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> <strong>To populate audit logs:</strong> Create invoices, payments, customers, or other entities. 
+                        All create/update/delete operations are automatically logged.
+                    </div>
                     <div class="btn-group" role="group">
                         <a href="/reports/audit-trail" class="btn btn-outline-primary">
                             <i class="bi bi-clipboard-data"></i> View Audit Trail Report
                         </a>
                         <button class="btn btn-outline-secondary" @onclick='() => NavigationManager.NavigateTo("/invoice/add")'>
-                            <i class="bi bi-plus"></i> Create Invoice (Test Audit)
+                            <i class="bi bi-plus"></i> Create Invoice
                         </button>
-                        <button class="btn btn-outline-secondary" @onclick='() => NavigationManager.NavigateTo("/payment/add")'>
-                            <i class="bi bi-plus"></i> Create Payment (Test Audit)
+                        <button class="btn btn-outline-secondary" @onclick='() => NavigationManager.NavigateTo("/payment/list")'>
+                            <i class="bi bi-plus"></i> Create Payment
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick='() => NavigationManager.NavigateTo("/customer/add")'>
+                            <i class="bi bi-plus"></i> Add Customer
                         </button>
                     </div>
                 </div>
@@ -255,16 +242,14 @@
 
 @code {
     private bool isLoadingStatus = false;
-    private bool isSeeding = false;
     private bool isClearing = false;
     private bool isLoadingRecent = false;
 
-    private int seedCount = 50;
     private int recentCount = 20;
 
     private DatabaseStatus? statusData;
     private string? statusError;
-    private string? seedMessage;
+    private string? clearMessage;
     private List<RecentLog>? recentLogs;
 
     protected override async Task OnInitializedAsync()
@@ -292,35 +277,6 @@
         }
     }
 
-    private async Task SeedData()
-    {
-        isSeeding = true;
-        seedMessage = null;
-
-        try
-        {
-            var response = await Http.PostAsync($"api/AuditDiagnostics/seed?count={seedCount}", null);
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<SeedResult>();
-                seedMessage = result?.Message ?? "Data seeded successfully!";
-                await CheckStatus();
-            }
-            else
-            {
-                seedMessage = $"Error: {response.StatusCode}";
-            }
-        }
-        catch (Exception ex)
-        {
-            seedMessage = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            isSeeding = false;
-        }
-    }
-
     private async Task ClearData()
     {
         if (!await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete ALL audit log data? This cannot be undone!"))
@@ -329,19 +285,29 @@
         }
 
         isClearing = true;
+        clearMessage = null;
 
         try
         {
             var response = await Http.DeleteAsync("api/AuditDiagnostics/clear");
             if (response.IsSuccessStatusCode)
             {
+                clearMessage = "All audit logs cleared successfully!";
                 await CheckStatus();
                 recentLogs = null;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                clearMessage = "Error: You must be an Admin to clear audit logs.";
+            }
+            else
+            {
+                clearMessage = $"Error: {response.StatusCode}";
             }
         }
         catch (Exception ex)
         {
-            statusError = ex.Message;
+            clearMessage = $"Error: {ex.Message}";
         }
         finally
         {
@@ -397,13 +363,6 @@
         public string ActionType { get; set; } = string.Empty;
         public string EntityType { get; set; } = string.Empty;
         public string? UserName { get; set; }
-    }
-
-    private class SeedResult
-    {
-        public bool Success { get; set; }
-        public int RecordsCreated { get; set; }
-        public string Message { get; set; } = string.Empty;
     }
 
     private class RecentLog

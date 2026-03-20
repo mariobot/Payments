@@ -1,61 +1,278 @@
 ﻿@page "/category/edit/{Id:int}"
 @inject HttpClient Http
+@inject NavigationManager NavigationManager
 @using System.ComponentModel.DataAnnotations
 
-<h3>Edit Category</h3>
+<PageTitle>Edit Category - HYIP Payments</PageTitle>
 
-@if (isLoading)
-{
-    <p>Loading...</p>
-}
-else if (category == null)
-{
-    <p>Category not found.</p>
-}
-else
-{
-    <EditForm Model="@category" OnValidSubmit="HandleValidSubmit" FormName="editCategoryForm">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/category/list">Categories</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Category</li>
+        </ol>
+    </nav>
 
-        <div class="mb-3">
-            <label for="name" class="form-label">Category Name</label>
-            <InputText id="name" class="form-control" @bind-Value="category.Name" />
-            <ValidationMessage For="@(() => category.Name)" />
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-folder-fill text-primary me-2"></i>
+                        Edit Category
+                    </h2>
+                    <p class="text-muted mb-0">Update category information</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary" @onclick="GoBack">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <InputTextArea id="description" class="form-control" @bind-Value="category.Description" />
-            <ValidationMessage For="@(() => category.Description)" />
-        </div>
-
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-    </EditForm>
-
-    @if (!string.IsNullOrEmpty(message))
+    @if (isLoading)
     {
-        <p>@message</p>
+        <!-- Loading State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0">Loading category details...</p>
+            </div>
+        </div>
     }
-}
+    else if (category == null)
+    {
+        <!-- Not Found State -->
+        <div class="card shadow-sm border-warning">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Category Not Found</h4>
+                <p class="text-muted">The category you're looking for doesn't exist or has been deleted.</p>
+                <button class="btn btn-primary mt-3" @onclick="GoBack">
+                    <i class="bi bi-arrow-left"></i> Return to Categories
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8 col-xl-6 mx-auto">
+                <!-- Main Form Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Category Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <EditForm Model="@category" OnValidSubmit="HandleValidSubmit" FormName="editCategoryForm">
+                            <DataAnnotationsValidator />
+
+                            <!-- Category ID Display -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <small class="text-muted">Category ID</small>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong>#@category.Id</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Category Name -->
+                            <div class="mb-4">
+                                <label for="name" class="form-label fw-semibold">
+                                    <i class="bi bi-tag text-primary me-2"></i>
+                                    Category Name
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-folder"></i>
+                                    </span>
+                                    <InputText id="name" 
+                                               class="form-control form-control-lg" 
+                                               @bind-Value="category.Name"
+                                               placeholder="Enter category name" />
+                                </div>
+                                <ValidationMessage For="@(() => category.Name)" class="text-danger small mt-1" />
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Choose a clear, descriptive name for this category
+                                </small>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-4">
+                                <label for="description" class="form-label fw-semibold">
+                                    <i class="bi bi-text-paragraph text-primary me-2"></i>
+                                    Description
+                                </label>
+                                <InputTextArea id="description" 
+                                              class="form-control" 
+                                              @bind-Value="category.Description"
+                                              rows="4"
+                                              placeholder="Enter a detailed description of this category (optional)" />
+                                <ValidationMessage For="@(() => category.Description)" class="text-danger small mt-1" />
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <small class="form-text text-muted">
+                                        <i class="bi bi-info-circle"></i> Provide additional details about this category
+                                    </small>
+                                    <small class="text-muted">
+                                        @((category.Description?.Length ?? 0))/500 characters
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" @onclick="GoBack" disabled="@isSaving">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary px-4" disabled="@isSaving">
+                                    @if (isSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Saving...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span>Save Changes</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                @if (!string.IsNullOrEmpty(message))
+                {
+                    <div class="alert @(isError ? "alert-danger" : "alert-success") alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi @(isError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill") me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>@(isError ? "Error" : "Success")!</strong>
+                                <p class="mb-0">@message</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="ClearMessage"></button>
+                    </div>
+                }
+
+                <!-- Info Card -->
+                <div class="card border-info mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-lightbulb text-info me-2"></i>
+                            Tips for Category Management
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Use clear, concise names that describe the category's purpose</li>
+                            <li>Keep descriptions informative but brief</li>
+                            <li>Categories help organize products and services efficiently</li>
+                            <li>Consider the hierarchy when naming categories</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-control:focus,
+    .input-group:focus-within .input-group-text {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+
+    .input-group-text {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #0d6efd;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+</style>
 
 @code {
-    [Parameter] public int Id { get; set; } // Changed from CategoryId to Id
+    [Parameter] public int Id { get; set; }
 
     private CategoryModel? category;
     private bool isLoading = true;
+    private bool isSaving = false;
     private string? message;
+    private bool isError = false;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadCategory();
+    }
+
+    private async Task LoadCategory()
     {
         try
         {
             isLoading = true;
-            category = await Http.GetFromJsonAsync<CategoryModel>($"api/Category/{Id}"); // Updated to use Id
+            category = await Http.GetFromJsonAsync<CategoryModel>($"api/Category/{Id}");
+        }
+        catch (HttpRequestException ex)
+        {
+            message = $"Network error: {ex.Message}. Please check your connection.";
+            isError = true;
         }
         catch (Exception ex)
         {
             message = $"An error occurred while loading the category: {ex.Message}";
+            isError = true;
         }
         finally
         {
@@ -66,35 +283,66 @@ else
     private async Task HandleValidSubmit()
     {
         message = null;
+        isError = false;
+        isSaving = true;
 
         try
         {
-            var response = await Http.PutAsJsonAsync($"api/Category/{Id}", category); // Updated to use Id
+            var response = await Http.PutAsJsonAsync($"api/Category/{Id}", category);
 
             if (response.IsSuccessStatusCode)
             {
                 message = "Category updated successfully!";
+                isError = false;
+
+                // Redirect after 2 seconds
+                await Task.Delay(2000);
+                NavigationManager.NavigateTo("/category/list");
             }
             else
             {
-                message = "Failed to update category. Please try again.";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                message = $"Failed to update category: {response.StatusCode}. {errorContent}";
+                isError = true;
             }
+        }
+        catch (HttpRequestException ex)
+        {
+            message = $"Network error: {ex.Message}. Please check your connection and try again.";
+            isError = true;
         }
         catch (Exception ex)
         {
             message = $"An error occurred: {ex.Message}";
+            isError = true;
         }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/category/list");
+    }
+
+    private void ClearMessage()
+    {
+        message = null;
+        isError = false;
     }
 
     public class CategoryModel
     {
         public int Id { get; set; }
 
-        [Required]
-        [StringLength(100, ErrorMessage = "Name must be less than 100 characters.")]
+        [Required(ErrorMessage = "Category name is required")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "Category name must be between 2 and 100 characters")]
         public string Name { get; set; } = string.Empty;
 
-        [StringLength(500, ErrorMessage = "Description must be less than 500 characters.")]
+        [StringLength(500, ErrorMessage = "Description must be less than 500 characters")]
         public string? Description { get; set; }
     }
 }
+

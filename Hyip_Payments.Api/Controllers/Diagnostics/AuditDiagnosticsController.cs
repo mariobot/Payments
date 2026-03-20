@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Hyip_Payments.Api.Controllers.Diagnostics
 {
     /// <summary>
-    /// Diagnostic controller to test audit logging and seed sample data
+    /// Diagnostic controller to test audit logging
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -49,7 +49,7 @@ namespace Hyip_Payments.Api.Controllers.Diagnostics
                     } : null,
                     Message = count > 0 
                         ? $"AuditLogs table has {count} records" 
-                        : "AuditLogs table exists but is empty"
+                        : "AuditLogs table exists but is empty. Create invoices, payments, or other entities to populate audit logs."
                 });
             }
             catch (Exception ex)
@@ -64,94 +64,11 @@ namespace Hyip_Payments.Api.Controllers.Diagnostics
         }
 
         /// <summary>
-        /// Seed sample audit log data for testing
-        /// POST: api/AuditDiagnostics/seed
-        /// </summary>
-        [HttpPost("seed")]
-        public async Task<ActionResult<object>> SeedData([FromQuery] int count = 50)
-        {
-            try
-            {
-                var random = new Random();
-                var actionTypes = new[] { "Create", "Update", "Delete", "View", "Login", "Security" };
-                var entityTypes = new[] { "Invoice", "Payment", "Customer", "Product", "User", "Order" };
-                var severities = new[] { "Info", "Warning", "Critical" };
-                var userNames = new[] { "admin", "john.doe", "jane.smith", "bob.johnson", "System" };
-
-                var logs = new List<AuditLogModel>();
-
-                for (int i = 0; i < count; i++)
-                {
-                    var actionType = actionTypes[random.Next(actionTypes.Length)];
-                    var entityType = entityTypes[random.Next(entityTypes.Length)];
-                    var userName = userNames[random.Next(userNames.Length)];
-                    var severity = actionType == "Security" ? "Warning" : 
-                                   actionType == "Delete" ? "Warning" : "Info";
-
-                    var log = new AuditLogModel
-                    {
-                        Timestamp = DateTime.UtcNow.AddHours(-random.Next(1, 168)), // Last 7 days
-                        UserId = $"user-{random.Next(1, 10)}",
-                        UserName = userName,
-                        UserEmail = $"{userName.Replace(".", "")}@example.com",
-                        ActionType = actionType,
-                        EntityType = entityType,
-                        EntityId = random.Next(1, 1000).ToString(),
-                        IpAddress = $"192.168.1.{random.Next(1, 255)}",
-                        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
-                        BeforeValue = actionType == "Update" || actionType == "Delete" 
-                            ? $"{{\"id\": {random.Next(1, 100)}, \"status\": \"old\"}}" 
-                            : null,
-                        AfterValue = actionType == "Create" || actionType == "Update" 
-                            ? $"{{\"id\": {random.Next(1, 100)}, \"status\": \"new\"}}" 
-                            : null,
-                        Severity = severity,
-                        IsSuccessful = random.Next(10) > 1, // 90% success rate
-                        Description = $"{actionType} {entityType} #{random.Next(1, 1000)}",
-                        HttpMethod = actionType == "Create" ? "POST" : 
-                                   actionType == "Update" ? "PUT" :
-                                   actionType == "Delete" ? "DELETE" : "GET",
-                        RequestPath = $"/api/{entityType.ToLower()}/{random.Next(1, 100)}",
-                        UserRole = userName == "admin" ? "Admin" : "User",
-                        DurationMs = random.Next(10, 500),
-                        SessionId = Guid.NewGuid().ToString().Substring(0, 16),
-                        CorrelationId = Guid.NewGuid().ToString()
-                    };
-
-                    logs.Add(log);
-                }
-
-                await _context.AuditLogs.AddRangeAsync(logs);
-                await _context.SaveChangesAsync();
-
-                return Ok(new
-                {
-                    Success = true,
-                    RecordsCreated = count,
-                    Message = $"Successfully seeded {count} audit log records",
-                    DateRange = new
-                    {
-                        From = logs.Min(l => l.Timestamp),
-                        To = logs.Max(l => l.Timestamp)
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Error = ex.Message,
-                    InnerException = ex.InnerException?.Message
-                });
-            }
-        }
-
-        /// <summary>
         /// Clear all audit log data
         /// DELETE: api/AuditDiagnostics/clear
         /// </summary>
         [HttpDelete("clear")]
+        [Authorize(Roles = "Admin")] // Restrict to admins only
         public async Task<ActionResult<object>> ClearData()
         {
             try

@@ -76,6 +76,22 @@ namespace Hyip_Payments.Command.Decorators
             {
                 var (actionType, entityType, entityId) = ParseCommandInfo(commandName, request);
 
+                // Sanitize request and response data before logging
+                var sanitizedResponse = response != null 
+                    ? AuditDataSanitizer.SanitizeObject(response) 
+                    : null;
+
+                var sanitizedAdditionalData = exception != null 
+                    ? AuditDataSanitizer.SanitizeObject(new { 
+                        ExceptionType = exception.GetType().Name,
+                        Message = exception.Message,
+                        // Don't log full stack trace if it might contain sensitive data
+                        StackTrace = AuditDataSanitizer.ContainsSensitiveData(exception.StackTrace ?? "") 
+                            ? "[REDACTED]" 
+                            : exception.StackTrace
+                    })
+                    : null;
+
                 var auditLog = new Models.AuditLogModel
                 {
                     ActionType = actionType,
@@ -86,14 +102,8 @@ namespace Hyip_Payments.Command.Decorators
                     IsSuccessful = isSuccessful,
                     DurationMs = durationMs,
                     BeforeValue = null, // Commands don't typically have before values
-                    AfterValue = response != null ? JsonSerializer.Serialize(response) : null,
-                    AdditionalData = exception != null 
-                        ? JsonSerializer.Serialize(new { 
-                            ExceptionType = exception.GetType().Name,
-                            Message = exception.Message,
-                            StackTrace = exception.StackTrace
-                        })
-                        : null
+                    AfterValue = sanitizedResponse,
+                    AdditionalData = sanitizedAdditionalData
                 };
 
                 await _auditService.LogAsync(auditLog);

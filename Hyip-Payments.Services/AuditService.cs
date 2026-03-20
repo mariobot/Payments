@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace Hyip_Payments.Services
 {
     /// <summary>
-    /// Implementation of audit logging service
+    /// Implementation of audit logging service with data sanitization
     /// </summary>
     public class AuditService : IAuditService
     {
@@ -22,6 +22,17 @@ namespace Hyip_Payments.Services
             if (auditLog.Timestamp == default)
             {
                 auditLog.Timestamp = DateTime.UtcNow;
+            }
+
+            // Sanitize sensitive data before saving
+            auditLog.BeforeValue = AuditDataSanitizer.SanitizeJson(auditLog.BeforeValue);
+            auditLog.AfterValue = AuditDataSanitizer.SanitizeJson(auditLog.AfterValue);
+            auditLog.AdditionalData = AuditDataSanitizer.SanitizeJson(auditLog.AdditionalData);
+
+            // Sanitize description if it contains sensitive keywords
+            if (AuditDataSanitizer.ContainsSensitiveData(auditLog.Description))
+            {
+                auditLog.Description = "[REDACTED - Contains sensitive information]";
             }
 
             _context.AuditLogs.Add(auditLog);
@@ -50,8 +61,9 @@ namespace Hyip_Payments.Services
                 UserName = userName,
                 Severity = severity,
                 IsSuccessful = isSuccessful,
-                BeforeValue = beforeValue != null ? JsonSerializer.Serialize(beforeValue) : null,
-                AfterValue = afterValue != null ? JsonSerializer.Serialize(afterValue) : null
+                // Sanitize objects before serialization
+                BeforeValue = AuditDataSanitizer.SanitizeObject(beforeValue),
+                AfterValue = AuditDataSanitizer.SanitizeObject(afterValue)
             };
 
             await LogAsync(auditLog);
@@ -69,7 +81,7 @@ namespace Hyip_Payments.Services
                 severity: "Info",
                 isSuccessful: true,
                 beforeValue: null,
-                afterValue: createdObject
+                afterValue: createdObject // Will be sanitized in LogActionAsync
             );
         }
 
@@ -84,8 +96,8 @@ namespace Hyip_Payments.Services
                 userName: userName,
                 severity: "Info",
                 isSuccessful: true,
-                beforeValue: beforeObject,
-                afterValue: afterObject
+                beforeValue: beforeObject, // Will be sanitized in LogActionAsync
+                afterValue: afterObject    // Will be sanitized in LogActionAsync
             );
         }
 
@@ -100,13 +112,14 @@ namespace Hyip_Payments.Services
                 userName: userName,
                 severity: "Warning",
                 isSuccessful: true,
-                beforeValue: deletedObject,
+                beforeValue: deletedObject, // Will be sanitized in LogActionAsync
                 afterValue: null
             );
         }
 
         public async Task LogLoginAsync(string userId, string userName, bool isSuccessful, string? ipAddress = null)
         {
+            // NEVER log password - login attempts should not include sensitive data
             var auditLog = new AuditLogModel
             {
                 ActionType = "Login",
@@ -117,7 +130,10 @@ namespace Hyip_Payments.Services
                 Description = isSuccessful ? "User logged in successfully" : "Failed login attempt",
                 Severity = isSuccessful ? "Info" : "Warning",
                 IsSuccessful = isSuccessful,
-                IpAddress = ipAddress
+                IpAddress = ipAddress,
+                // NO password data logged - only the fact that login occurred
+                BeforeValue = null,
+                AfterValue = null
             };
 
             await LogAsync(auditLog);
@@ -125,11 +141,16 @@ namespace Hyip_Payments.Services
 
         public async Task LogSecurityEventAsync(string description, string severity = "Warning", string? userId = null)
         {
+            // Sanitize description to ensure no sensitive data leaks
+            var sanitizedDescription = AuditDataSanitizer.ContainsSensitiveData(description)
+                ? "[REDACTED - Contains sensitive keywords]"
+                : description;
+
             var auditLog = new AuditLogModel
             {
                 ActionType = "Security",
                 EntityType = "System",
-                Description = description,
+                Description = sanitizedDescription,
                 Severity = severity,
                 UserId = userId,
                 IsSuccessful = false
@@ -140,16 +161,21 @@ namespace Hyip_Payments.Services
 
         public async Task LogFailureAsync(string actionType, string entityType, string? entityId, string errorMessage, string? userId = null)
         {
+            // Sanitize error message to avoid leaking sensitive data in exceptions
+            var sanitizedError = AuditDataSanitizer.ContainsSensitiveData(errorMessage)
+                ? "[REDACTED - Error contains sensitive information]"
+                : errorMessage;
+
             var auditLog = new AuditLogModel
             {
                 ActionType = actionType,
                 EntityType = entityType,
                 EntityId = entityId,
                 UserId = userId,
-                Description = $"Failed to {actionType.ToLower()} {entityType}: {errorMessage}",
+                Description = $"Failed to {actionType.ToLower()} {entityType}: {sanitizedError}",
                 Severity = "Critical",
                 IsSuccessful = false,
-                AdditionalData = JsonSerializer.Serialize(new { ErrorMessage = errorMessage })
+                AdditionalData = JsonSerializer.Serialize(new { ErrorMessage = sanitizedError })
             };
 
             await LogAsync(auditLog);

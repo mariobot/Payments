@@ -6,122 +6,361 @@
 
 <PageTitle>Add Cryptocurrency - HYIP Payments</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="bi bi-currency-bitcoin text-warning"></i> Add New Cryptocurrency</h3>
-        <ActionButton Action="Back" OnClick="GoBack">
-            Back to List
-        </ActionButton>
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/coin/list">Cryptocurrencies</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add Cryptocurrency</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-currency-bitcoin text-purple me-2"></i>
+                        Add New Cryptocurrency
+                    </h2>
+                    <p class="text-muted mb-0">Register a new digital currency</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary" @onclick="GoBack">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    @if (errorMessage != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
-            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
-        </div>
-    }
+    <div class="row">
+        <div class="col-lg-10 col-xl-8 mx-auto">
+            <!-- Main Form Card -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-purple text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Cryptocurrency Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <EditForm Model="@coin" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
 
-    @if (successMessage != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill"></i> @successMessage
-            <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
-        </div>
-    }
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <h6 class="text-purple mb-3">
+                                    <i class="bi bi-info-circle-fill"></i> Basic Information
+                                </h6>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <EditForm Model="@coin" OnValidSubmit="HandleValidSubmit">
-                <DataAnnotationsValidator />
+                                <!-- Coin Name -->
+                                <div class="mb-4">
+                                    <label for="name" class="form-label fw-semibold">
+                                        <i class="bi bi-coin text-purple me-2"></i>
+                                        Coin Name
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-currency-bitcoin"></i>
+                                        </span>
+                                        <InputText id="name"
+                                                 class="form-control"
+                                                 @bind-Value="coin.Name"
+                                                 placeholder="e.g., Bitcoin, Ethereum, Cardano" />
+                                    </div>
+                                    <ValidationMessage For="@(() => coin.Name)" class="text-danger small mt-1" />
+                                    <small class="form-text text-muted">
+                                        <i class="bi bi-info-circle"></i> Official name of the cryptocurrency
+                                    </small>
+                                </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Basic Information</h5>
+                                <!-- Symbol -->
+                                <div class="mb-4">
+                                    <label for="symbol" class="form-label fw-semibold">
+                                        <i class="bi bi-tag text-purple me-2"></i>
+                                        Symbol
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-hash"></i>
+                                        </span>
+                                        <InputText id="symbol"
+                                                 class="form-control"
+                                                 @bind-Value="coin.Symbol"
+                                                 placeholder="e.g., BTC, ETH, ADA"
+                                                 maxlength="10"
+                                                 style="text-transform: uppercase;" />
+                                    </div>
+                                    <ValidationMessage For="@(() => coin.Symbol)" class="text-danger small mt-1" />
+                                    <small class="form-text text-muted">
+                                        <i class="bi bi-info-circle"></i> Trading symbol (usually 3-4 characters)
+                                    </small>
+                                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-coin"></i> Coin Name
-                                <span class="text-danger">*</span>
-                            </label>
-                            <InputText class="form-control"
-                                     @bind-Value="coin.Name"
-                                     placeholder="e.g., Bitcoin, Ethereum" />
-                            <ValidationMessage For="@(() => coin.Name)" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-tag"></i> Symbol
-                                <span class="text-danger">*</span>
-                            </label>
-                            <InputText class="form-control"
-                                     @bind-Value="coin.Symbol"
-                                     placeholder="e.g., BTC, ETH"
-                                     style="text-transform: uppercase;" />
-                            <ValidationMessage For="@(() => coin.Symbol)" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-cash-stack"></i> Current Price (USD)
-                                <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <InputNumber class="form-control"
-                                           @bind-Value="coin.CurrentPrice"
-                                           placeholder="0.00"
-                                           step="0.01" />
+                                <!-- Current Price -->
+                                <div class="mb-4">
+                                    <label for="price" class="form-label fw-semibold">
+                                        <i class="bi bi-cash-stack text-purple me-2"></i>
+                                        Current Price (USD)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </span>
+                                        <InputNumber id="price"
+                                                   class="form-control"
+                                                   @bind-Value="coin.CurrentPrice"
+                                                   placeholder="0.00"
+                                                   step="0.01" />
+                                    </div>
+                                    <ValidationMessage For="@(() => coin.CurrentPrice)" class="text-danger small mt-1" />
+                                    <small class="form-text text-muted">
+                                        <i class="bi bi-info-circle"></i> Current market price in USD
+                                    </small>
+                                </div>
                             </div>
-                            <ValidationMessage For="@(() => coin.CurrentPrice)" />
+
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <h6 class="text-purple mb-3">
+                                    <i class="bi bi-gear-fill"></i> Additional Details
+                                </h6>
+
+                                <!-- Network / Blockchain -->
+                                <div class="mb-4">
+                                    <label for="network" class="form-label fw-semibold">
+                                        <i class="bi bi-diagram-3 text-purple me-2"></i>
+                                        Network / Blockchain
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-bezier2"></i>
+                                        </span>
+                                        <InputText id="network"
+                                                 class="form-control"
+                                                 @bind-Value="coin.Network"
+                                                 placeholder="e.g., Ethereum, Binance Smart Chain, Solana" />
+                                    </div>
+                                    <ValidationMessage For="@(() => coin.Network)" class="text-danger small mt-1" />
+                                    <small class="form-text text-muted">
+                                        <i class="bi bi-info-circle"></i> Blockchain network (optional)
+                                    </small>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-4">
+                                    <label for="description" class="form-label fw-semibold">
+                                        <i class="bi bi-file-text text-purple me-2"></i>
+                                        Description
+                                    </label>
+                                    <InputTextArea id="description"
+                                                  class="form-control"
+                                                  @bind-Value="coin.Description"
+                                                  rows="5"
+                                                  placeholder="Enter coin description, features, or use case (optional)" />
+                                    <ValidationMessage For="@(() => coin.Description)" class="text-danger small mt-1" />
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Brief description of the cryptocurrency
+                                        </small>
+                                        <small class="text-muted">
+                                            @((coin.Description?.Length ?? 0))/500 characters
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                            <button type="button" class="btn btn-outline-secondary px-4" @onclick="GoBack" disabled="@isSubmitting">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-purple px-4" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-plus-circle me-2"></i>
+                                    <span>Add Cryptocurrency</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                        <div class="flex-grow-1">
+                            <strong>Success!</strong>
+                            <p class="mb-0">@successMessage</p>
                         </div>
                     </div>
+                    <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+                </div>
+            }
 
-                    <div class="col-md-6">
-                        <h5 class="mb-3"><i class="bi bi-gear"></i> Additional Details</h5>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-diagram-3"></i> Network / Blockchain
-                            </label>
-                            <InputText class="form-control"
-                                     @bind-Value="coin.Network"
-                                     placeholder="e.g., Ethereum, Binance Smart Chain" />
-                            <ValidationMessage For="@(() => coin.Network)" />
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                        <div class="flex-grow-1">
+                            <strong>Error!</strong>
+                            <p class="mb-0">@errorMessage</p>
                         </div>
+                    </div>
+                    <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                </div>
+            }
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-file-text"></i> Description
-                            </label>
-                            <InputTextArea class="form-control"
-                                         @bind-Value="coin.Description"
-                                         rows="5"
-                                         placeholder="Enter coin description (optional)" />
-                            <ValidationMessage For="@(() => coin.Description)" />
+            <!-- Popular Cryptocurrencies Card -->
+            <div class="card border-purple mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-star-fill text-purple me-2"></i>
+                        Popular Cryptocurrencies
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Top 3:</strong>
+                            <ul class="list-unstyled mb-0 mt-1 small">
+                                <li>₿ Bitcoin (BTC)</li>
+                                <li>Ξ Ethereum (ETH)</li>
+                                <li>₮ Tether (USDT)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Altcoins:</strong>
+                            <ul class="list-unstyled mb-0 mt-1 small">
+                                <li>🔷 BNB (BNB)</li>
+                                <li>◎ Solana (SOL)</li>
+                                <li>₳ Cardano (ADA)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>DeFi Tokens:</strong>
+                            <ul class="list-unstyled mb-0 mt-1 small">
+                                <li>🦄 Uniswap (UNI)</li>
+                                <li>🔗 Chainlink (LINK)</li>
+                                <li>🟣 Polygon (MATIC)</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <hr class="my-4" />
-
-                <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-secondary" @onclick="GoBack">
-                        <i class="bi bi-x-circle"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-success btn-lg" disabled="@isSubmitting">
-                        @if (isSubmitting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                        }
-                        <i class="bi bi-check-circle"></i> Add Cryptocurrency
-                    </button>
+            <!-- Tips Card -->
+            <div class="card border-info mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-info me-2"></i>
+                        Tips for Adding Cryptocurrencies
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Use the official name and symbol from CoinMarketCap or CoinGecko</li>
+                        <li>Update prices regularly to reflect current market values</li>
+                        <li>Specify the blockchain network for tokens (e.g., ERC-20, BEP-20)</li>
+                        <li>Include a clear description for user education</li>
+                        <li>Verify symbol uniqueness to avoid confusion</li>
+                    </ul>
                 </div>
-            </EditForm>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Custom Styles -->
+<style>
+    .text-purple {
+        color: #6f42c1 !important;
+    }
+
+    .bg-purple {
+        background-color: #6f42c1 !important;
+    }
+
+    .btn-purple {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+
+    .btn-purple:hover:not(:disabled) {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+    }
+
+    .border-purple {
+        border-color: #6f42c1 !important;
+    }
+
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .input-group:focus-within .input-group-text {
+        border-color: #6f42c1;
+        box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.15);
+    }
+
+    .input-group-text {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #6f42c1;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+</style>
 
 @code {
     private CoinModel coin = new();

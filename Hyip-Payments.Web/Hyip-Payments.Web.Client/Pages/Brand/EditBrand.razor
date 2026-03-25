@@ -325,20 +325,6 @@
     }
 </style>
 
-                        @if (successMessage != null)
-                        {
-                            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                                <i class="bi bi-check-circle-fill"></i> @successMessage
-                                <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 @code {
     [Parameter] public int BrandId { get; set; }
 

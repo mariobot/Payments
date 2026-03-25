@@ -7,147 +7,384 @@
 
 <PageTitle>Edit Wallet - HYIP Payments</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="bi bi-pencil-square text-warning"></i> Edit Wallet</h3>
-        <ActionButton Action="Back" OnClick="GoBack">
-            Back to List
-        </ActionButton>
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/wallet/list">Wallets</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Wallet</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-wallet2 text-info me-2"></i>
+                        Edit Wallet
+                    </h2>
+                    <p class="text-muted mb-0">Update wallet information and balance</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary" @onclick="GoBack">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (isLoading)
     {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2">Loading wallet...</p>
+        <!-- Loading State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-info mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0">Loading wallet details...</p>
+            </div>
         </div>
     }
     else if (wallet == null)
     {
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle-fill"></i> Wallet not found
+        <!-- Not Found State -->
+        <div class="card shadow-sm border-info">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-exclamation-triangle text-info" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Wallet Not Found</h4>
+                <p class="text-muted">The wallet you're looking for doesn't exist or has been deleted.</p>
+                <button class="btn btn-info mt-3 text-white" @onclick="GoBack">
+                    <i class="bi bi-arrow-left"></i> Return to Wallets
+                </button>
+            </div>
         </div>
     }
     else
     {
-        @if (errorMessage != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i> @errorMessage
-                <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
-            </div>
-        }
+        <div class="row">
+            <div class="col-lg-10 col-xl-8 mx-auto">
+                <!-- Main Form Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-info text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Wallet Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <EditForm Model="@wallet" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
 
-        @if (successMessage != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill"></i> @successMessage
-                <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
-            </div>
-        }
-
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <EditForm Model="@wallet" OnValidSubmit="HandleValidSubmit">
-                    <DataAnnotationsValidator />
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5 class="mb-3"><i class="bi bi-info-circle"></i> Wallet Information</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-geo-alt"></i> Wallet Address
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <InputText class="form-control"
-                                         @bind-Value="wallet.Address"
-                                         placeholder="e.g., 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb" />
-                                <ValidationMessage For="@(() => wallet.Address)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Enter the blockchain wallet address
-                                </small>
+                            <!-- Wallet ID Display -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <small class="text-muted">Wallet ID</small>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong>#@wallet.Id</strong>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-currency-exchange"></i> Currency / Coin Type
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <InputText class="form-control"
-                                         @bind-Value="wallet.Currency"
-                                         placeholder="e.g., BTC, ETH, USDT"
-                                         maxlength="32"
-                                         style="text-transform: uppercase;" />
-                                <ValidationMessage For="@(() => wallet.Currency)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> The cryptocurrency type (BTC, ETH, USDT, etc.)
-                                </small>
+                            <div class="row">
+                                <!-- Left Column -->
+                                <div class="col-md-6">
+                                    <h6 class="text-info mb-3">
+                                        <i class="bi bi-wallet-fill"></i> Wallet Details
+                                    </h6>
+
+                                    <!-- Wallet Address -->
+                                    <div class="mb-4">
+                                        <label for="address" class="form-label fw-semibold">
+                                            <i class="bi bi-geo-alt text-info me-2"></i>
+                                            Wallet Address
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-wallet2"></i>
+                                            </span>
+                                            <InputText id="address"
+                                                     class="form-control font-monospace"
+                                                     @bind-Value="wallet.Address"
+                                                     placeholder="e.g., 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb" />
+                                        </div>
+                                        <ValidationMessage For="@(() => wallet.Address)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Enter the blockchain wallet address
+                                        </small>
+                                    </div>
+
+                                    <!-- Currency / Coin Type -->
+                                    <div class="mb-4">
+                                        <label for="currency" class="form-label fw-semibold">
+                                            <i class="bi bi-currency-exchange text-info me-2"></i>
+                                            Currency / Coin Type
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-coin"></i>
+                                            </span>
+                                            <InputText id="currency"
+                                                     class="form-control"
+                                                     @bind-Value="wallet.Currency"
+                                                     placeholder="e.g., BTC, ETH, USDT"
+                                                     maxlength="32"
+                                                     style="text-transform: uppercase;" />
+                                        </div>
+                                        <ValidationMessage For="@(() => wallet.Currency)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> The cryptocurrency type (BTC, ETH, USDT, etc.)
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column -->
+                                <div class="col-md-6">
+                                    <h6 class="text-info mb-3">
+                                        <i class="bi bi-cash-stack"></i> Balance & Status
+                                    </h6>
+
+                                    <!-- Balance -->
+                                    <div class="mb-4">
+                                        <label for="balance" class="form-label fw-semibold">
+                                            <i class="bi bi-cash text-info me-2"></i>
+                                            Balance
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-currency-dollar"></i>
+                                            </span>
+                                            <InputNumber id="balance"
+                                                       class="form-control"
+                                                       @bind-Value="wallet.Balance"
+                                                       placeholder="0.00"
+                                                       step="0.01" />
+                                        </div>
+                                        <ValidationMessage For="@(() => wallet.Balance)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Current balance in USD equivalent
+                                        </small>
+                                    </div>
+
+                                    <!-- User ID -->
+                                    <div class="mb-4">
+                                        <label for="userId" class="form-label fw-semibold">
+                                            <i class="bi bi-person-badge text-info me-2"></i>
+                                            User ID (Optional)
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-person"></i>
+                                            </span>
+                                            <InputText id="userId"
+                                                     class="form-control"
+                                                     @bind-Value="wallet.UserId"
+                                                     placeholder="User identifier" />
+                                        </div>
+                                        <ValidationMessage For="@(() => wallet.UserId)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Link this wallet to a specific user
+                                        </small>
+                                    </div>
+
+                                    <!-- Active Status -->
+                                    <div class="mb-4">
+                                        <div class="form-check form-switch">
+                                            <InputCheckbox id="isActive"
+                                                         class="form-check-input"
+                                                         @bind-Value="wallet.IsActive"
+                                                         style="width: 3em; height: 1.5em;" />
+                                            <label class="form-check-label fw-semibold ms-2" for="isActive">
+                                                <i class="bi bi-toggle-on text-success me-2"></i>
+                                                Active Wallet
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted ms-5">
+                                            <i class="bi bi-info-circle"></i> Enable this wallet for transactions
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" @onclick="GoBack" disabled="@isSubmitting">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-info px-4 text-white" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span>Update Wallet</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Success!</strong>
+                                <p class="mb-0">@successMessage</p>
                             </div>
                         </div>
+                        <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+                    </div>
+                }
 
-                        <div class="col-md-6">
-                            <h5 class="mb-3"><i class="bi bi-cash-stack"></i> Balance & Status</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-cash"></i> Balance
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <InputNumber class="form-control"
-                                               @bind-Value="wallet.Balance"
-                                               placeholder="0.00"
-                                               step="0.01" />
-                                </div>
-                                <ValidationMessage For="@(() => wallet.Balance)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Current balance in USD equivalent
-                                </small>
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Error!</strong>
+                                <p class="mb-0">@errorMessage</p>
                             </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                    </div>
+                }
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-person-badge"></i> User ID (Optional)
-                                </label>
-                                <InputText class="form-control"
-                                         @bind-Value="wallet.UserId"
-                                         placeholder="User identifier" />
-                                <ValidationMessage For="@(() => wallet.UserId)" />
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Link this wallet to a specific user
-                                </small>
+                <!-- Supported Cryptocurrencies Card -->
+                <div class="card border-info mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-currency-bitcoin text-info me-2"></i>
+                            Supported Cryptocurrencies
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Major Coins:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>₿ BTC - Bitcoin</li>
+                                    <li>Ξ ETH - Ethereum</li>
+                                    <li>₳ ADA - Cardano</li>
+                                </ul>
                             </div>
-
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-                                    <InputCheckbox id="isActive" 
-                                                 class="form-check-input" 
-                                                 @bind-Value="wallet.IsActive" />
-                                    <label class="form-check-label fw-bold" for="isActive">
-                                        <i class="bi bi-toggle-on"></i> Active Wallet
-                                    </label>
-                                </div>
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle"></i> Enable this wallet for transactions
-                                </small>
+                            <div class="col-md-4">
+                                <strong>Stablecoins:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>₮ USDT - Tether</li>
+                                    <li>💵 USDC - USD Coin</li>
+                                    <li>🟢 DAI - Dai</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Altcoins:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🔷 BNB - Binance Coin</li>
+                                    <li>⊕ XRP - Ripple</li>
+                                    <li>◎ SOL - Solana</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <hr class="my-4" />
+                <!-- Tips Card -->
+                <div class="card border-warning mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-lightbulb text-warning me-2"></i>
+                            Tips for Wallet Management
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Always verify the wallet address before updating</li>
+                            <li>Ensure the address matches the cryptocurrency type</li>
+                            <li>Double-check the blockchain network (e.g., ERC-20, TRC-20)</li>
+                            <li>Keep wallet addresses secure and private</li>
+                            <li>Monitor balance changes regularly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary" @onclick="GoBack">
-                            <i class="bi bi-x-circle"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-warning btn-lg" disabled="@isSubmitting">
-                            @if (isSubmitting)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                            }
-                            <i class="bi bi-check-circle"></i> Update Wallet
+<!-- Custom Styles -->
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .input-group:focus-within .input-group-text {
+        border-color: #0dcaf0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.15);
+    }
+
+    .input-group-text {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #0dcaf0;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .font-monospace {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.9em;
+    }
+</style>
                         </button>
                     </div>
                 </EditForm>

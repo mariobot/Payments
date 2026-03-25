@@ -24,5 +24,8 @@ namespace Hyip_Payments.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsActive { get; set; } = true;
+
+        [NotMapped]
+        public bool IsSelected { get; set; }
     }
 }

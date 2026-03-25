@@ -22,5 +22,12 @@ namespace Hyip_Payments.Models
 
         [MaxLength(100)]
         public string? Region { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public bool IsActive { get; set; } = true;
+
+        [NotMapped]
+        public bool IsSelected { get; set; }
     }
 }

@@ -4,99 +4,326 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<PageTitle>Edit Brand</PageTitle>
+<PageTitle>Edit Brand - HYIP Payments</PageTitle>
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    <h3 class="mb-0"><i class="bi bi-pencil-square"></i> Edit Brand</h3>
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/brand/list">Brands</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Brand</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-award text-danger me-2"></i>
+                        Edit Brand
+                    </h2>
+                    <p class="text-muted mb-0">Update brand information</p>
                 </div>
-                <div class="card-body">
-                    @if (isLoading)
-                    {
-                        <div class="text-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2">Loading brand...</p>
-                        </div>
-                    }
-                    else if (errorMessage != null)
-                    {
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle"></i> @errorMessage
-                            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
-                        </div>
-                        <button class="btn btn-secondary" @onclick="GoToList">
-                            <i class="bi bi-arrow-left"></i> Back to List
-                        </button>
-                    }
-                    else if (brand != null)
-                    {
+                <div>
+                    <button class="btn btn-outline-secondary" @onclick="GoToList">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <!-- Loading State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-danger mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0">Loading brand details...</p>
+            </div>
+        </div>
+    }
+    else if (brand == null)
+    {
+        <!-- Not Found State -->
+        <div class="card shadow-sm border-danger">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Brand Not Found</h4>
+                <p class="text-muted">The brand you're looking for doesn't exist or has been deleted.</p>
+                <button class="btn btn-danger mt-3" @onclick="GoToList">
+                    <i class="bi bi-arrow-left"></i> Return to Brands
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8 col-xl-6 mx-auto">
+                <!-- Main Form Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-danger text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Brand Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
                         <EditForm Model="@brand" OnValidSubmit="HandleValidSubmit">
                             <DataAnnotationsValidator />
-                            <ValidationSummary class="alert alert-danger" />
 
-                            <!-- Brand Name -->
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-bookmark text-warning"></i> Brand Name
-                                    <span class="text-danger">*</span>
-                                </label>
-                                <InputText class="form-control form-control-lg" 
-                                          @bind-Value="brand.Name" 
-                                          placeholder="Enter brand name (e.g., Nike, Apple)" />
-                                <ValidationMessage For="@(() => brand.Name)" class="text-danger small" />
-                            </div>
-
-                            <!-- Description -->
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-file-text text-warning"></i> Description
-                                </label>
-                                <InputTextArea class="form-control" 
-                                              @bind-Value="brand.Description" 
-                                              rows="3"
-                                              placeholder="Describe the brand (optional)..." />
-                                <ValidationMessage For="@(() => brand.Description)" class="text-danger small" />
-                            </div>
-
-                            <!-- Active Status -->
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-                                    <InputCheckbox id="isActive" class="form-check-input" @bind-Value="brand.IsActive" style="cursor: pointer; width: 3em; height: 1.5em;" />
-                                    <label for="isActive" class="form-check-label fw-bold" style="cursor: pointer;">
-                                        @if (brand.IsActive)
-                                        {
-                                            <i class="bi bi-check-circle-fill text-success"></i>
-                                            <span class="text-success">Brand is Active</span>
-                                        }
-                                        else
-                                        {
-                                            <i class="bi bi-x-circle-fill text-secondary"></i>
-                                            <span class="text-secondary">Brand is Inactive</span>
-                                        }
-                                    </label>
+                            <!-- Brand ID Display -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <small class="text-muted">Brand ID</small>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong>#@brand.Id</strong>
+                                    </div>
                                 </div>
                             </div>
 
-                            <hr class="my-4" />
+                            <!-- Brand Name -->
+                            <div class="mb-4">
+                                <label for="name" class="form-label fw-semibold">
+                                    <i class="bi bi-award text-danger me-2"></i>
+                                    Brand Name
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-tag-fill"></i>
+                                    </span>
+                                    <InputText id="name"
+                                             class="form-control"
+                                             @bind-Value="brand.Name"
+                                             placeholder="e.g., Apple, Samsung, Nike" />
+                                </div>
+                                <ValidationMessage For="@(() => brand.Name)" class="text-danger small mt-1" />
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Official brand or manufacturer name
+                                </small>
+                            </div>
 
-                            <div class="d-flex justify-content-between">
-                                <button type="button" class="btn btn-secondary" @onclick="GoToList">
-                                    <i class="bi bi-x-circle"></i> Cancel
+                            <!-- Description -->
+                            <div class="mb-4">
+                                <label for="description" class="form-label fw-semibold">
+                                    <i class="bi bi-text-paragraph text-danger me-2"></i>
+                                    Description
+                                </label>
+                                <InputTextArea id="description"
+                                              class="form-control"
+                                              @bind-Value="brand.Description"
+                                              rows="4"
+                                              placeholder="Provide a brief description of the brand (optional)" />
+                                <ValidationMessage For="@(() => brand.Description)" class="text-danger small mt-1" />
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <small class="form-text text-muted">
+                                        <i class="bi bi-info-circle"></i> Brief description of the brand
+                                    </small>
+                                    <small class="text-muted">
+                                        @((brand.Description?.Length ?? 0))/500 characters
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Active Status -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <InputCheckbox id="isActive"
+                                                 class="form-check-input"
+                                                 @bind-Value="brand.IsActive"
+                                                 style="width: 3em; height: 1.5em;" />
+                                    <label class="form-check-label fw-semibold ms-2" for="isActive">
+                                        @if (brand.IsActive)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span class="text-success">Active Brand</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle-fill text-secondary me-2"></i>
+                                            <span class="text-secondary">Inactive Brand</span>
+                                        }
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted ms-5">
+                                    <i class="bi bi-info-circle"></i> Toggle to activate or deactivate this brand
+                                </small>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" @onclick="GoToList" disabled="@isSubmitting">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Cancel
                                 </button>
-                                <button type="submit" class="btn btn-warning" disabled="@isSubmitting">
+                                <button type="submit" class="btn btn-danger px-4" disabled="@isSubmitting">
                                     @if (isSubmitting)
                                     {
-                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
                                     }
-                                    <i class="bi bi-check-circle"></i> Update Brand
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span>Update Brand</span>
+                                    }
                                 </button>
                             </div>
                         </EditForm>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Success!</strong>
+                                <p class="mb-0">@successMessage</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Error!</strong>
+                                <p class="mb-0">@errorMessage</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                    </div>
+                }
+
+                <!-- Popular Brands Card -->
+                <div class="card border-danger mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-star-fill text-danger me-2"></i>
+                            Popular Brand Examples
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Tech:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🍎 Apple</li>
+                                    <li>📱 Samsung</li>
+                                    <li>💻 Microsoft</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Fashion:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>👟 Nike</li>
+                                    <li>👕 Adidas</li>
+                                    <li>👗 Zara</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Automotive:</strong>
+                                <ul class="list-unstyled mb-0 mt-1 small">
+                                    <li>🚗 Tesla</li>
+                                    <li>🏎️ BMW</li>
+                                    <li>🚙 Toyota</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips Card -->
+                <div class="card border-info mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-lightbulb text-info me-2"></i>
+                            Tips for Brand Management
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Keep brand names consistent across your system</li>
+                            <li>Update descriptions to reflect current brand positioning</li>
+                            <li>Deactivate brands that are no longer in use</li>
+                            <li>Verify spelling and official brand names</li>
+                            <li>Link brands to products for better organization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-control:focus,
+    .input-group:focus-within .input-group-text {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15);
+    }
+
+    .input-group-text {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #dc3545;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+</style>
 
                         @if (successMessage != null)
                         {

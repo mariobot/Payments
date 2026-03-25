@@ -6,148 +6,417 @@
 
 <PageTitle>Edit Product - HYIP Payments</PageTitle>
 
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-8 col-xl-6">
-            <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/product/list">Products</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Product</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h2 class="mb-1"><i class="bi bi-pencil-square text-warning"></i> Edit Product</h2>
+                    <h2 class="mb-1">
+                        <i class="bi bi-box-seam text-orange me-2"></i>
+                        Edit Product
+                    </h2>
                     <p class="text-muted mb-0">Update product information</p>
                 </div>
-                <button type="button" class="btn btn-outline-secondary" @onclick="GoBack">
-                    <i class="bi bi-arrow-left me-1"></i> Back
+                <div>
+                    <button class="btn btn-outline-secondary" @onclick="GoBack">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <!-- Loading State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-orange mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0">Loading product details...</p>
+            </div>
+        </div>
+    }
+    else if (product == null)
+    {
+        <!-- Not Found State -->
+        <div class="card shadow-sm border-orange">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-exclamation-triangle text-orange" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Product Not Found</h4>
+                <p class="text-muted">The product you're looking for doesn't exist or has been deleted.</p>
+                <button class="btn btn-orange mt-3" @onclick="GoBack">
+                    <i class="bi bi-arrow-left"></i> Return to Products
                 </button>
             </div>
-
-            @if (isLoading)
-            {
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2">Loading product...</p>
-                </div>
-            }
-            else if (product == null)
-            {
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill"></i> Product not found
-                </div>
-            }
-            else
-            {
-                <!-- Alert Messages -->
-                @if (successMessage != null)
-                {
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i>@successMessage
-                        <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
-                    </div>
-                }
-                @if (errorMessage != null)
-                {
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMessage
-                        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
-                    </div>
-                }
-
-                <!-- Form Card -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Product Information</h5>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-10 col-xl-8 mx-auto">
+                <!-- Main Form Card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-orange text-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Product Information
+                        </h5>
                     </div>
                     <div class="card-body p-4">
                         <EditForm Model="@product" OnValidSubmit="HandleValidSubmit">
                             <DataAnnotationsValidator />
 
+                            <!-- Product ID Display -->
+                            <div class="alert alert-light border mb-4">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <small class="text-muted">Product ID</small>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong>#@product.Id</strong>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Basic Information Section -->
                             <div class="mb-4">
-                                <h6 class="text-primary border-bottom pb-2 mb-3">
-                                    <i class="bi bi-info-circle me-2"></i>Basic Information
+                                <h6 class="text-orange mb-3">
+                                    <i class="bi bi-info-circle-fill"></i> Basic Information
                                 </h6>
 
                                 <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label fw-semibold">
-                                            Product Name <span class="text-danger">*</span>
+                                    <!-- Product Name -->
+                                    <div class="col-md-12 mb-4">
+                                        <label for="name" class="form-label fw-semibold">
+                                            <i class="bi bi-box text-orange me-2"></i>
+                                            Product Name
+                                            <span class="text-danger">*</span>
                                         </label>
-                                        <InputText class="form-control" @bind-Value="product.Name" 
-                                                   placeholder="Enter product name" />
-                                        <ValidationMessage For="@(() => product.Name)" class="text-danger small" />
-                                    </div>
-
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label fw-semibold">Description</label>
-                                        <InputTextArea class="form-control" @bind-Value="product.Description" 
-                                                       rows="4" placeholder="Enter product description" />
-                                        <ValidationMessage For="@(() => product.Description)" class="text-danger small" />
-                                    </div>
-
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label fw-semibold">
-                                            Price <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
-                                            <InputNumber class="form-control" @bind-Value="product.Price" 
-                                                         placeholder="0.00" step="0.01" />
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-tag-fill"></i>
+                                            </span>
+                                            <InputText id="name"
+                                                     class="form-control"
+                                                     @bind-Value="product.Name"
+                                                     placeholder="e.g., iPhone 15 Pro, Nike Air Max" />
                                         </div>
-                                        <ValidationMessage For="@(() => product.Price)" class="text-danger small" />
+                                        <ValidationMessage For="@(() => product.Name)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Enter a descriptive product name
+                                        </small>
+                                    </div>
+
+                                    <!-- Description -->
+                                    <div class="col-md-12 mb-4">
+                                        <label for="description" class="form-label fw-semibold">
+                                            <i class="bi bi-text-paragraph text-orange me-2"></i>
+                                            Description
+                                        </label>
+                                        <InputTextArea id="description"
+                                                      class="form-control"
+                                                      @bind-Value="product.Description"
+                                                      rows="4"
+                                                      placeholder="Enter detailed product description (optional)" />
+                                        <ValidationMessage For="@(() => product.Description)" class="text-danger small mt-1" />
+                                        <div class="d-flex justify-content-between align-items-center mt-1">
+                                            <small class="form-text text-muted">
+                                                <i class="bi bi-info-circle"></i> Detailed product description
+                                            </small>
+                                            <small class="text-muted">
+                                                @((product.Description?.Length ?? 0))/1000 characters
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Price -->
+                                    <div class="col-md-12 mb-4">
+                                        <label for="price" class="form-label fw-semibold">
+                                            <i class="bi bi-cash-stack text-orange me-2"></i>
+                                            Price
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-currency-dollar"></i>
+                                            </span>
+                                            <InputNumber id="price"
+                                                       class="form-control"
+                                                       @bind-Value="product.Price"
+                                                       placeholder="0.00"
+                                                       step="0.01" />
+                                        </div>
+                                        <ValidationMessage For="@(() => product.Price)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Product price in USD
+                                        </small>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Classification Section -->
                             <div class="mb-4">
-                                <h6 class="text-primary border-bottom pb-2 mb-3">
-                                    <i class="bi bi-tags me-2"></i>Classification
+                                <h6 class="text-orange mb-3">
+                                    <i class="bi bi-tags-fill"></i> Classification
                                 </h6>
 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold">
-                                            Category <span class="text-danger">*</span>
+                                    <!-- Category -->
+                                    <div class="col-md-6 mb-4">
+                                        <label for="category" class="form-label fw-semibold">
+                                            <i class="bi bi-folder text-orange me-2"></i>
+                                            Category
+                                            <span class="text-danger">*</span>
                                         </label>
-                                        <InputSelect class="form-select" @bind-Value="product.CategoryId">
-                                            <option value="0">-- Select Category --</option>
-                                            @if (categories != null)
-                                            {
-                                                @foreach (var category in categories)
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-grid"></i>
+                                            </span>
+                                            <InputSelect id="category" class="form-select" @bind-Value="product.CategoryId">
+                                                <option value="0">-- Select Category --</option>
+                                                @if (categories != null)
                                                 {
-                                                    <option value="@category.Id">@category.Name</option>
+                                                    @foreach (var category in categories)
+                                                    {
+                                                        <option value="@category.Id">@category.Name</option>
+                                                    }
                                                 }
-                                            }
-                                        </InputSelect>
-                                        <ValidationMessage For="@(() => product.CategoryId)" class="text-danger small" />
+                                            </InputSelect>
+                                        </div>
+                                        <ValidationMessage For="@(() => product.CategoryId)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Select product category
+                                        </small>
                                     </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-semibold">
-                                            Brand <span class="text-danger">*</span>
+                                    <!-- Brand -->
+                                    <div class="col-md-6 mb-4">
+                                        <label for="brand" class="form-label fw-semibold">
+                                            <i class="bi bi-award text-orange me-2"></i>
+                                            Brand
+                                            <span class="text-danger">*</span>
                                         </label>
-                                        <InputSelect class="form-select" @bind-Value="product.BrandId">
-                                            <option value="0">-- Select Brand --</option>
-                                            @if (brands != null)
-                                            {
-                                                @foreach (var brand in brands)
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-bookmark"></i>
+                                            </span>
+                                            <InputSelect id="brand" class="form-select" @bind-Value="product.BrandId">
+                                                <option value="0">-- Select Brand --</option>
+                                                @if (brands != null)
                                                 {
-                                                    <option value="@brand.Id">@brand.Name</option>
+                                                    @foreach (var brand in brands)
+                                                    {
+                                                        <option value="@brand.Id">@brand.Name</option>
+                                                    }
                                                 }
-                                            }
-                                        </InputSelect>
-                                        <ValidationMessage For="@(() => product.BrandId)" class="text-danger small" />
+                                            </InputSelect>
+                                        </div>
+                                        <ValidationMessage For="@(() => product.BrandId)" class="text-danger small mt-1" />
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle"></i> Select product brand
+                                        </small>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Status Section -->
                             <div class="mb-4">
-                                <h6 class="text-primary border-bottom pb-2 mb-3">
-                                    <i class="bi bi-toggle-on me-2"></i>Status
+                                <h6 class="text-orange mb-3">
+                                    <i class="bi bi-toggle-on"></i> Status
                                 </h6>
 
                                 <div class="form-check form-switch">
-                                    <InputCheckbox class="form-check-input" id="isActive" @bind-Value="product.IsActive" />
+                                    <InputCheckbox id="isActive"
+                                                 class="form-check-input"
+                                                 @bind-Value="product.IsActive"
+                                                 style="width: 3em; height: 1.5em;" />
+                                    <label class="form-check-label fw-semibold ms-2" for="isActive">
+                                        @if (product.IsActive)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <span class="text-success">Product is Active</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle-fill text-secondary me-2"></i>
+                                            <span class="text-secondary">Product is Inactive</span>
+                                        }
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted ms-5">
+                                    <i class="bi bi-info-circle"></i> Active products are visible in the system
+                                </small>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" @onclick="GoBack" disabled="@isSubmitting">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-orange px-4" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span>Update Product</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Success!</strong>
+                                <p class="mb-0">@successMessage</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="@(() => successMessage = null)"></button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mt-4 shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong>Error!</strong>
+                                <p class="mb-0">@errorMessage</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                    </div>
+                }
+
+                <!-- Tips Card -->
+                <div class="card border-info mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-lightbulb text-info me-2"></i>
+                            Tips for Product Management
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Keep product information up-to-date</li>
+                            <li>Ensure prices reflect current market values</li>
+                            <li>Update descriptions when features change</li>
+                            <li>Verify category and brand assignments</li>
+                            <li>Deactivate discontinued products</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .text-orange {
+        color: #fd7e14 !important;
+    }
+
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+
+    .btn-orange {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
+    }
+
+    .btn-orange:hover:not(:disabled) {
+        background-color: #e36d0d;
+        border-color: #e36d0d;
+    }
+
+    .border-orange {
+        border-color: #fd7e14 !important;
+    }
+
+    .spinner-border.text-orange {
+        color: #fd7e14 !important;
+    }
+
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .input-group:focus-within .input-group-text {
+        border-color: #fd7e14;
+        box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.15);
+    }
+
+    .input-group-text {
+        transition: all 0.2s ease;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #fd7e14;
+    }
+
+    .btn {
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+</style>
                                     <label class="form-check-label fw-semibold" for="isActive">
                                         Product is Active
                                     </label>

@@ -417,38 +417,6 @@
         border-color: #198754;
     }
 </style>
-                                    <label class="form-check-label fw-semibold" for="isActive">
-                                        Product is Active
-                                    </label>
-                                    <div class="form-text">Active products are visible in the system</div>
-                                </div>
-                            </div>
-
-                            <!-- Form Actions -->
-                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                                <button type="button" class="btn btn-outline-secondary" @onclick="GoBack" disabled="@isSubmitting">
-                                    <i class="bi bi-x-circle me-1"></i> Cancel
-                                </button>
-                                <button type="submit" class="btn btn-warning" disabled="@isSubmitting">
-                                    @if (isSubmitting)
-                                    {
-                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>Updating...</span>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-check-circle me-1"></i>
-                                        <span>Update Product</span>
-                                    }
-                                </button>
-                            </div>
-                        </EditForm>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-</div>
 
 @code {
     [Parameter]

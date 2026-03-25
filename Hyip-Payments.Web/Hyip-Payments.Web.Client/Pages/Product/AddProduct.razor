@@ -364,69 +364,6 @@
         border-color: #198754;
     }
 </style>
-                                        }
-                                    </InputSelect>
-                                    <ValidationMessage For="@(() => product.CategoryId)" class="text-danger small" />
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-semibold">
-                                        Brand <span class="text-danger">*</span>
-                                    </label>
-                                    <InputSelect class="form-select" @bind-Value="product.BrandId">
-                                        <option value="0">-- Select Brand --</option>
-                                        @if (brands != null)
-                                        {
-                                            @foreach (var brand in brands)
-                                            {
-                                                <option value="@brand.Id">@brand.Name</option>
-                                            }
-                                        }
-                                    </InputSelect>
-                                    <ValidationMessage For="@(() => product.BrandId)" class="text-danger small" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Status Section -->
-                        <div class="mb-4">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="bi bi-toggle-on me-2"></i>Status
-                            </h6>
-
-                            <div class="form-check form-switch">
-                                <InputCheckbox class="form-check-input" id="isActive" @bind-Value="product.IsActive" />
-                                <label class="form-check-label fw-semibold" for="isActive">
-                                    Product is Active
-                                </label>
-                                <div class="form-text">Active products are visible in the system</div>
-                            </div>
-                        </div>
-
-                        <!-- Form Actions -->
-                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                            <button type="button" class="btn btn-outline-secondary" @onclick="GoBack" disabled="@isSubmitting">
-                                <i class="bi bi-x-circle me-1"></i> Cancel
-                            </button>
-                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
-                                @if (isSubmitting)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Adding...</span>
-                                }
-                                else
-                                {
-                                    <i class="bi bi-plus-circle me-1"></i>
-                                    <span>Add Product</span>
-                                }
-                            </button>
-                        </div>
-                    </EditForm>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 @code {
     private ProductModel product = new() { IsActive = true };

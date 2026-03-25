@@ -2,122 +2,296 @@
 @page "/products"
 @rendermode InteractiveAuto
 @using Hyip_Payments.Models
-@using Hyip_Payments.Web.Client.Services
 @using System.Net.Http.Json
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
-@inject ICartService CartService
-@implements IDisposable
+@inject IJSRuntime JSRuntime
 
-<PageTitle>Products</PageTitle>
+<PageTitle>Products - HYIP Payments</PageTitle>
 
-<div class="container mt-4">
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Products</li>
+        </ol>
+    </nav>
+
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2><i class="bi bi-box-seam"></i> Product Catalog</h2>
-            <p class="text-muted">Browse our products and add to market</p>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-box-seam text-orange me-2"></i>
+                        Products
+                    </h2>
+                    <p class="text-muted mb-0">Manage your product catalog</p>
+                </div>
+                <div>
+                    <a href="/product/add" class="btn btn-orange">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Add Product
+                    </a>
+                </div>
+            </div>
         </div>
-        <div>
-            <button class="btn btn-outline-primary me-2" @onclick="GoToMarket">
-                <i class="bi bi-cart3"></i> Market Cart
-                @if (GetCartCount() > 0)
-                {
-                    <span class="badge bg-danger">@GetCartCount()</span>
-                }
-            </button>
-            <button class="btn btn-primary" @onclick="GoToAdd">
-                <i class="bi bi-plus-circle"></i> Add Product
-            </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Products</h6>
+                            <h3 class="mb-0">@(filteredProducts?.Count ?? 0)</h3>
+                        </div>
+                        <div class="bg-orange bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-box-seam text-orange" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Active</h6>
+                            <h3 class="mb-0">@(products?.Count(p => p.IsActive) ?? 0)</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Value</h6>
+                            <h3 class="mb-0">${(products?.Sum(p => p.Price) ?? 0):F2}</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-cash-stack text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Showing</h6>
+                            <h3 class="mb-0">@paginatedProducts.Count</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-eye-fill text-info" style="font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Search -->
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control border-start-0" 
+                               placeholder="Search products..." 
+                               @bind="searchTerm" 
+                               @bind:event="oninput"
+                               @onkeyup="ApplyFilters" />
+                        @if (!string.IsNullOrEmpty(searchTerm))
+                        {
+                            <button class="btn btn-outline-secondary" @onclick="ClearSearch">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="col-md-2">
+                    <select class="form-select" @bind="categoryFilter" @bind:after="ApplyFilters">
+                        <option value="">All Categories</option>
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Brand Filter -->
+                <div class="col-md-2">
+                    <select class="form-select" @bind="brandFilter" @bind:after="ApplyFilters">
+                        <option value="">All Brands</option>
+                        @foreach (var brand in brands)
+                        {
+                            <option value="@brand.Id">@brand.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-md-2">
+                    <select class="form-select" @bind="statusFilter" @bind:after="ApplyFilters">
+                        <option value="">All Status</option>
+                        <option value="active">Active Only</option>
+                        <option value="inactive">Inactive Only</option>
+                    </select>
+                </div>
+
+                <!-- Page Size -->
+                <div class="col-md-1">
+                    <select class="form-select" @bind="pageSize" @bind:after="ApplyFilters">
+                        <option value="12">12</option>
+                        <option value="24">24</option>
+                        <option value="48">48</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                <!-- Export -->
+                <div class="col-md-2">
+                    <button class="btn btn-outline-success w-100" @onclick="ExportToCSV" disabled="@isLoading">
+                        <i class="bi bi-file-earmark-excel me-2"></i>
+                        Export
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- View Toggle -->
-    <div class="btn-group mb-3" role="group">
-        <button class="btn btn-sm @(viewMode == "cards" ? "btn-primary" : "btn-outline-primary")" 
-                @onclick='() => viewMode = "cards"'>
-            <i class="bi bi-grid-3x3-gap"></i> Cards
-        </button>
-        <button class="btn btn-sm @(viewMode == "table" ? "btn-primary" : "btn-outline-primary")" 
-                @onclick='() => viewMode = "table"'>
-            <i class="bi bi-table"></i> Table
-        </button>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="btn-group" role="group">
+            <button class="btn btn-sm @(viewMode == "cards" ? "btn-orange" : "btn-outline-secondary")" 
+                    @onclick='() => viewMode = "cards"'>
+                <i class="bi bi-grid-3x3-gap me-1"></i> Cards
+            </button>
+            <button class="btn btn-sm @(viewMode == "table" ? "btn-orange" : "btn-outline-secondary")" 
+                    @onclick='() => viewMode = "table"'>
+                <i class="bi bi-table me-1"></i> Table
+            </button>
+        </div>
+
+        @if (filteredProducts.Any())
+        {
+            <small class="text-muted">
+                Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, filteredProducts.Count) of @filteredProducts.Count
+            </small>
+        }
     </div>
 
+    <!-- Data Display -->
     @if (isLoading)
     {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="spinner-border text-orange mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0">Loading products...</p>
             </div>
-            <p class="mt-2">Loading products...</p>
         </div>
     }
-    else if (errorMessage != null)
+    else if (products == null || !products.Any())
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle"></i> @errorMessage
-            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-box-seam text-muted mb-3" style="font-size: 4rem;"></i>
+                <h4>No Products Found</h4>
+                <p class="text-muted mb-4">Start by creating your first product</p>
+                <a href="/product/add" class="btn btn-orange">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Add Your First Product
+                </a>
+            </div>
         </div>
     }
-    else if (products != null && products.Any())
+    else if (!paginatedProducts.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-search text-muted mb-3" style="font-size: 4rem;"></i>
+                <h4>No Results Found</h4>
+                <p class="text-muted mb-4">Try adjusting your search or filters</p>
+                <button class="btn btn-outline-orange" @onclick="ClearFilters">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+    }
+    else
     {
         @if (viewMode == "cards")
         {
             <!-- Card View -->
-            <div class="row g-4">
-                @foreach (var product in products)
+            <div class="row g-4 mb-4">
+                @foreach (var product in paginatedProducts)
                 {
-                    <div class="col-md-4 col-lg-3">
-                        <div class="card h-100 shadow-sm product-card @(!product.IsActive ? "opacity-75" : "")">
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="bi bi-box-seam display-1 text-muted"></i>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card h-100 border-0 shadow-sm product-card @(!product.IsActive ? "opacity-75" : "")">
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center position-relative" style="height: 200px;">
+                                <i class="bi bi-box-seam display-1 text-orange opacity-25"></i>
+                                @if (!product.IsActive)
+                                {
+                                    <span class="position-absolute top-0 start-0 m-2 badge bg-secondary">Inactive</span>
+                                }
+                                else
+                                {
+                                    <span class="position-absolute top-0 start-0 m-2 badge bg-success">Active</span>
+                                }
+                                <span class="position-absolute top-0 end-0 m-2 badge bg-primary">$@product.Price.ToString("F2")</span>
                             </div>
 
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">@product.Name</h5>
-                                <p class="card-text text-muted small flex-grow-1">
+                                <h5 class="card-title text-truncate" title="@product.Name">@product.Name</h5>
+                                <p class="card-text text-muted small flex-grow-1" style="min-height: 60px;">
                                     @(string.IsNullOrEmpty(product.Description) ? "No description" : 
                                       product.Description.Length > 80 ? product.Description.Substring(0, 80) + "..." : product.Description)
                                 </p>
 
-                                <div class="mb-2">
+                                <div class="mb-3">
                                     @if (product.Category != null)
                                     {
-                                        <span class="badge bg-info text-dark">@product.Category.Name</span>
+                                        <span class="badge bg-info text-dark me-1">
+                                            <i class="bi bi-folder me-1"></i>@product.Category.Name
+                                        </span>
                                     }
                                     @if (product.Brand != null)
                                     {
-                                        <span class="badge bg-secondary">@product.Brand.Name</span>
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-award me-1"></i>@product.Brand.Name
+                                        </span>
                                     }
-                                    @if (product.IsActive)
-                                    {
-                                        <span class="badge bg-success">Available</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">Unavailable</span>
-                                    }
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h4 class="text-primary mb-0">$@product.Price.ToString("F2")</h4>
-                                </div>
-
-                                <div class="btn-group w-100 mb-2" role="group">
-                                    <button class="btn btn-success btn-sm" 
-                                            @onclick="() => AddToMarket(product)" 
-                                            disabled="@(!product.IsActive)">
-                                        <i class="bi bi-cart-plus"></i> Add to Market
-                                    </button>
                                 </div>
 
                                 <div class="btn-group w-100" role="group">
-                                    <button class="btn btn-outline-primary btn-sm" @onclick="() => GoToEdit(product.Id)">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => ConfirmDelete(product.Id, product.Name)">
-                                        <i class="bi bi-trash"></i> Delete
+                                    <a href="/product/edit/@product.Id" class="btn btn-sm btn-outline-orange">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteProduct(product.Id)">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </div>
@@ -129,156 +303,308 @@
         else
         {
             <!-- Table View -->
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th class="text-end">Price</th>
-                            <th>Category</th>
-                            <th>Brand</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var product in products)
-                        {
-                            <tr>
-                                <td><strong>@product.Name</strong></td>
-                                <td>@(product.Description ?? "-")</td>
-                                <td class="text-end"><strong>$@product.Price.ToString("F2")</strong></td>
-                                <td>@(product.Category?.Name ?? "-")</td>
-                                <td>@(product.Brand?.Name ?? "-")</td>
-                                <td>
-                                    @if (product.IsActive)
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4" style="width: 50px;">
+                                        <input type="checkbox" class="form-check-input" @onchange="ToggleSelectAll" />
+                                    </th>
+                                    <th class="sortable" @onclick="() => SortBy(nameof(ProductModel.Name))">
+                                        Product
+                                        @if (sortColumn == nameof(ProductModel.Name))
+                                        {
+                                            <i class="bi bi-chevron-@(sortDescending ? "down" : "up") ms-1"></i>
+                                        }
+                                    </th>
+                                    <th class="sortable" @onclick="() => SortBy(nameof(ProductModel.Price))">
+                                        Price
+                                        @if (sortColumn == nameof(ProductModel.Price))
+                                        {
+                                            <i class="bi bi-chevron-@(sortDescending ? "down" : "up") ms-1"></i>
+                                        }
+                                    </th>
+                                    <th>Category</th>
+                                    <th>Brand</th>
+                                    <th>Status</th>
+                                    <th class="text-end px-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in paginatedProducts)
+                                {
+                                    <tr>
+                                        <td class="px-4">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   @bind="product.IsSelected" />
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-orange bg-opacity-10 rounded-circle p-2 me-3">
+                                                    <i class="bi bi-box-seam text-orange"></i>
+                                                </div>
+                                                <div>
+                                                    <strong>@product.Name</strong>
+                                                    <br />
+                                                    <small class="text-muted">@(product.Description != null && product.Description.Length > 50 ? product.Description.Substring(0, 50) + "..." : product.Description ?? "No description")</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong class="text-primary">${product.Price:F2}</strong>
+                                        </td>
+                                        <td>
+                                            @if (product.Category != null)
+                                            {
+                                                <span class="badge bg-info text-dark">@product.Category.Name</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (product.Brand != null)
+                                            {
+                                                <span class="badge bg-secondary">@product.Brand.Name</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (product.IsActive)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i> Active
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-x-circle me-1"></i> Inactive
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-end px-4">
+                                            <div class="btn-group" role="group">
+                                                <a href="/product/edit/@product.Id" class="btn btn-sm btn-outline-orange">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteProduct(product.Id)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="card-footer bg-light">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <p class="mb-0 text-muted">
+                                Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, filteredProducts.Count) 
+                                of @filteredProducts.Count entries
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <nav>
+                                <ul class="pagination pagination-sm justify-content-end mb-0">
+                                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => ChangePage(currentPage - 1)">Previous</button>
+                                    </li>
+                                    @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
                                     {
-                                        <span class="badge bg-success">Active</span>
+                                        var pageNum = i;
+                                        <li class="page-item @(currentPage == pageNum ? "active" : "")">
+                                            <button class="page-link" @onclick="() => ChangePage(pageNum)">@pageNum</button>
+                                        </li>
                                     }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">Inactive</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-success" 
-                                                @onclick="() => AddToMarket(product)"
-                                                disabled="@(!product.IsActive)">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-warning" @onclick="() => GoToEdit(product.Id)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(product.Id, product.Name)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => ChangePage(currentPage + 1)">Next</button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
             </div>
         }
 
-        <div class="mt-3">
-            <p class="text-muted mb-0">
-                <i class="bi bi-info-circle"></i> Total: <strong>@products.Count</strong> product(s)
-            </p>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No products found. 
-            <button class="btn btn-sm btn-primary ms-2" @onclick="GoToAdd">
-                Add First Product
-            </button>
-        </div>
-    }
-
-    <!-- Delete Confirmation Modal -->
-    @if (showDeleteConfirm)
-    {
-        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="CancelDelete"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to delete the product <strong>@productToDeleteName</strong>?</p>
-                        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
-                        <button type="button" class="btn btn-danger" @onclick="DeleteProduct">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
+        <!-- Bulk Actions -->
+        @if (products.Any(p => p.IsSelected))
+        {
+            <div class="card border-0 shadow-sm mt-3 border-orange">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@products.Count(p => p.IsSelected) item(s) selected</strong>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-success btn-sm" @onclick="BulkActivate">
+                                <i class="bi bi-check-circle me-1"></i> Activate
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="BulkDeactivate">
+                                <i class="bi bi-x-circle me-1"></i> Deactivate
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="BulkDelete">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
     }
 
-    <!-- Toast Notification -->
-    @if (showToast)
+    <!-- Error Message -->
+    @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-            <div class="toast show bg-success text-white" role="alert">
-                <div class="toast-header">
-                    <i class="bi bi-check-circle me-2"></i>
-                    <strong class="me-auto">Success</strong>
-                    <button type="button" class="btn-close" @onclick="() => showToast = false"></button>
-                </div>
-                <div class="toast-body">
-                    @toastMessage
-                </div>
-            </div>
+        <div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
         </div>
     }
 </div>
 
+<!-- Custom Styles -->
 <style>
+    .text-orange {
+        color: #fd7e14 !important;
+    }
+
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+
+    .btn-orange {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
+    }
+
+    .btn-orange:hover:not(:disabled) {
+        background-color: #e36d0d;
+        border-color: #e36d0d;
+    }
+
+    .btn-outline-orange {
+        color: #fd7e14;
+        border-color: #fd7e14;
+    }
+
+    .btn-outline-orange:hover {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
+    }
+
+    .border-orange {
+        border-color: #fd7e14 !important;
+    }
+
     .product-card {
-        transition: transform 0.2s;
+        transition: all 0.3s ease;
     }
 
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+    }
+
+    .sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .sortable:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.75rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #6c757d;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #fd7e14;
     }
 </style>
 
 @code {
     private List<ProductModel> products = new();
+    private List<ProductModel> filteredProducts = new();
+    private List<ProductModel> paginatedProducts = new();
+    private List<CategoryModel> categories = new();
+    private List<BrandModel> brands = new();
+
     private bool isLoading = true;
     private string? errorMessage;
+
+    // View Mode
     private string viewMode = "cards";
-    private bool showDeleteConfirm = false;
-    private int productToDelete = 0;
-    private string productToDeleteName = string.Empty;
-    private bool showToast = false;
-    private string toastMessage = string.Empty;
+
+    // Filtering & Search
+    private string searchTerm = "";
+    private string statusFilter = "";
+    private string categoryFilter = "";
+    private string brandFilter = "";
+
+    // Sorting
+    private string sortColumn = nameof(ProductModel.Name);
+    private bool sortDescending = false;
+
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 12;
+    private int totalPages => (int)Math.Ceiling(filteredProducts.Count / (double)pageSize);
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadProducts();
-        CartService.OnChange += StateHasChanged;
+        await LoadData();
     }
 
-    private async Task LoadProducts()
+    private async Task LoadData()
     {
+        isLoading = true;
+        errorMessage = null;
+
         try
         {
-            products = await Http.GetFromJsonAsync<List<ProductModel>>("api/Product") ?? new();
+            var productsTask = Http.GetFromJsonAsync<List<ProductModel>>("api/Product");
+            var categoriesTask = Http.GetFromJsonAsync<List<CategoryModel>>("api/Category");
+            var brandsTask = Http.GetFromJsonAsync<List<BrandModel>>("api/Brand");
+
+            await Task.WhenAll(productsTask, categoriesTask, brandsTask);
+
+            products = await productsTask ?? new List<ProductModel>();
+            categories = await categoriesTask ?? new List<CategoryModel>();
+            brands = await brandsTask ?? new List<BrandModel>();
+
+            ApplyFilters();
         }
         catch (Exception ex)
         {
             errorMessage = $"Error loading products: {ex.Message}";
+            products = new List<ProductModel>();
         }
         finally
         {
@@ -286,90 +612,161 @@
         }
     }
 
-    private void AddToMarket(ProductModel product)
+    private void ApplyFilters()
     {
-        CartService.AddItem(product.Id, product.Name, product.Price, 1);
-        ShowToast($"'{product.Name}' added to market cart!");
+        filteredProducts = products.Where(p =>
+            (string.IsNullOrEmpty(searchTerm) || 
+             p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             (p.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+            (statusFilter == "" || 
+             (statusFilter == "active" && p.IsActive) || 
+             (statusFilter == "inactive" && !p.IsActive)) &&
+            (categoryFilter == "" || p.CategoryId.ToString() == categoryFilter) &&
+            (brandFilter == "" || p.BrandId.ToString() == brandFilter)
+        ).ToList();
+
+        ApplySorting();
+        currentPage = 1;
+        UpdatePagination();
     }
 
-    private int GetCartCount()
+    private void ApplySorting()
     {
-        return CartService.GetItemCount();
-    }
-
-    private void ShowToast(string message)
-    {
-        toastMessage = message;
-        showToast = true;
-        StateHasChanged();
-
-        Task.Delay(3000).ContinueWith(_ => 
+        filteredProducts = sortColumn switch
         {
-            showToast = false;
-            InvokeAsync(StateHasChanged);
-        });
+            nameof(ProductModel.Name) => sortDescending 
+                ? filteredProducts.OrderByDescending(p => p.Name).ToList()
+                : filteredProducts.OrderBy(p => p.Name).ToList(),
+            nameof(ProductModel.Price) => sortDescending
+                ? filteredProducts.OrderByDescending(p => p.Price).ToList()
+                : filteredProducts.OrderBy(p => p.Price).ToList(),
+            _ => filteredProducts
+        };
     }
 
-    private void ConfirmDelete(int id, string name)
+    private void SortBy(string column)
     {
-        productToDelete = id;
-        productToDeleteName = name;
-        showDeleteConfirm = true;
-    }
-
-    private void CancelDelete()
-    {
-        productToDelete = 0;
-        productToDeleteName = string.Empty;
-        showDeleteConfirm = false;
-    }
-
-    private async Task DeleteProduct()
-    {
-        showDeleteConfirm = false;
-
-        try
+        if (sortColumn == column)
         {
-            var response = await Http.DeleteAsync($"api/Product/{productToDelete}");
+            sortDescending = !sortDescending;
+        }
+        else
+        {
+            sortColumn = column;
+            sortDescending = false;
+        }
+        ApplySorting();
+        UpdatePagination();
+    }
 
-            if (response.IsSuccessStatusCode)
+    private void UpdatePagination()
+    {
+        paginatedProducts = filteredProducts
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+            UpdatePagination();
+        }
+    }
+
+    private void ClearSearch()
+    {
+        searchTerm = "";
+        ApplyFilters();
+    }
+
+    private void ClearFilters()
+    {
+        searchTerm = "";
+        statusFilter = "";
+        categoryFilter = "";
+        brandFilter = "";
+        ApplyFilters();
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        var isChecked = (bool)(e.Value ?? false);
+        foreach (var product in paginatedProducts)
+        {
+            product.IsSelected = isChecked;
+        }
+    }
+
+    private async Task DeleteProduct(int id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this product?"))
+        {
+            try
             {
-                products.RemoveAll(p => p.Id == productToDelete);
-                ShowToast("Product deleted successfully!");
+                var response = await Http.DeleteAsync($"api/Product/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                }
+                else
+                {
+                    errorMessage = "Failed to delete product.";
+                }
             }
-            else
+            catch (Exception ex)
             {
-                errorMessage = $"Failed to delete product: {response.ReasonPhrase}";
+                errorMessage = $"Error deleting product: {ex.Message}";
             }
         }
-        catch (Exception ex)
+    }
+
+    private async Task BulkActivate()
+    {
+        var selected = products.Where(p => p.IsSelected).ToList();
+        foreach (var product in selected)
         {
-            errorMessage = $"Error deleting product: {ex.Message}";
+            product.IsActive = true;
+            await Http.PutAsJsonAsync($"api/Product/{product.Id}", product);
         }
-        finally
+        await LoadData();
+    }
+
+    private async Task BulkDeactivate()
+    {
+        var selected = products.Where(p => p.IsSelected).ToList();
+        foreach (var product in selected)
         {
-            productToDelete = 0;
-            productToDeleteName = string.Empty;
+            product.IsActive = false;
+            await Http.PutAsJsonAsync($"api/Product/{product.Id}", product);
+        }
+        await LoadData();
+    }
+
+    private async Task BulkDelete()
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {products.Count(p => p.IsSelected)} products?"))
+        {
+            var selected = products.Where(p => p.IsSelected).ToList();
+            foreach (var product in selected)
+            {
+                await Http.DeleteAsync($"api/Product/{product.Id}");
+            }
+            await LoadData();
         }
     }
 
-    private void GoToAdd()
+    private async Task ExportToCSV()
     {
-        NavigationManager.NavigateTo("/product/add");
-    }
+        var csv = "ID,Name,Description,Price,Category,Brand,Status\n";
+        foreach (var product in filteredProducts)
+        {
+            csv += $"{product.Id},\"{product.Name}\",\"{product.Description}\",{product.Price},\"{product.Category?.Name}\",\"{product.Brand?.Name}\",\"{(product.IsActive ? "Active" : "Inactive")}\"\n";
+        }
 
-    private void GoToEdit(int id)
-    {
-        NavigationManager.NavigateTo($"/product/edit/{id}");
-    }
-
-    private void GoToMarket()
-    {
-        NavigationManager.NavigateTo("/market");
-    }
-
-    public void Dispose()
-    {
-        CartService.OnChange -= StateHasChanged;
+        await JSRuntime.InvokeVoidAsync("downloadFile", "products.csv", csv);
     }
 }
+

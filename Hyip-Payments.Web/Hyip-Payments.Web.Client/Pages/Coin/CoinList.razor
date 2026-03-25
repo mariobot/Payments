@@ -1,65 +1,360 @@
 ﻿@page "/coin/list"
+@using Hyip_Payments.Models
+@using System.Net.Http.Json
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
-<h3>Coin List</h3>
+<PageTitle>Coins - HYIP Payments</PageTitle>
 
-@if (isLoading)
-{
-    <p>Loading...</p>
-}
-else if (coins == null || !coins.Any())
-{
-    <p>No coins found.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Symbol</th>
-                <th>Market Cap</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var coin in coins)
-            {
-                <tr>
-                    <td>@coin.Name</td>
-                    <td>@coin.Symbol</td>
-                    <td>@coin.MarketCap.ToString("C")</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary me-1" @onclick="() => NavigateToEdit(coin.Id)">Edit</button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteCoin(coin.Id)">Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<style>
+    .coin-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #6f42c1;
+    }
+    .coin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(111, 66, 193, 0.2) !important;
+    }
+    .price-badge {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+</style>
 
-@if (!string.IsNullOrEmpty(message))
-{
-    <p>@message</p>
-}
+<div class="container-fluid px-4 py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Coins</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-currency-bitcoin me-2" style="color: #6f42c1;"></i>
+                        Cryptocurrencies
+                    </h2>
+                    <p class="text-muted mb-0">Manage cryptocurrency listings</p>
+                </div>
+                <div>
+                    <a href="/coin/add" class="btn" style="background-color: #6f42c1; color: white;">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Add Coin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Coins</h6>
+                            <h3 class="mb-0">@(filteredCoins?.Count ?? 0)</h3>
+                        </div>
+                        <div class="rounded-3 p-3" style="background-color: rgba(111, 66, 193, 0.1);">
+                            <i class="bi bi-currency-bitcoin fs-4" style="color: #6f42c1;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Networks</h6>
+                            <h3 class="mb-0">@(filteredCoins?.Select(c => c.Network).Distinct().Count() ?? 0)</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-diagram-3 text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Avg. Price</h6>
+                            <h3 class="mb-0">@((filteredCoins?.Average(c => c.CurrentPrice) ?? 0).ToString("C2"))</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-graph-up text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Value</h6>
+                            <h3 class="mb-0">@((filteredCoins?.Sum(c => c.CurrentPrice) ?? 0).ToString("C2"))</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-cash-stack text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search by name or symbol..."
+                               @bind="searchTerm" @bind:after="ApplyFilters" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" @bind="filterNetwork" @bind:after="ApplyFilters">
+                        <option value="">All Networks</option>
+                        @foreach (var network in allCoins?.Where(c => !string.IsNullOrEmpty(c.Network)).Select(c => c.Network).Distinct().OrderBy(n => n) ?? Enumerable.Empty<string?>())
+                        {
+                            <option value="@network">@network</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" @bind="sortBy" @bind:after="ApplyFilters">
+                        <option value="name">Name</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="btn-group w-100" role="group">
+                        <button class="btn btn-outline-secondary" @onclick="ResetFilters">
+                            <i class="bi bi-x-circle me-1"></i> Reset
+                        </button>
+                        <button class="btn btn-outline-success" @onclick="ExportToCSV">
+                            <i class="bi bi-download me-1"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border" style="color: #6f42c1;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading coins...</p>
+        </div>
+    }
+    else if (filteredCoins == null || !filteredCoins.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-currency-bitcoin text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3">No Coins Found</h4>
+                <p class="text-muted">@(string.IsNullOrEmpty(searchTerm) ? "Start by adding your first cryptocurrency." : "Try adjusting your search criteria.")</p>
+                @if (string.IsNullOrEmpty(searchTerm))
+                {
+                    <a href="/coin/add" class="btn mt-2" style="background-color: #6f42c1; color: white;">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Add First Coin
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Coins Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th @onclick='() => Sort("Name")' style="cursor: pointer;">
+                                    Coin
+                                    @if (sortColumn == "Name")
+                                    {
+                                        <i class="bi bi-@(sortAscending ? "sort-up" : "sort-down")"></i>
+                                    }
+                                </th>
+                                <th>Symbol</th>
+                                <th @onclick='() => Sort("CurrentPrice")' style="cursor: pointer;" class="text-end">
+                                    Current Price
+                                    @if (sortColumn == "CurrentPrice")
+                                    {
+                                        <i class="bi bi-@(sortAscending ? "sort-up" : "sort-down")"></i>
+                                    }
+                                </th>
+                                <th>Network</th>
+                                <th>Description</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var coin in paginatedCoins)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-currency-bitcoin me-2" style="color: #6f42c1;"></i>
+                                            <strong>@coin.Name</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: #6f42c1;">@coin.Symbol</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="price-badge text-success">@coin.CurrentPrice.ToString("C4")</span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(coin.Network))
+                                        {
+                                            <span class="badge bg-info bg-opacity-75">@coin.Network</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(coin.Description))
+                                        {
+                                            <span>@(coin.Description.Length > 50 ? coin.Description.Substring(0, 50) + "..." : coin.Description)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No description</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/coin/edit/@coin.Id" class="btn" style="border-color: #6f42c1; color: #6f42c1;">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" @onclick="() => DeleteCoin(coin.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <label class="me-2">Show:</label>
+                            <select class="form-select form-select-sm w-auto" @bind="pageSize" @bind:after="UpdatePagination">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="ms-3 text-muted">
+                                Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, filteredCoins.Count) of @filteredCoins.Count coins
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <nav>
+                            <ul class="pagination pagination-sm justify-content-end mb-0">
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => ChangePage(1)">First</button>
+                                </li>
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => ChangePage(currentPage - 1)">Previous</button>
+                                </li>
+                                @for (int pageNum = Math.Max(1, currentPage - 2); pageNum <= Math.Min(totalPages, currentPage + 2); pageNum++)
+                                {
+                                    var pageNumber = pageNum;
+                                    <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+                                        <button class="page-link" @onclick="() => ChangePage(pageNumber)">@pageNumber</button>
+                                    </li>
+                                }
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => ChangePage(currentPage + 1)">Next</button>
+                                </li>
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => ChangePage(totalPages)">Last</button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
-    private List<CoinModel>? coins;
+    private List<CoinModel>? allCoins;
+    private List<CoinModel>? filteredCoins;
+    private List<CoinModel> paginatedCoins = new();
     private bool isLoading = true;
     private string? message;
 
+    // Search and Filter
+    private string searchTerm = "";
+    private string filterNetwork = "";
+    private string sortBy = "name";
+
+    // Sorting
+    private string sortColumn = "Name";
+    private bool sortAscending = true;
+
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 1;
+
     protected override async Task OnInitializedAsync()
+    {
+        await LoadCoins();
+    }
+
+    private async Task LoadCoins()
     {
         try
         {
             isLoading = true;
-            coins = await Http.GetFromJsonAsync<List<CoinModel>>("api/Coin");
+            allCoins = await Http.GetFromJsonAsync<List<CoinModel>>("api/Coin") ?? new();
+            ApplyFilters();
         }
         catch (Exception ex)
         {
             message = $"An error occurred while loading coins: {ex.Message}";
+            await JSRuntime.InvokeVoidAsync("showToast", "Error loading coins", "error");
         }
         finally
         {
@@ -67,9 +362,77 @@ else
         }
     }
 
+    private void ApplyFilters()
+    {
+        if (allCoins == null) return;
+
+        filteredCoins = allCoins.Where(c =>
+            (string.IsNullOrEmpty(searchTerm) ||
+             c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             c.Symbol.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(filterNetwork) || c.Network == filterNetwork)
+        ).ToList();
+
+        ApplySorting();
+        UpdatePagination();
+    }
+
+    private void ApplySorting()
+    {
+        if (filteredCoins == null) return;
+
+        filteredCoins = sortColumn switch
+        {
+            "Name" => sortAscending ? filteredCoins.OrderBy(c => c.Name).ToList() : filteredCoins.OrderByDescending(c => c.Name).ToList(),
+            "CurrentPrice" => sortAscending ? filteredCoins.OrderBy(c => c.CurrentPrice).ToList() : filteredCoins.OrderByDescending(c => c.CurrentPrice).ToList(),
+            _ => filteredCoins.OrderBy(c => c.Name).ToList()
+        };
+    }
+
+    private void Sort(string column)
+    {
+        if (sortColumn == column)
+            sortAscending = !sortAscending;
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+        ApplySorting();
+        UpdatePagination();
+    }
+
+    private void UpdatePagination()
+    {
+        if (filteredCoins == null) return;
+
+        totalPages = (int)Math.Ceiling(filteredCoins.Count / (double)pageSize);
+        currentPage = Math.Min(currentPage, Math.Max(1, totalPages));
+
+        paginatedCoins = filteredCoins
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    private void ChangePage(int page)
+    {
+        currentPage = page;
+        UpdatePagination();
+    }
+
+    private void ResetFilters()
+    {
+        searchTerm = "";
+        filterNetwork = "";
+        sortBy = "name";
+        ApplyFilters();
+    }
+
     private async Task DeleteCoin(int id)
     {
-        message = null;
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this coin?");
+        if (!confirmed) return;
 
         try
         {
@@ -77,30 +440,32 @@ else
 
             if (response.IsSuccessStatusCode)
             {
-                message = "Coin deleted successfully!";
-                coins = coins?.Where(c => c.Id != id).ToList(); // Remove the deleted coin from the list
+                await JSRuntime.InvokeVoidAsync("showToast", "Coin deleted successfully", "success");
+                await LoadCoins();
             }
             else
             {
-                message = "Failed to delete coin. Please try again.";
+                await JSRuntime.InvokeVoidAsync("showToast", "Failed to delete coin. Please try again.", "error");
             }
         }
         catch (Exception ex)
         {
-            message = $"An error occurred: {ex.Message}";
+            await JSRuntime.InvokeVoidAsync("showToast", $"Error: {ex.Message}", "error");
         }
     }
 
-    private void NavigateToEdit(int id)
+    private async Task ExportToCSV()
     {
-        NavigationManager.NavigateTo($"/coin/edit/{id}");
-    }
+        if (filteredCoins == null || !filteredCoins.Any()) return;
 
-    public class CoinModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Symbol { get; set; } = string.Empty;
-        public decimal MarketCap { get; set; }
+        var csv = "Name,Symbol,Current Price,Network,Description\n";
+        foreach (var coin in filteredCoins)
+        {
+            csv += $"\"{coin.Name}\",\"{coin.Symbol}\",{coin.CurrentPrice},\"{coin.Network}\",\"{coin.Description}\"\n";
+        }
+
+        await JSRuntime.InvokeVoidAsync("downloadFile", "coins.csv", csv);
+        await JSRuntime.InvokeVoidAsync("showToast", "CSV exported successfully", "success");
     }
 }
+

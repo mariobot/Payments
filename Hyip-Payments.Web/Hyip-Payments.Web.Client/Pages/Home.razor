@@ -5,7 +5,7 @@
 
 <div class="container-fluid">
     <h3>💼 Payment Management Dashboard</h3>
-    
+
     <div class="row mt-4">
         <!-- Invoice Stats -->
         <div class="col-md-3 mb-4">
@@ -18,6 +18,21 @@
                 </div>
                 <button class="btn btn-sm btn-primary mt-3 w-100" @onclick="GoToInvoices">
                     View Invoices
+                </button>
+            </div>
+        </div>
+
+        <!-- Customers Stats -->
+        <div class="col-md-3 mb-4">
+            <div class="stat-card" style="border-left: 4px solid #9b59b6;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Customers</h6>
+                        <h4 class="mb-0">@("👥")</h4>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-secondary mt-3 w-100" @onclick="GoToCustomers" style="background-color: #9b59b6; border-color: #9b59b6;">
+                    View Customers
                 </button>
             </div>
         </div>
@@ -51,21 +66,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Payment History Stats -->
-        <div class="col-md-3 mb-4">
-            <div class="stat-card" style="border-left: 4px solid #f39c12;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-2">Payment History</h6>
-                        <h4 class="mb-0">@("💰")</h4>
-                    </div>
-                </div>
-                <button class="btn btn-sm btn-warning mt-3 w-100" @onclick="GoToPayments">
-                    View History
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- Quick Actions -->
@@ -88,12 +88,17 @@
                             </button>
                         </div>
                         <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-info w-100" @onclick="GoToAddCustomer">
+                                ➕ Add Customer
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <button class="btn btn-outline-danger w-100" @onclick="GoToCreatePayment">
                                 ➕ Create Payment
                             </button>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <button class="btn btn-outline-info w-100" @onclick="GoToRecurringInvoices">
+                            <button class="btn btn-outline-warning w-100" @onclick="GoToRecurringInvoices">
                                 🔄 Recurring Invoices
                             </button>
                         </div>
@@ -211,6 +216,7 @@
 @code {
     // View navigation methods
     private void GoToInvoices() => NavigationManager.NavigateTo("/invoice");
+    private void GoToCustomers() => NavigationManager.NavigateTo("/customer/list");
     private void GoToProducts() => NavigationManager.NavigateTo("/product/list");
     private void GoToPayments() => NavigationManager.NavigateTo("/payment/list");
     private void GoToRecurringInvoices() => NavigationManager.NavigateTo("/recurring-invoice/list");
@@ -218,5 +224,6 @@
     // Add navigation methods
     private void GoToCreateInvoice() => NavigationManager.NavigateTo("/invoice/add");
     private void GoToAddProduct() => NavigationManager.NavigateTo("/product/add");
+    private void GoToAddCustomer() => NavigationManager.NavigateTo("/customer/add");
     private void GoToCreatePayment() => NavigationManager.NavigateTo("/payment/add");
 }

@@ -24,13 +24,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("summary")]
         public async Task<ActionResult<InvoiceSummaryReportModel>> GetSummary(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetInvoiceSummaryReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetInvoiceSummaryReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);
@@ -45,8 +45,8 @@ namespace Hyip_Payments.Api.Controllers.Report
         public async Task<ActionResult<InvoiceAgingReportModel>> GetAging(
             [FromQuery] DateTime? reportDate = null)
         {
-            var query = new GetInvoiceAgingReportQuery 
-            { 
+            var query = new GetInvoiceAgingReportQuery
+            {
                 ReportDate = reportDate ?? DateTime.Today
             };
 
@@ -62,8 +62,8 @@ namespace Hyip_Payments.Api.Controllers.Report
         public async Task<ActionResult<DraftInvoicesReportModel>> GetDrafts(
             [FromQuery] DateTime? reportDate = null)
         {
-            var query = new GetDraftInvoicesReportQuery 
-            { 
+            var query = new GetDraftInvoicesReportQuery
+            {
                 ReportDate = reportDate ?? DateTime.Today
             };
 
@@ -77,13 +77,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("paid")]
         public async Task<ActionResult<PaidInvoicesReportModel>> GetPaid(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetPaidInvoicesReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetPaidInvoicesReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);

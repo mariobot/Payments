@@ -27,7 +27,7 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
         {
             // Base query for transactions in date range
             var query = _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate)
                 .Include(p => p.PaymentMethod)
                 .Include(p => p.Invoice)
@@ -49,7 +49,7 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
                 var searchLower = request.SearchTerm.ToLower();
-                query = query.Where(p => 
+                query = query.Where(p =>
                     (p.Reference != null && p.Reference.ToLower().Contains(searchLower)) ||
                     (p.Description != null && p.Description.ToLower().Contains(searchLower)) ||
                     (p.Invoice != null && p.Invoice.InvoiceNumber != null && p.Invoice.InvoiceNumber.ToLower().Contains(searchLower))
@@ -81,7 +81,7 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
 
             // Get all transactions for summary (without filters)
             var allTransactions = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate)
                 .Include(p => p.PaymentMethod)
                 .ToListAsync(cancellationToken);
@@ -97,7 +97,7 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
                 PendingAmount = allTransactions.Where(t => t.Status == "Pending").Sum(t => t.Amount),
                 FailedAmount = allTransactions.Where(t => t.Status == "Failed").Sum(t => t.Amount),
                 AverageTransactionAmount = allTransactions.Any() ? allTransactions.Average(t => t.Amount) : 0,
-                
+
                 // Transactions by payment method
                 TransactionsByMethod = allTransactions
                     .GroupBy(t => t.PaymentMethod?.Name ?? "Unknown")

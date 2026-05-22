@@ -24,7 +24,7 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
         {
             // Get Revenue Data (Completed Transactions)
             var completedTransactions = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate
                          && p.Status == "Completed")
                 .ToListAsync(cancellationToken);
@@ -33,7 +33,7 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
 
             // Get Expense Data (Failed/Cancelled + Processing Fees)
             var failedTransactions = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate
                          && (p.Status == "Failed" || p.Status == "Cancelled"))
                 .ToListAsync(cancellationToken);

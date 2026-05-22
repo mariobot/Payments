@@ -78,7 +78,7 @@ namespace Hyip_Payments.Command.InvoiceCommand
                     // 1. Create the invoice from DTO
                     var invoice = new InvoiceModel
                     {
-                        InvoiceNumber = string.IsNullOrWhiteSpace(request.Invoice.InvoiceNumber) 
+                        InvoiceNumber = string.IsNullOrWhiteSpace(request.Invoice.InvoiceNumber)
                             ? await _invoiceNumberService.GenerateNextInvoiceNumberAsync()
                             : request.Invoice.InvoiceNumber,
                         InvoiceDate = request.Invoice.InvoiceDate,

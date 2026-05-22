@@ -1,4 +1,3 @@
-using System.Net.Http;
 using Hyip_Payments.Command.CoinCommand;
 using Hyip_Payments.Command.CountryCommand;
 using Hyip_Payments.Command.InvoiceCommand;
@@ -16,7 +15,6 @@ using Hyip_Payments.Query.PaymentQuery;
 using Hyip_Payments.Query.WalletQuery;
 using Hyip_Payments.Services;
 using MediatR;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Hyip_Payments.Web.Extensions
 {
@@ -67,7 +65,8 @@ namespace Hyip_Payments.Web.Extensions
             services.AddScoped<IRequestHandler<AddPaymentTransactionCommand, PaymentTransactionModel>, AddPaymentTransactionCommandHandler>();
 
             // Register all queries. 
-            services.AddMediatR(cfg => {
+            services.AddMediatR(cfg =>
+            {
                 cfg.RegisterServicesFromAssemblyContaining<GetAllInvoicesQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetInvoiceByIdQuery>();
                 cfg.RegisterServicesFromAssemblyContaining<GetMoneyByIdQuery>();

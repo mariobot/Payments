@@ -91,8 +91,8 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
             var totalAmount = agingDetails.Sum(i => i.Amount);
             foreach (var bucket in agingBuckets)
             {
-                var bucketInvoices = agingDetails.Where(i => 
-                    i.DaysOld >= bucket.MinDays && 
+                var bucketInvoices = agingDetails.Where(i =>
+                    i.DaysOld >= bucket.MinDays &&
                     (bucket.MaxDays == null || i.DaysOld <= bucket.MaxDays)).ToList();
 
                 bucket.InvoiceCount = bucketInvoices.Count;

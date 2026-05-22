@@ -25,7 +25,7 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
             // Simulate expenses based on failed and cancelled transactions
             // In a real system, you would have an Expenses table
             var failedTransactions = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate
                          && (p.Status == "Failed" || p.Status == "Cancelled"))
                 .ToListAsync(cancellationToken);
@@ -41,7 +41,7 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
 
             // Add processing fees for all completed transactions (simulated)
             var completedTransactions = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate
                          && p.Status == "Completed")
                 .ToListAsync(cancellationToken);
@@ -87,8 +87,8 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
             // Calculate percentages
             foreach (var category in expensesByCategory)
             {
-                category.Percentage = totalExpenses > 0 
-                    ? category.TotalAmount / totalExpenses * 100 
+                category.Percentage = totalExpenses > 0
+                    ? category.TotalAmount / totalExpenses * 100
                     : 0;
             }
 
@@ -110,8 +110,8 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
                 FailedTransactionsCount = failedTransactions.Count,
                 LargestExpense = allExpenses.Any() ? allExpenses.Max(e => e.Amount) : 0,
                 SmallestExpense = allExpenses.Any() ? allExpenses.Min(e => e.Amount) : 0,
-                MedianExpense = allExpenses.Any() 
-                    ? allExpenses.OrderBy(e => e.Amount).Skip(allExpenses.Count / 2).First().Amount 
+                MedianExpense = allExpenses.Any()
+                    ? allExpenses.OrderBy(e => e.Amount).Skip(allExpenses.Count / 2).First().Amount
                     : 0
             };
 

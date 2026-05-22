@@ -1,5 +1,5 @@
-using Hyip_Payments.Services;
 using System.Diagnostics;
+using Hyip_Payments.Services;
 
 namespace Hyip_Payments.Web.Middleware
 {
@@ -89,7 +89,7 @@ namespace Hyip_Payments.Web.Middleware
                 return false;
 
             // Check if path starts with any audit path
-            return AuditPaths.Any(auditPath => 
+            return AuditPaths.Any(auditPath =>
                 path.StartsWith(auditPath, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -166,7 +166,7 @@ namespace Hyip_Payments.Web.Middleware
 
             // Extract entity type from path (e.g., /api/invoice -> Invoice)
             var entityType = segments.Length >= 2 ? segments[1] : "Unknown";
-            
+
             // Capitalize first letter
             if (!string.IsNullOrEmpty(entityType))
             {

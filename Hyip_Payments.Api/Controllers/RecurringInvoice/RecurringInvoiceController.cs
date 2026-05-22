@@ -74,7 +74,7 @@ public class RecurringInvoiceController : ControllerBase
     public async Task<ActionResult<RecurringInvoiceModel>> Create([FromBody] CreateRecurringInvoiceDto dto)
     {
         try
-        {         
+        {
             var userId = User.FindFirst("sub")?.Value ?? User.FindFirst("userId")?.Value;
 
             var command = new AddRecurringInvoiceCommand

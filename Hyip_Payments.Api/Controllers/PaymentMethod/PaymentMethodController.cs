@@ -55,7 +55,7 @@ namespace Hyip_Payments.Api.Controllers.PaymentMethod
             var result = await _mediator.Send(new EditPaymentMethodCommand(paymentMethod));
             if (result == null)
                 return NotFound();
-            
+
             return Ok(result);
         }
 
@@ -66,7 +66,7 @@ namespace Hyip_Payments.Api.Controllers.PaymentMethod
             var result = await _mediator.Send(new DeletePaymentMethodCommand(id));
             if (!result)
                 return NotFound();
-            
+
             return NoContent();
         }
     }

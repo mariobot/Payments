@@ -1,11 +1,11 @@
+using System.Security.Claims;
 using Hyip_Payments.Command.UserCommand;
 using Hyip_Payments.Services;
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.Auth
 {

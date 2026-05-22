@@ -52,7 +52,7 @@ namespace Hyip_Payments.Api.Controllers.Invoice
             invoice.Id = id;
             var result = await _mediator.Send(new EditInvoiceCommand(invoice));
             if (result == null)
-               return NotFound();
+                return NotFound();
             return NoContent();
         }
 

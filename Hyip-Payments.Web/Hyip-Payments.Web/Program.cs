@@ -49,7 +49,7 @@ namespace Hyip_Payments.Web
                         var token = tokenService.GetTokenAsync().GetAwaiter().GetResult();
                         if (!string.IsNullOrEmpty(token))
                         {
-                            httpClient.DefaultRequestHeaders.Authorization = 
+                            httpClient.DefaultRequestHeaders.Authorization =
                                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                         }
                     }
@@ -78,12 +78,12 @@ namespace Hyip_Payments.Web
                 })
                 .AddIdentityCookies();
 
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
-                options.UseSqlServer(connectionString, 
+                options.UseSqlServer(connectionString,
                     sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(30),
@@ -92,7 +92,7 @@ namespace Hyip_Payments.Web
             // Add ApplicationDbContext
             // TODO pending while fix the migrations of the Identity
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString, 
+                options.UseSqlServer(connectionString,
                     sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(30),
@@ -203,7 +203,7 @@ namespace Hyip_Payments.Web
             //app.UseCors("AllowSpecificOrigins");
 
             app.MapStaticAssets();
-            
+
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode()
                 .AddInteractiveWebAssemblyRenderMode()

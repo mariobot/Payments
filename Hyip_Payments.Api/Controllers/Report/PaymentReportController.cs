@@ -24,13 +24,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("summary")]
         public async Task<ActionResult<PaymentSummaryReportModel>> GetSummary(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetPaymentSummaryReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetPaymentSummaryReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);
@@ -43,13 +43,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("methods")]
         public async Task<ActionResult<PaymentMethodsReportModel>> GetMethods(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetPaymentMethodsReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetPaymentMethodsReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);
@@ -62,15 +62,15 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("transactions")]
         public async Task<ActionResult<TransactionLogReportModel>> GetTransactions(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate,
             [FromQuery] string? status = null,
             [FromQuery] string? paymentMethod = null,
             [FromQuery] string? searchTerm = null)
         {
-            var query = new GetTransactionLogReportQuery 
-            { 
-                StartDate = startDate, 
+            var query = new GetTransactionLogReportQuery
+            {
+                StartDate = startDate,
                 EndDate = endDate,
                 Status = status,
                 PaymentMethod = paymentMethod,
@@ -87,13 +87,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("status")]
         public async Task<ActionResult<PaymentStatusReportModel>> GetStatus(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate,
             [FromQuery] string? statusFilter = null)
         {
-            var query = new GetPaymentStatusReportQuery 
-            { 
-                StartDate = startDate, 
+            var query = new GetPaymentStatusReportQuery
+            {
+                StartDate = startDate,
                 EndDate = endDate,
                 StatusFilter = statusFilter
             };

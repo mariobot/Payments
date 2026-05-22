@@ -1,7 +1,6 @@
 using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Hyip_Payments.Command.Decorators
 {
@@ -77,17 +76,18 @@ namespace Hyip_Payments.Command.Decorators
                 var (actionType, entityType, entityId) = ParseCommandInfo(commandName, request);
 
                 // Sanitize request and response data before logging
-                var sanitizedResponse = response != null 
-                    ? AuditDataSanitizer.SanitizeObject(response) 
+                var sanitizedResponse = response != null
+                    ? AuditDataSanitizer.SanitizeObject(response)
                     : null;
 
-                var sanitizedAdditionalData = exception != null 
-                    ? AuditDataSanitizer.SanitizeObject(new { 
+                var sanitizedAdditionalData = exception != null
+                    ? AuditDataSanitizer.SanitizeObject(new
+                    {
                         ExceptionType = exception.GetType().Name,
                         Message = exception.Message,
                         // Don't log full stack trace if it might contain sensitive data
-                        StackTrace = AuditDataSanitizer.ContainsSensitiveData(exception.StackTrace ?? "") 
-                            ? "[REDACTED]" 
+                        StackTrace = AuditDataSanitizer.ContainsSensitiveData(exception.StackTrace ?? "")
+                            ? "[REDACTED]"
                             : exception.StackTrace
                     })
                     : null;
@@ -132,7 +132,7 @@ namespace Hyip_Payments.Command.Decorators
             {
                 actionType = "Update";
                 entityType = commandName.Replace("Update", "").Replace("Edit", "").Replace("Command", "");
-                
+
                 // Try to get ID from request using reflection
                 entityId = GetEntityId(request);
             }
@@ -140,7 +140,7 @@ namespace Hyip_Payments.Command.Decorators
             {
                 actionType = "Delete";
                 entityType = commandName.Replace("Delete", "").Replace("Remove", "").Replace("Command", "");
-                
+
                 // Try to get ID from request using reflection
                 entityId = GetEntityId(request);
             }

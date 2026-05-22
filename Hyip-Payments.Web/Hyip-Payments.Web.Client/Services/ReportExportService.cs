@@ -1,7 +1,6 @@
-using Hyip_Payments.Models;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using System.Net.Http.Json;
 
 namespace Hyip_Payments.Web.Client.Services;
 
@@ -25,7 +24,7 @@ public class ReportExportService
         try
         {
             var response = await _httpClient.PostAsJsonAsync("api/Report/Export/Pdf", request);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsByteArrayAsync();
@@ -48,7 +47,7 @@ public class ReportExportService
         try
         {
             var response = await _httpClient.PostAsJsonAsync("api/Report/Export/Excel", request);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsByteArrayAsync();

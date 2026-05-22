@@ -3,7 +3,6 @@ using Hyip_Payments.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace Hyip_Payments.Api.Controllers.User
 {

@@ -24,8 +24,8 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
         {
             // Get all paid invoices in date range
             var paidInvoices = await _context.Invoices
-                .Where(i => i.StatusInvoice == "Paid" 
-                         && i.InvoiceDate >= request.StartDate 
+                .Where(i => i.StatusInvoice == "Paid"
+                         && i.InvoiceDate >= request.StartDate
                          && i.InvoiceDate <= request.EndDate)
                 .Include(i => i.Items)
                 .Select(i => new

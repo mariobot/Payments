@@ -10,20 +10,19 @@ using Hyip_Payments.Query.ProductQuery;
 using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Hyip_Payments.Api
 {
     public class Program
-    { 
+    {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                 throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
             var defaultEndpoint = builder.Configuration.GetConnectionString("DefaultConnection") ??
@@ -32,7 +31,7 @@ namespace Hyip_Payments.Api
 
             // Add PaymentsDbContext
             builder.Services.AddDbContext<PaymentsDbContext>(options =>
-                options.UseSqlServer(connectionString, 
+                options.UseSqlServer(connectionString,
                     sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(30),

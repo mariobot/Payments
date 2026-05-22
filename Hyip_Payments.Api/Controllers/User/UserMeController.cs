@@ -1,9 +1,7 @@
-﻿using Hyip_Payments.Models;
-using Hyip_Payments.Context;
-using Microsoft.AspNetCore.Authorization;
+﻿using Hyip_Payments.Context;
+using Hyip_Payments.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace Hyip_Payments.Api.Controllers.User
 {
@@ -98,8 +96,8 @@ namespace Hyip_Payments.Api.Controllers.User
                 });
             }
 
-            var claims = User.Claims.Select(c => new 
-            { 
+            var claims = User.Claims.Select(c => new
+            {
                 Type = c.Type,
                 Value = c.Value,
                 ShortType = c.Type.Split('/').Last()

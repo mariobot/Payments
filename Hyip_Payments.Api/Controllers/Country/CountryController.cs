@@ -1,9 +1,9 @@
+using Hyip_Payments.Command.CountryCommand;
+using Hyip_Payments.Models;
+using Hyip_Payments.Query.CountryQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Hyip_Payments.Command.CountryCommand;
-using Hyip_Payments.Query.CountryQuery;
-using Hyip_Payments.Models;
 
 namespace Hyip_Payments.Api.Controllers.Country
 {

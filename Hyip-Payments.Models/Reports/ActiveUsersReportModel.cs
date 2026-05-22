@@ -43,18 +43,18 @@ namespace Hyip_Payments.Models.Reports
         public int ActiveThisWeek { get; set; }
         public int ActiveThisMonth { get; set; }
         public int DormantUsers { get; set; }
-        
+
         // Engagement Metrics
         public decimal AverageInvoicesPerActiveUser { get; set; }
         public decimal AveragePaymentsPerActiveUser { get; set; }
         public decimal AverageRevenuePerActiveUser { get; set; }
-        
+
         // Activity Insights
         public string MostActiveUser { get; set; } = string.Empty;
         public int MostActiveUserActions { get; set; }
         public int NewUsersThisMonth { get; set; }
         public int UsersNeverLoggedIn { get; set; }
-        
+
         // Trends
         public decimal WeekOverWeekGrowth { get; set; }
         public decimal MonthOverMonthGrowth { get; set; }

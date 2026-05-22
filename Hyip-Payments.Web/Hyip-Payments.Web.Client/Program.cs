@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Hyip_Payments.Web.Client.Services;
+﻿using Hyip_Payments.Web.Client.Services;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace Hyip_Payments.Web.Client
 {

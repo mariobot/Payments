@@ -143,8 +143,8 @@ namespace Hyip_Payments.Query.ReportQuery.User
             var totalActivityActions = roleActivities.Sum(r => r.TotalActions);
             foreach (var activity in roleActivities)
             {
-                activity.ActivityPercentage = totalActivityActions > 0 
-                    ? (decimal)activity.TotalActions / totalActivityActions * 100 
+                activity.ActivityPercentage = totalActivityActions > 0
+                    ? (decimal)activity.TotalActions / totalActivityActions * 100
                     : 0;
             }
 

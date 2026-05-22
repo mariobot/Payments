@@ -1,8 +1,8 @@
+using System.Globalization;
 using Hyip_Payments.Context;
 using Hyip_Payments.Models.Reports;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
 
 namespace Hyip_Payments.Query.ReportQuery.Payment
 {
@@ -25,7 +25,7 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
         {
             // Get all payment transactions in date range
             var payments = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate)
                 .Include(p => p.PaymentMethod)
                 .ToListAsync(cancellationToken);
@@ -47,10 +47,10 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
             // Calculate percentages and success rates
             foreach (var status in paymentsByStatus)
             {
-                status.Percentage = totalPayments > 0 
-                    ? (decimal)status.Count / totalPayments * 100 
+                status.Percentage = totalPayments > 0
+                    ? (decimal)status.Count / totalPayments * 100
                     : 0;
-                
+
                 // Success rate is 100% for Completed, 0% for Failed/Cancelled, and in-progress for Pending
                 status.SuccessRate = status.Status switch
                 {
@@ -78,8 +78,8 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
             // Calculate percentages for payment methods
             foreach (var method in paymentsByMethod)
             {
-                method.Percentage = totalAmount > 0 
-                    ? method.TotalAmount / totalAmount * 100 
+                method.Percentage = totalAmount > 0
+                    ? method.TotalAmount / totalAmount * 100
                     : 0;
             }
 

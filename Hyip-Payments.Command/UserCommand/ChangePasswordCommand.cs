@@ -9,7 +9,7 @@ namespace Hyip_Payments.Command.UserCommand
     {
         public int UserId { get; }
         public string NewPassword { get; }
-        
+
         public ChangePasswordCommand(int userId, string newPassword)
         {
             UserId = userId;

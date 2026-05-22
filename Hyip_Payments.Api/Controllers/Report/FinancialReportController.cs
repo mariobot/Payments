@@ -24,13 +24,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("revenue")]
         public async Task<ActionResult<RevenueReportModel>> GetRevenue(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetRevenueReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetRevenueReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);
@@ -43,13 +43,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("expenses")]
         public async Task<ActionResult<ExpenseReportModel>> GetExpenses(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetExpenseReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetExpenseReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);
@@ -62,13 +62,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("profit-loss")]
         public async Task<ActionResult<ProfitLossReportModel>> GetProfitLoss(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetProfitLossReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetProfitLossReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);
@@ -81,13 +81,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("cash-flow")]
         public async Task<ActionResult<CashFlowReportModel>> GetCashFlow(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
-            var query = new GetCashFlowReportQuery 
-            { 
-                StartDate = startDate, 
-                EndDate = endDate 
+            var query = new GetCashFlowReportQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate
             };
 
             var result = await _mediator.Send(query);

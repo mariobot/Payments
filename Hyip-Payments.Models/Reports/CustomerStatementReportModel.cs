@@ -15,12 +15,12 @@ public class CustomerStatementReportModel
     public DateTime StatementDate { get; set; }
     public DateTime PeriodStart { get; set; }
     public DateTime PeriodEnd { get; set; }
-    
+
     public decimal OpeningBalance { get; set; }
     public decimal ClosingBalance { get; set; }
     public decimal TotalInvoiced { get; set; }
     public decimal TotalPaid { get; set; }
-    
+
     public List<CustomerStatementTransactionModel> Transactions { get; set; } = new();
 }
 

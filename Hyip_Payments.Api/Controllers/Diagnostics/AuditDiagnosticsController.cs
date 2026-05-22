@@ -1,5 +1,4 @@
 using Hyip_Payments.Context;
-using Hyip_Payments.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -47,8 +46,8 @@ namespace Hyip_Payments.Api.Controllers.Diagnostics
                         latestLog.EntityType,
                         latestLog.UserName
                     } : null,
-                    Message = count > 0 
-                        ? $"AuditLogs table has {count} records" 
+                    Message = count > 0
+                        ? $"AuditLogs table has {count} records"
                         : "AuditLogs table exists but is empty. Create invoices, payments, or other entities to populate audit logs."
                 });
             }

@@ -1,8 +1,7 @@
 using Hyip_Payments.Command.UserCommand;
-using Hyip_Payments.Query.UserQuery;
 using Hyip_Payments.Models;
+using Hyip_Payments.Query.UserQuery;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hyip_Payments.Api.Controllers.User

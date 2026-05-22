@@ -55,7 +55,7 @@ namespace Hyip_Payments.Services
             {
                 // Serialize to JSON
                 var json = JsonSerializer.Serialize(obj);
-                
+
                 // Sanitize the JSON string
                 return SanitizeJson(json);
             }
@@ -79,7 +79,7 @@ namespace Hyip_Payments.Services
                 // Parse JSON
                 var jsonDoc = JsonDocument.Parse(json);
                 var sanitized = SanitizeJsonElement(jsonDoc.RootElement);
-                
+
                 // Serialize back to string
                 return JsonSerializer.Serialize(sanitized);
             }
@@ -163,7 +163,7 @@ namespace Hyip_Payments.Services
                 // Match both string and non-string values
                 var pattern = $@"""{field}""\s*:\s*""[^""]*""";
                 json = Regex.Replace(json, pattern, $@"""{field}"": ""***REDACTED***""", RegexOptions.IgnoreCase);
-                
+
                 // Match non-quoted values (numbers, booleans, etc.)
                 pattern = $@"""{field}""\s*:\s*[^,}}]+";
                 json = Regex.Replace(json, pattern, $@"""{field}"": ""***REDACTED***""", RegexOptions.IgnoreCase);
@@ -202,7 +202,7 @@ namespace Hyip_Payments.Services
             if (string.IsNullOrEmpty(text))
                 return false;
 
-            return SensitiveFields.Any(field => 
+            return SensitiveFields.Any(field =>
                 text.Contains(field, StringComparison.OrdinalIgnoreCase));
         }
 

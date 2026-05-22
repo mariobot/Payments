@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -27,7 +27,7 @@ public class ReportExportController : ControllerBase
         {
             var pdfBytes = GeneratePdf(request);
             var fileName = $"{SanitizeFileName(request.ReportName)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            
+
             return File(pdfBytes, "application/pdf", fileName);
         }
         catch (Exception ex)
@@ -48,7 +48,7 @@ public class ReportExportController : ControllerBase
             // Generate CSV format that Excel can open directly
             var csvContent = GenerateCsv(request);
             var fileName = $"{SanitizeFileName(request.ReportName)}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            
+
             return File(Encoding.UTF8.GetBytes(csvContent), "text/csv", fileName);
         }
         catch (Exception ex)
@@ -67,7 +67,7 @@ public class ReportExportController : ControllerBase
         {
             var csvContent = GenerateCsv(request);
             var fileName = $"{SanitizeFileName(request.ReportName)}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            
+
             return File(Encoding.UTF8.GetBytes(csvContent), "text/csv", fileName);
         }
         catch (Exception ex)

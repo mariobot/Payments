@@ -24,13 +24,13 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("activity")]
         public async Task<ActionResult<UserActivityReportModel>> GetActivity(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate,
             [FromQuery] string? role = null)
         {
-            var query = new GetUserActivityReportQuery 
-            { 
-                StartDate = startDate, 
+            var query = new GetUserActivityReportQuery
+            {
+                StartDate = startDate,
                 EndDate = endDate,
                 Role = role
             };
@@ -45,15 +45,15 @@ namespace Hyip_Payments.Api.Controllers.Report
         /// </summary>
         [HttpGet("audit-trail")]
         public async Task<ActionResult<AuditTrailReportModel>> GetAuditTrail(
-            [FromQuery] DateTime startDate, 
+            [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate,
             [FromQuery] string? actionType = null,
             [FromQuery] string? entityType = null,
             [FromQuery] string? performedBy = null)
         {
-            var query = new GetAuditTrailReportQuery 
-            { 
-                StartDate = startDate, 
+            var query = new GetAuditTrailReportQuery
+            {
+                StartDate = startDate,
                 EndDate = endDate,
                 ActionType = actionType,
                 EntityType = entityType,
@@ -72,8 +72,8 @@ namespace Hyip_Payments.Api.Controllers.Report
         public async Task<ActionResult<ActiveUsersReportModel>> GetActiveUsers(
             [FromQuery] DateTime? reportDate = null)
         {
-            var query = new GetActiveUsersReportQuery 
-            { 
+            var query = new GetActiveUsersReportQuery
+            {
                 ReportDate = reportDate ?? DateTime.UtcNow
             };
 
@@ -89,8 +89,8 @@ namespace Hyip_Payments.Api.Controllers.Report
         public async Task<ActionResult<UserRolesReportModel>> GetUserRoles(
             [FromQuery] DateTime? reportDate = null)
         {
-            var query = new GetUserRolesReportQuery 
-            { 
+            var query = new GetUserRolesReportQuery
+            {
                 ReportDate = reportDate ?? DateTime.UtcNow
             };
 

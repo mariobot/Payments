@@ -34,18 +34,18 @@ namespace Hyip_Payments.Models.Reports
         public int ViewActions { get; set; }
         public int LoginActions { get; set; }
         public int SecurityEvents { get; set; }
-        
+
         public Dictionary<string, int> ActionsByType { get; set; } = new();
         public Dictionary<string, int> ActionsByEntity { get; set; } = new();
         public Dictionary<string, int> ActionsByUser { get; set; } = new();
         public Dictionary<string, int> ActionsBySeverity { get; set; } = new();
-        
+
         public string MostActiveUser { get; set; } = string.Empty;
         public int MostActiveUserActions { get; set; }
-        
+
         public string MostAuditedEntity { get; set; } = string.Empty;
         public int MostAuditedEntityCount { get; set; }
-        
+
         public int CriticalEvents { get; set; }
         public int WarningEvents { get; set; }
         public int InfoEvents { get; set; }

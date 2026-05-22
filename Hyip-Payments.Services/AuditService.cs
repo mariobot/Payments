@@ -1,6 +1,6 @@
+using System.Text.Json;
 using Hyip_Payments.Context;
 using Hyip_Payments.Models;
-using System.Text.Json;
 
 namespace Hyip_Payments.Services
 {

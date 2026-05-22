@@ -24,7 +24,7 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
         {
             // Get completed payment transactions in date range
             var transactions = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate
                          && p.Status == "Completed")
                 .Include(p => p.PaymentMethod)
@@ -58,8 +58,8 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
             // Calculate percentages
             foreach (var method in revenueByMethod)
             {
-                method.Percentage = totalRevenue > 0 
-                    ? (method.TotalAmount / totalRevenue) * 100 
+                method.Percentage = totalRevenue > 0
+                    ? (method.TotalAmount / totalRevenue) * 100
                     : 0;
             }
 
@@ -69,8 +69,8 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
                 EndDate = request.EndDate,
                 TotalRevenue = totalRevenue,
                 TotalTransactions = transactions.Count,
-                AverageTransactionValue = transactions.Count > 0 
-                    ? totalRevenue / transactions.Count 
+                AverageTransactionValue = transactions.Count > 0
+                    ? totalRevenue / transactions.Count
                     : 0,
                 RevenueByDate = revenueByDate,
                 RevenueByPaymentMethod = revenueByMethod

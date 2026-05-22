@@ -10,7 +10,7 @@ namespace Hyip_Payments.Query.CountryQuery
     {
         public GetCountryListQuery()
         {
-            
+
         }
     }
 

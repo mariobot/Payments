@@ -1,6 +1,5 @@
-using System.Threading.Tasks;
-using Hyip_Payments.Models;
 using Hyip_Payments.Command.BrandCommand;
+using Hyip_Payments.Models;
 using Hyip_Payments.Query.BrandQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -47,7 +46,7 @@ namespace Hyip_Payments.Api.Controllers.Brand
         }
 
         // PUT: api/Brand/5
-        [HttpPut("{id}")]   
+        [HttpPut("{id}")]
         public async Task<IActionResult> Edit(int id, [FromBody] BrandModel brand)
         {
             if (id != brand.Id)

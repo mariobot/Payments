@@ -1,7 +1,7 @@
+using System.Security.Claims;
 using Hyip_Payments.Web.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using System.Security.Claims;
 
 namespace Hyip_Payments.Web.Identity
 {

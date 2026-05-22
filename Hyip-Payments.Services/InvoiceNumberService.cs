@@ -58,7 +58,7 @@ public class InvoiceNumberService
         lock (_lock)
         {
             var searchPrefix = $"{prefix}-";
-            
+
             var lastInvoice = _context.Invoices
                 .Where(i => i.InvoiceNumber.StartsWith(searchPrefix))
                 .OrderByDescending(i => i.Id)

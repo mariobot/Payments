@@ -95,7 +95,7 @@ public class RecurringInvoiceGenerationService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, 
+                _logger.LogError(ex,
                     $"Failed to generate invoice from template: {template.TemplateName} (ID: {template.Id})");
                 failureCount++;
             }

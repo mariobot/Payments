@@ -1,6 +1,5 @@
 using Hyip_Payments.Command.InvoiceCommand;
 using Hyip_Payments.Context;
-using Hyip_Payments.Models;
 using Hyip_Payments.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

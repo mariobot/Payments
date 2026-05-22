@@ -27,7 +27,7 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
             var query = _context.PaymentTransactions
                 .Include(p => p.PaymentMethod)
                 .Include(p => p.Invoice)
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate);
 
             // Apply status filter if provided

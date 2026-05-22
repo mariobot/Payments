@@ -16,7 +16,7 @@ namespace Hyip_Payments.Web.Client.Services
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request, 
+            HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             // Get token from localStorage

@@ -1,5 +1,4 @@
 using Hyip_Payments.Context;
-using Hyip_Payments.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

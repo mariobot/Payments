@@ -131,9 +131,9 @@ namespace Hyip_Payments.Api.Controllers.Report
         // Helper method to get current user ID
         private string GetCurrentUserId()
         {
-            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                ?? User.FindFirst("sub")?.Value 
-                ?? User.FindFirst("userId")?.Value 
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("sub")?.Value
+                ?? User.FindFirst("userId")?.Value
                 ?? string.Empty;
         }
     }

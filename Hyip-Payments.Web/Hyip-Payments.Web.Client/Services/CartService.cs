@@ -23,7 +23,7 @@ namespace Hyip_Payments.Web.Client.Services
         public void AddItem(int productId, string productName, decimal unitPrice, int quantity = 1)
         {
             var existingItem = _cartItems.FirstOrDefault(x => x.ProductId == productId);
-            
+
             if (existingItem != null)
             {
                 existingItem.Quantity += quantity;

@@ -1,6 +1,6 @@
-using MediatR;
-using Hyip_Payments.Models;
 using Hyip_Payments.Context;
+using Hyip_Payments.Models;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hyip_Payments.Query.InvoiceQuery
@@ -36,7 +36,7 @@ namespace Hyip_Payments.Query.InvoiceQuery
             }
             // Don't include Items to avoid circular reference issues
             // Use the /with-items endpoint to get invoice with items
-            
+
         }
     }
 }

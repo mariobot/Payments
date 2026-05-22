@@ -42,7 +42,7 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
             var draftInvoiceDtos = draftInvoices.Select(i =>
             {
                 var daysInDraft = (request.ReportDate - i.InvoiceDate.Date).Days;
-                
+
                 return new DraftInvoiceDto
                 {
                     InvoiceId = i.Id,

@@ -1,8 +1,8 @@
+using System.Globalization;
 using Hyip_Payments.Context;
 using Hyip_Payments.Models.Reports;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
 
 namespace Hyip_Payments.Query.ReportQuery.Invoice
 {
@@ -25,7 +25,7 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
         {
             // Get all invoices in date range
             var invoices = await _context.Invoices
-                .Where(i => i.InvoiceDate >= request.StartDate 
+                .Where(i => i.InvoiceDate >= request.StartDate
                          && i.InvoiceDate <= request.EndDate)
                 .ToListAsync(cancellationToken);
 
@@ -46,8 +46,8 @@ namespace Hyip_Payments.Query.ReportQuery.Invoice
             // Calculate percentages
             foreach (var status in invoicesByStatus)
             {
-                status.Percentage = totalInvoices > 0 
-                    ? (decimal)status.Count / totalInvoices * 100 
+                status.Percentage = totalInvoices > 0
+                    ? (decimal)status.Count / totalInvoices * 100
                     : 0;
             }
 

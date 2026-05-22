@@ -1,6 +1,6 @@
 using Hyip_Payments.Command.PaymentCommand;
-using Hyip_Payments.Query.PaymentQuery;
 using Hyip_Payments.Models;
+using Hyip_Payments.Query.PaymentQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

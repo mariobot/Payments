@@ -24,7 +24,7 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
         {
             // Get all payment transactions in date range with payment method
             var transactions = await _context.PaymentTransactions
-                .Where(p => p.TransactionDate >= request.StartDate 
+                .Where(p => p.TransactionDate >= request.StartDate
                          && p.TransactionDate <= request.EndDate)
                 .Include(p => p.PaymentMethod)
                 .ToListAsync(cancellationToken);
@@ -61,14 +61,14 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
                     PendingCount = pendingCount,
                     CancelledCount = cancelledCount,
                     SuccessRate = successRate,
-                    AverageTransactionAmount = methodTransactions.Count > 0 
-                        ? totalAmount / methodTransactions.Count 
+                    AverageTransactionAmount = methodTransactions.Count > 0
+                        ? totalAmount / methodTransactions.Count
                         : 0,
-                    LargestTransaction = methodTransactions.Any() 
-                        ? methodTransactions.Max(t => t.Amount) 
+                    LargestTransaction = methodTransactions.Any()
+                        ? methodTransactions.Max(t => t.Amount)
                         : 0,
-                    SmallestTransaction = methodTransactions.Any() 
-                        ? methodTransactions.Min(t => t.Amount) 
+                    SmallestTransaction = methodTransactions.Any()
+                        ? methodTransactions.Min(t => t.Amount)
                         : 0,
                     IsActive = method.IsActive,
                     Description = method.Description
@@ -82,14 +82,14 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
             // Calculate percentages
             foreach (var method in paymentMethodDetails)
             {
-                method.Percentage = totalAmount > 0 
-                    ? method.TotalAmount / totalAmount * 100 
+                method.Percentage = totalAmount > 0
+                    ? method.TotalAmount / totalAmount * 100
                     : 0;
             }
 
             // Create summary
             var methodsWithTransactions = paymentMethodDetails.Where(m => m.TotalTransactions > 0).ToList();
-            
+
             var summary = new PaymentMethodSummaryDto
             {
                 MostUsedMethod = methodsWithTransactions
@@ -103,8 +103,8 @@ namespace Hyip_Payments.Query.ReportQuery.Payment
                     .FirstOrDefault()?.MethodName ?? "None",
                 ActiveMethods = paymentMethodDetails.Count(m => m.IsActive),
                 InactiveMethods = paymentMethodDetails.Count(m => !m.IsActive),
-                AverageSuccessRate = methodsWithTransactions.Any() 
-                    ? methodsWithTransactions.Average(m => m.SuccessRate) 
+                AverageSuccessRate = methodsWithTransactions.Any()
+                    ? methodsWithTransactions.Average(m => m.SuccessRate)
                     : 0,
                 TotalSuccessfulAmount = transactions
                     .Where(t => t.Status == "Completed")

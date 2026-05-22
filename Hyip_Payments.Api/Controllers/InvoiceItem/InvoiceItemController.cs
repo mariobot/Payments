@@ -1,7 +1,6 @@
 using Hyip_Payments.Command.InvoiceItemCommand;
 using Hyip_Payments.Models;
 using Hyip_Payments.Query.InvoiceItemQuery;
-using Hyip_Payments.Query.PaymentQuery;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

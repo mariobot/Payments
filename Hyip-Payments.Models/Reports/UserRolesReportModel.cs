@@ -52,17 +52,17 @@ namespace Hyip_Payments.Models.Reports
         public int MostActiveRoleActions { get; set; }
         public string HighestRevenueRole { get; set; } = string.Empty;
         public decimal HighestRevenueRoleAmount { get; set; }
-        
+
         // User Distribution
         public int UsersWithRoles { get; set; }
         public int UsersWithoutRoles { get; set; }
         public int UsersWithMultipleRoles { get; set; }
-        
+
         // Activity Metrics
         public decimal AverageActionsPerRole { get; set; }
         public decimal AverageUsersPerRole { get; set; }
         public decimal AverageRevenuePerRole { get; set; }
-        
+
         // Top Performers by Role
         public Dictionary<string, string> TopUserByRole { get; set; } = new();
         public Dictionary<string, int> ActionsByRole { get; set; } = new();

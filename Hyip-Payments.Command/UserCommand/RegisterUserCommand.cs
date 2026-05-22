@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Hyip_Payments.Context;
+﻿using Hyip_Payments.Context;
 using Hyip_Payments.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

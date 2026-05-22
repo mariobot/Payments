@@ -3,7 +3,6 @@ using Hyip_Payments.Command.Decorators;
 using Hyip_Payments.Query.CoinQuery;
 using Hyip_Payments.Services;
 using MediatR;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Hyip_Payments.Api.Extensions
 {

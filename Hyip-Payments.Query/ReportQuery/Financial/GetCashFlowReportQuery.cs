@@ -27,15 +27,15 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
 
             // Get completed payments (cash inflows - operating activities)
             var completedPayments = await _context.PaymentTransactions
-                .Where(p => p.Status == "Completed" 
-                         && p.TransactionDate >= startDate 
+                .Where(p => p.Status == "Completed"
+                         && p.TransactionDate >= startDate
                          && p.TransactionDate <= endDate)
                 .ToListAsync(cancellationToken);
 
             // Get failed/cancelled payments (potential cash outflows from refunds)
             var failedPayments = await _context.PaymentTransactions
                 .Where(p => (p.Status == "Failed" || p.Status == "Cancelled")
-                         && p.TransactionDate >= startDate 
+                         && p.TransactionDate >= startDate
                          && p.TransactionDate <= endDate)
                 .ToListAsync(cancellationToken);
 
@@ -178,11 +178,11 @@ namespace Hyip_Payments.Query.ReportQuery.Financial
             var highestDailyInflow = dailyCashFlow.Any() ? dailyCashFlow.Max(d => d.Inflows) : 0;
             var highestDailyOutflow = dailyCashFlow.Any() ? dailyCashFlow.Max(d => d.Outflows) : 0;
 
-            var cashFlowGrowthRate = openingBalance > 0 
-                ? ((closingBalance - openingBalance) / openingBalance) * 100 
+            var cashFlowGrowthRate = openingBalance > 0
+                ? ((closingBalance - openingBalance) / openingBalance) * 100
                 : 0;
 
-            var cashFlowHealth = netCashFlow >= 0 
+            var cashFlowHealth = netCashFlow >= 0
                 ? (netCashFlow > totalInflows * 0.2m ? "Positive" : "Stable")
                 : "Negative";
 

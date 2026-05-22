@@ -17,8 +17,8 @@ namespace Hyip_Payments.Query.CustomReportQuery
         public async Task<List<CustomReportModel>> Handle(GetSavedReportsQuery request, CancellationToken cancellationToken)
         {
             return await _context.CustomReports
-                .Where(r => r.IsActive && 
-                       (r.CreatedByUserId == request.UserId || 
+                .Where(r => r.IsActive &&
+                       (r.CreatedByUserId == request.UserId ||
                         (request.IncludePublic && r.IsPublic)))
                 .OrderByDescending(r => r.LastRunDate ?? r.CreatedDate)
                 .ToListAsync(cancellationToken);

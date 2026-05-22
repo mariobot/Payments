@@ -1,8 +1,6 @@
-﻿using Hyip_Payments.Models;
-using Hyip_Payments.Context;
+﻿using Hyip_Payments.Context;
+using Hyip_Payments.Models;
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Hyip_Payments.Command.WalletCommand
 {
